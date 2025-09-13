@@ -1,4 +1,6 @@
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Core/widgets/custom_bottom.dart';
+import 'package:chatbox/Features/onboarding/presentation/views/widgets/login_row.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/widgets/onboard_socialmedia_login.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/widgets/or_divider.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/widgets/welcome_app_bar.dart';
@@ -16,8 +18,11 @@ class OnboardViewBody extends StatelessWidget {
         child: Column(
           children: [
             WelcomeAppBar(),
-            SizedBox(height: 43.h),
-            Text('Connect friends easily & quickly', style: AppTextStyles.bold68),
+            SizedBox(height: 30.h),
+            Text(
+              'Connect friends easily & quickly',
+              style: AppTextStyles.bold68,
+            ),
             SizedBox(height: 16.h),
             Text(
               'Our chat app is the perfect way to stay connected with friends and family.',
@@ -31,6 +36,16 @@ class OnboardViewBody extends StatelessWidget {
             OnboardSocialMediaLogin(),
             SizedBox(height: 30.h),
             OrDivider(),
+            SizedBox(height: 30.h),
+            CustomBottom(
+              text: 'Sign up with email',
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              textColor: Theme.of(context).colorScheme.onPrimary,
+              onTap: () {},
+            ),
+            SizedBox(height: 30.h),
+            LoginRow(onTap: () {}),
+            SizedBox(height: 30.h),
           ],
         ),
       ),
