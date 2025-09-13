@@ -1,84 +1,85 @@
 import 'package:chatbox/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 abstract class AppTextStyles {
-  static const TextStyle bold68 = TextStyle(
-    fontSize: 68,
+  static TextStyle bold68 = TextStyle(
+    fontSize: 68.sp,
     fontFamily: carosFontFamily,
     fontWeight: FontWeight.w600,
-    height: 1.15,
+    height: 1.15.h,
   );
 
-  static const TextStyle semiBold40 = TextStyle(
-    fontSize: 40,
+  static TextStyle semiBold40 = TextStyle(
+    fontSize: 40.sp,
     fontStyle: FontStyle.italic,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w500,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle semiBold20 = TextStyle(
-    fontSize: 20,
+  static TextStyle semiBold20 = TextStyle(
+    fontSize: 20.sp,
     fontFamily: carosFontFamily,
     fontWeight: FontWeight.w500,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle bold18 = TextStyle(
-    fontSize: 18,
+  static TextStyle bold18 = TextStyle(
+    fontSize: 18.sp,
     fontFamily: carosFontFamily,
     fontWeight: FontWeight.w600,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle regular18 = TextStyle(
-    fontSize: 18,
+  static TextStyle regular18 = TextStyle(
+    fontSize: 18.sp,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w400,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle regular16 = TextStyle(
-    fontSize: 16,
+  static TextStyle regular16 = TextStyle(
+    fontSize: 16.sp,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w400,
-    height: 1.62,
+    height: 1.62.h,
   );
 
-  static const TextStyle semiBold16 = TextStyle(
-    fontSize: 16,
+  static TextStyle semiBold16 = TextStyle(
+    fontSize: 16.sp,
     fontFamily: carosFontFamily,
     fontWeight: FontWeight.w500,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle regular14 = TextStyle(
-    fontSize: 14,
+  static TextStyle regular14 = TextStyle(
+    fontSize: 14.sp,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w400,
-    height: 1,
+    height: 1.h,
     letterSpacing: 0.10,
   );
 
-  static const TextStyle semiBold14 = TextStyle(
-    fontSize: 14,
+  static TextStyle semiBold14 = TextStyle(
+    fontSize: 14.sp,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w500,
-    height: 1,
+    height: 1.h,
     letterSpacing: 0.10,
   );
 
-  static const TextStyle bold14 = TextStyle(
-    fontSize: 14,
+  static TextStyle bold14 = TextStyle(
+    fontSize: 14.sp,
     fontFamily: carosFontFamily,
     fontWeight: FontWeight.w600,
-    height: 1,
+    height: 1.h,
   );
 
-  static const TextStyle regular12 = TextStyle(
-    fontSize: 12,
+  static TextStyle regular12 = TextStyle(
+    fontSize: 12.sp,
     fontFamily: circularStdFontFamily,
     fontWeight: FontWeight.w400,
-    height: 1,
+    height: 1.h,
   );
 }
