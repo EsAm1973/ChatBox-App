@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/utils/app_router.dart';
+import 'package:chatbox/Core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,9 +14,7 @@ class MyApp extends StatelessWidget {
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
       title: 'ChatBox',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppThemes.getLightTheme,
     );
   }
 }
