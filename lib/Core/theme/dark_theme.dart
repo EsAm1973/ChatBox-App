@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 final ThemeData darkTheme = ThemeData(
   scaffoldBackgroundColor: AppColors.darkBackground,
   brightness: Brightness.dark,
-  colorScheme: ColorScheme.dark(
+  colorScheme: const ColorScheme.dark(
     primary: AppColors.darkPrimary,
     onPrimary: AppColors.darkOnPrimary,
     surface: AppColors.darkSurface,
@@ -17,7 +17,7 @@ final ThemeData darkTheme = ThemeData(
     secondaryContainer: AppColors.darkSecondaryVariant,
   ),
 
-  appBarTheme: AppBarTheme(
+  appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.darkBackground,
     foregroundColor: AppColors.darkOnBackground,
     elevation: 0,
@@ -29,7 +29,7 @@ final ThemeData darkTheme = ThemeData(
     ),
   ),
 
-  floatingActionButtonTheme: FloatingActionButtonThemeData(
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: AppColors.darkPrimary,
     foregroundColor: AppColors.darkOnPrimary,
   ),
@@ -39,15 +39,15 @@ final ThemeData darkTheme = ThemeData(
       backgroundColor: AppColors.darkSecondary,
       foregroundColor: AppColors.darkOnSecondary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-      textStyle: TextStyle(fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      textStyle: const TextStyle(fontWeight: FontWeight.w600),
     ),
   ),
 
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
       foregroundColor: AppColors.darkPrimaryVariant,
-      textStyle: TextStyle(fontWeight: FontWeight.w600),
+      textStyle: const TextStyle(fontWeight: FontWeight.w600),
     ),
   ),
 
@@ -55,7 +55,7 @@ final ThemeData darkTheme = ThemeData(
     filled: true,
     fillColor: AppColors.darkBackground,
     hintStyle: TextStyle(color: AppColors.darkOnBackground.withValues(alpha: 0.8)),
-    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide.none,

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:flutter/material.dart';
@@ -135,7 +134,7 @@ class _ProfilePictureScreenState extends State<ProfilePictureScreen> {
                       elevation: 0,
                     ),
                     onPressed: () => _pickImage(ImageSource.camera),
-                    icon: Icon(Icons.camera_alt_rounded),
+                    icon: const Icon(Icons.camera_alt_rounded),
                     label: const Text('Take Photo'),
                   ),
                 ),
@@ -155,7 +154,7 @@ class _ProfilePictureScreenState extends State<ProfilePictureScreen> {
                       elevation: 2,
                     ),
                     onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: Icon(Icons.photo_library_rounded),
+                    icon: const Icon(Icons.photo_library_rounded),
                     label: const Text('Choose from Gallery'),
                   ),
                 ),

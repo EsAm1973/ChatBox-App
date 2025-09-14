@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 final ThemeData lightTheme = ThemeData(
   scaffoldBackgroundColor: AppColors.background,
   brightness: Brightness.light,
-  colorScheme: ColorScheme.light(
+  colorScheme: const ColorScheme.light(
     primary: AppColors.primary,
     onPrimary: AppColors.onPrimary,
     surface: AppColors.surface,
@@ -17,7 +17,7 @@ final ThemeData lightTheme = ThemeData(
     secondaryContainer: AppColors.secondaryVariant,
   ),
 
-  appBarTheme: AppBarTheme(
+  appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.background,
     foregroundColor: AppColors.onBackground,
     elevation: 0,
@@ -29,7 +29,7 @@ final ThemeData lightTheme = ThemeData(
     ),
   ),
 
-  floatingActionButtonTheme: FloatingActionButtonThemeData(
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: AppColors.primary,
     foregroundColor: AppColors.onPrimary,
   ),
@@ -39,15 +39,15 @@ final ThemeData lightTheme = ThemeData(
       backgroundColor: AppColors.secondary,
       foregroundColor: AppColors.onSecondary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-      textStyle: TextStyle(fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      textStyle: const TextStyle(fontWeight: FontWeight.w600),
     ),
   ),
 
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
       foregroundColor: AppColors.primaryVariant,
-      textStyle: TextStyle(fontWeight: FontWeight.w600),
+      textStyle: const TextStyle(fontWeight: FontWeight.w600),
     ),
   ),
 
@@ -55,7 +55,7 @@ final ThemeData lightTheme = ThemeData(
     filled: true,
     fillColor: AppColors.background,
     hintStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
-    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide.none,

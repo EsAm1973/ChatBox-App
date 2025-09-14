@@ -8,7 +8,7 @@ class OnboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(child: OnboardViewBody()),
+      body: const SafeArea(child: OnboardViewBody()),
     );
   }
 }

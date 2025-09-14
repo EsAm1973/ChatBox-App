@@ -19,7 +19,7 @@ class OnboardViewBody extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            WelcomeAppBar(),
+            const WelcomeAppBar(),
             SizedBox(height: 30.h),
             Text(
               'Connect friends easily & quickly',
@@ -35,9 +35,9 @@ class OnboardViewBody extends StatelessWidget {
               ),
             ),
             SizedBox(height: 38.h),
-            OnboardSocialMediaLogin(),
+            const OnboardSocialMediaLogin(),
             SizedBox(height: 30.h),
-            OrDivider(),
+            const OrDivider(),
             SizedBox(height: 30.h),
             CustomBottom(
               text: 'Sign up with email',
