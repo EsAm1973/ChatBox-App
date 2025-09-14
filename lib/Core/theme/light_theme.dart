@@ -18,12 +18,12 @@ final ThemeData lightTheme = ThemeData(
   ),
 
   appBarTheme: AppBarTheme(
-    backgroundColor: AppColors.primary,
-    foregroundColor: AppColors.onPrimary,
+    backgroundColor: AppColors.background,
+    foregroundColor: AppColors.onBackground,
     elevation: 0,
-    iconTheme: IconThemeData(color: AppColors.onPrimary),
+    iconTheme: IconThemeData(color: AppColors.onBackground),
     titleTextStyle: TextStyle(
-      color: AppColors.onPrimary,
+      color: AppColors.onBackground,
       fontSize: 18,
       fontWeight: FontWeight.w600,
     ),
@@ -53,8 +53,8 @@ final ThemeData lightTheme = ThemeData(
 
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: AppColors.surface,
-    hintStyle: TextStyle(color: AppColors.onSurface.withOpacity(0.7)),
+    fillColor: AppColors.background,
+    hintStyle: TextStyle(color: AppColors.onBackground.withOpacity(0.7)),
     contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),

@@ -44,13 +44,13 @@ class OnboardViewBody extends StatelessWidget {
               backgroundColor: Theme.of(context).colorScheme.primary,
               textColor: Theme.of(context).colorScheme.onPrimary,
               onTap: () {
-                GoRouter.of(context).pushReplacement(AppRouter.kSignupRoute);
+                GoRouter.of(context).push(AppRouter.kSignupRoute);
               },
             ),
             SizedBox(height: 30.h),
             LoginRow(
               onTap: () {
-                GoRouter.of(context).pushReplacement(AppRouter.kLoginRoute);
+                GoRouter.of(context).push(AppRouter.kLoginRoute);
               },
             ),
             SizedBox(height: 30.h),

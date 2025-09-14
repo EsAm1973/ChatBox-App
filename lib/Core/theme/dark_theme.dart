@@ -18,12 +18,12 @@ final ThemeData darkTheme = ThemeData(
   ),
 
   appBarTheme: AppBarTheme(
-    backgroundColor: AppColors.darkPrimary,
-    foregroundColor: AppColors.darkOnPrimary,
+    backgroundColor: AppColors.darkBackground,
+    foregroundColor: AppColors.darkOnBackground,
     elevation: 0,
-    iconTheme: IconThemeData(color: AppColors.darkOnPrimary),
+    iconTheme: IconThemeData(color: AppColors.darkOnBackground),
     titleTextStyle: TextStyle(
-      color: AppColors.darkOnPrimary,
+      color: AppColors.darkOnBackground,
       fontSize: 18,
       fontWeight: FontWeight.w600,
     ),
@@ -53,8 +53,8 @@ final ThemeData darkTheme = ThemeData(
 
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: AppColors.darkSurface,
-    hintStyle: TextStyle(color: AppColors.darkOnSurface.withValues(alpha: 0.8)),
+    fillColor: AppColors.darkBackground,
+    hintStyle: TextStyle(color: AppColors.darkOnBackground.withValues(alpha: 0.8)),
     contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
