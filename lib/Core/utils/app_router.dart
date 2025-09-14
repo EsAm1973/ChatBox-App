@@ -1,3 +1,4 @@
+import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
@@ -9,6 +10,7 @@ abstract class AppRouter {
   static const String kOnboardRoute = '/onboard';
   static const String kLoginRoute = '/login';
   static const String kSignupRoute = '/signup';
+  static const String kChoosePictureRoute = '/choose-picture';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -26,6 +28,10 @@ abstract class AppRouter {
       GoRoute(
         path: kSignupRoute,
         builder: (context, state) => const SignupView(),
+      ),
+      GoRoute(
+        path: kChoosePictureRoute,
+        builder: (context, state) => const ProfilePictureScreen(),
       ),
     ],
   );

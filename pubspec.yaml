@@ -38,6 +38,7 @@ dependencies:
   svg_flutter: ^0.0.1
   flutter_screenutil: ^5.9.3
   firebase_core: ^4.1.0
+  image_picker: ^1.2.0
 
 dev_dependencies:
   flutter_test:

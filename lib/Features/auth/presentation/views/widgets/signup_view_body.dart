@@ -1,9 +1,11 @@
+import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Core/widgets/custom_textfeild.dart';
 import 'package:chatbox/Features/auth/presentation/data/mixins/auth_validator_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class SignupViewBody extends StatefulWidget {
   const SignupViewBody({super.key});
@@ -96,9 +98,11 @@ class _SignupViewBodyState extends State<SignupViewBody> with AppValidators {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 textColor: Theme.of(context).colorScheme.onPrimary,
                 onTap: () {
-                  if (_formKey.currentState!.validate()) {
-                    // If the form is valid, you can process the data.
-                  } else {}
+                  GoRouter.of(context).push(AppRouter.kChoosePictureRoute);
+                  // if (_formKey.currentState!.validate()) {
+                  //   // If the form is valid, you can process the data.
+                  //   GoRouter.of(context).push(AppRouter.kChoosePictureRoute);
+                  // } else {}
                 },
               ),
             ],
