@@ -39,6 +39,11 @@ dependencies:
   flutter_screenutil: ^5.9.3
   firebase_core: ^4.1.0
   image_picker: ^1.2.0
+  cloud_firestore: ^6.0.1
+  firebase_auth: ^6.0.2
+  supabase_flutter: ^2.10.0
+  dartz: ^0.10.1
+  flutter_bloc: ^9.1.1
 
 dev_dependencies:
   flutter_test:
