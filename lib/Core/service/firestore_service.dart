@@ -16,6 +16,16 @@ class FirestoreService {
     }
   }
 
+  Future<void> deleteUser(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).delete();
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to delete user data.');
+    }
+  }
+
   Future<UserModel?> getUser(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();

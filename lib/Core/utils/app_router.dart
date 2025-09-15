@@ -35,11 +35,26 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kChoosePictureRoute,
-        builder:
-            (context, state) => BlocProvider(
-              create: (context) => RegisterCubit(getIt<AuthRepo>()),
-              child: const ProfilePictureScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra == null || extra is! Map<String, dynamic>) {
+            throw Exception('Expected Map<String, dynamic> in state.extra');
+          }
+
+          final data = extra;
+          final name = data['name'] as String? ?? '';
+          final email = data['email'] as String? ?? '';
+          final password = data['password'] as String? ?? '';
+
+          return BlocProvider(
+            create: (context) => RegisterCubit(getIt<AuthRepo>()),
+            child: ProfilePictureScreen(
+              email: email,
+              password: password,
+              name: name,
             ),
+          );
+        },
       ),
     ],
   );

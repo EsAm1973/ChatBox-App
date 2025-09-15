@@ -10,21 +10,21 @@ class SupabaseStorageService implements StorageService {
     _supabase = await Supabase.initialize(
       url: 'https://umhtbpnmknxwpdmmtqhu.supabase.co',
       anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtaHRicG5ta254d3BkbW10cWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5MzQwMzksImV4cCI6MjA3MzUxMDAzOX0.o5CCLtSnOwq_lhbVY3p5__YucZ-kghl1HH-2pLZT7FY',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtaHRicG5ta254d3BkbW10cWh1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzkzNDAzOSwiZXhwIjoyMDczNTEwMDM5fQ.uMvZ-lHqdA2Yp88-V07KpM8YlOfOH0R7araQFcfR3wA',
     );
   }
 
   @override
-  Future<String> uploadFile(File file, String path) async {
+  Future<String> uploadFile(File file, String path,String userId) async {
     try {
       String fileName = b.basenameWithoutExtension(file.path);
       String extensionName = b.extension(file.path);
-      String filePath = '$path/$fileName$extensionName';
+      String filePath = '$path/$userId/$fileName$extensionName';
 
       // Upload the file
       await _supabase.client.storage
           .from('user-image')
-          .upload(filePath, file);
+          .upload(filePath, file, fileOptions: const FileOptions(upsert: true));
 
       // Get the public URL
       String publicUrl = _supabase.client.storage
@@ -34,6 +34,25 @@ class SupabaseStorageService implements StorageService {
       return publicUrl;
     } catch (e) {
       throw Exception('Failed to upload User Image: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteFile(String fileUrl) async {
+    try {
+      // Extract the file path from the URL
+      final uri = Uri.parse(fileUrl);
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length < 3) {
+        throw Exception('Invalid file URL format');
+      }
+
+      // The path is everything after the bucket name (user-image)
+      final filePath = pathSegments.sublist(2).join('/');
+
+      await _supabase.client.storage.from('user-image').remove([filePath]);
+    } catch (e) {
+      throw Exception('Failed to delete file: $e');
     }
   }
 }

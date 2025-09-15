@@ -98,11 +98,17 @@ class _SignupViewBodyState extends State<SignupViewBody> with AppValidators {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 textColor: Theme.of(context).colorScheme.onPrimary,
                 onTap: () {
-                  GoRouter.of(context).push(AppRouter.kChoosePictureRoute);
-                  // if (_formKey.currentState!.validate()) {
-                  //   // If the form is valid, you can process the data.
-                  //   GoRouter.of(context).push(AppRouter.kChoosePictureRoute);
-                  // } else {}
+                  if (_formKey.currentState!.validate()) {
+                    // If the form is valid, you can process the data.
+                    GoRouter.of(context).push(
+                      AppRouter.kChoosePictureRoute,
+                      extra: {
+                        'name': _nameController.text,
+                        'email': _emailController.text,
+                        'password': _passwordController.text,
+                      },
+                    );
+                  } else {}
                 },
               ),
             ],

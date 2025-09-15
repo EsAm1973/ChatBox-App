@@ -7,6 +7,7 @@ import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Features/auth/presentation/data/models/user_model.dart';
 import 'package:chatbox/Features/auth/presentation/data/repos/auth_repo.dart';
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepoImplementation implements AuthRepo {
   final FirebaseAuthService firebaseAuthServices;
@@ -26,18 +27,21 @@ class AuthRepoImplementation implements AuthRepo {
     required String name,
     required File profilePic,
   }) async {
+    String? uploadedImageUrl;
+    User? user;
     try {
-      // 1. First upload the image to Supabase
-      final imageUrl = await storageService.uploadFile(
-        profilePic,
-        'user-image',
-      );
-
       // 2. Create user in Firebase Auth
-      final user = await firebaseAuthServices.createUserWithEmailAndPassword(
+      user = await firebaseAuthServices.createUserWithEmailAndPassword(
         email: email,
         password: password,
         displayName: name,
+      );
+
+      // 1. First upload the image to Supabase
+      uploadedImageUrl = await storageService.uploadFile(
+        profilePic,
+        'user-image',
+        user.uid,
       );
 
       // 3. Create UserModel with the image URL
@@ -45,9 +49,9 @@ class AuthRepoImplementation implements AuthRepo {
         uid: user.uid,
         name: name,
         email: email,
-        profilePic: imageUrl,
+        profilePic: uploadedImageUrl,
         phoneNumber: '',
-        about: 'Hey there! I am using ChatBox',
+        about: '',
         isOnline: true,
         createdAt: DateTime.now(),
         lastSeen: DateTime.now(),
@@ -58,8 +62,28 @@ class AuthRepoImplementation implements AuthRepo {
 
       return Right(userModel);
     } on Failure catch (e) {
+      // If we uploaded an image but then failed, delete the image
+      if (uploadedImageUrl != null) {
+        try {
+          await storageService.deleteFile(uploadedImageUrl);
+          await firebaseAuthServices.deleteUser(user!.uid);
+        } catch (deleteError) {
+          // Log the error but don't throw it as we want to preserve the original error
+          print('Failed to delete image during rollback: $deleteError');
+        }
+      }
       return Left(e);
     } catch (e) {
+      // If we uploaded an image but then failed, delete the image
+      if (uploadedImageUrl != null) {
+        try {
+          await storageService.deleteFile(uploadedImageUrl);
+          await firebaseAuthServices.deleteUser(user!.uid);
+        } catch (deleteError) {
+          // Log the error but don't throw it as we want to preserve the original error
+          print('Failed to delete image during rollback: $deleteError');
+        }
+      }
       return Left(
         FirebaseFailure(errorMessage: 'An unexpected error occurred: $e'),
       );
