@@ -1,8 +1,12 @@
+import 'package:chatbox/Core/service/getit_service.dart';
+import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
+import 'package:chatbox/Features/auth/presentation/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 abstract class AppRouter {
@@ -31,7 +35,11 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kChoosePictureRoute,
-        builder: (context, state) => const ProfilePictureScreen(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => RegisterCubit(getIt<AuthRepo>()),
+              child: const ProfilePictureScreen(),
+            ),
       ),
     ],
   );
