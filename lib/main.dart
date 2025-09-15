@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_theme.dart';
@@ -10,6 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SupabaseStorageService.initSupabaseStorage();
+  setupGetIt();
   runApp(const MyApp());
 }
 
