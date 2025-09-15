@@ -59,7 +59,7 @@ class AuthRepoImplementation implements AuthRepo {
 
       // 4. Save user to Firestore
       await firestoreService.saveUser(userModel);
-
+      await user.sendEmailVerification();
       return Right(userModel);
     } on Failure catch (e) {
       // If we uploaded an image but then failed, delete the image

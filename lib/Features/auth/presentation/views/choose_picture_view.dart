@@ -51,7 +51,7 @@ class _ProfilePictureScreenState extends State<ProfilePictureScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_ios_new,
+            Icons.arrow_back,
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () => GoRouter.of(context).pop(),
