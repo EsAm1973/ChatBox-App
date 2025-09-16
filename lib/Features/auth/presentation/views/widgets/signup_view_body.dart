@@ -94,7 +94,7 @@ class _SignupViewBodyState extends State<SignupViewBody> with AppValidators {
               ),
               SizedBox(height: 100.h),
               CustomBottom(
-                text: 'Create Account',
+                text: 'Next',
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 textColor: Theme.of(context).colorScheme.onPrimary,
                 onTap: () {

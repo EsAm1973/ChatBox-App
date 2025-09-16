@@ -16,8 +16,3 @@ final class RegisterSuccess extends RegisterState {
   final UserModel user;
   RegisterSuccess({required this.user});
 }
-
-final class RegisterRollback extends RegisterState {
-  final String errorMessage;
-  RegisterRollback({required this.errorMessage});
-}

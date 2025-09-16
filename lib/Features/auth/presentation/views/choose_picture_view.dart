@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Core/helper%20functions/animated_dialog.dart';
+import 'package:chatbox/Core/helper%20functions/build_error_bar.dart';
 import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/views/widgets/choose_picture_app_bar.dart';
 import 'package:chatbox/Features/auth/presentation/views/widgets/choose_picture_view_body.dart';
@@ -51,35 +52,15 @@ class _ChoosePictureScreenState extends State<ChoosePictureScreen> {
       body: BlocListener<RegisterCubit, RegisterState>(
         listener: (context, state) {
           if (state is RegisterSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'User Created Successfully',
-                  style: AppTextStyles.regular14,
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-              ),
-            );
-          } else if (state is RegisterRollback) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Registration rolled back: ${state.errorMessage}',
-                  style: AppTextStyles.regular14,
-                ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
+            openAnimatedDialog(
+              context,
+              'success',
+              'Welcome aboard!',
+              'Your account was created successfully. We’ve sent a verification email to your inbox — please click the link to confirm your account and start chatting with your contacts',
+              'Go to Login',
             );
           } else if (state is RegisterError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.errorMessage,
-                  style: AppTextStyles.regular14,
-                ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            buildErrorBar(context, state);
           }
         },
         child: ChoosePictureViewBody(
