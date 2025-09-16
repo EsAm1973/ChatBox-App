@@ -2,8 +2,8 @@ import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/widgets/login_row.dart';
-import 'package:chatbox/Features/onboarding/presentation/views/widgets/onboard_socialmedia_login.dart';
-import 'package:chatbox/Features/onboarding/presentation/views/widgets/or_divider.dart';
+import 'package:chatbox/Core/widgets/socialmedia_login_widget.dart';
+import 'package:chatbox/Core/widgets/or_divider.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/widgets/welcome_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -35,7 +35,7 @@ class OnboardViewBody extends StatelessWidget {
               ),
             ),
             SizedBox(height: 38.h),
-            const OnboardSocialMediaLogin(),
+            const SocialMediaLoginWidget(),
             SizedBox(height: 30.h),
             const OrDivider(),
             SizedBox(height: 30.h),
