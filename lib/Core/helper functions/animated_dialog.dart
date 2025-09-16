@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 void openAnimatedDialog(
   BuildContext context,
@@ -8,6 +9,7 @@ void openAnimatedDialog(
   String title,
   String description,
   String buttonText,
+  void Function(BuildContext context) onTransition, // Add transition callback
 ) {
   showGeneralDialog(
     context: context,
@@ -33,11 +35,8 @@ void openAnimatedDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // أيقونة نجاح
                 Icon(Icons.check_circle, color: Colors.green, size: 80.r),
                 SizedBox(height: 20.h),
-
-                // العنوان
                 Text(
                   title,
                   style: TextStyle(
@@ -46,8 +45,6 @@ void openAnimatedDialog(
                   ),
                 ),
                 SizedBox(height: 15.h),
-
-                // الرسالة
                 Text(
                   description,
                   textAlign: TextAlign.center,
@@ -57,21 +54,11 @@ void openAnimatedDialog(
                   ),
                 ),
                 SizedBox(height: 25.h),
-
-                // زر التنقل
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // إغلاق الدايلوج
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder:
-                      //         (context) =>
-                      //             HomePage(), // استبدل HomePage بالصفحة المطلوبة
-                      //   ),
-                      // );
+                      GoRouter.of(context).pop();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -95,5 +82,8 @@ void openAnimatedDialog(
         ),
       );
     },
-  );
+  ).then((_) {
+    // Called when dialog is closed by any means
+    onTransition(context);
+  });
 }
