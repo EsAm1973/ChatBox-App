@@ -48,7 +48,7 @@ abstract class AppRouter {
 
           return BlocProvider(
             create: (context) => RegisterCubit(getIt<AuthRepo>()),
-            child: ProfilePictureScreen(
+            child: ChoosePictureScreen(
               email: email,
               password: password,
               name: name,
