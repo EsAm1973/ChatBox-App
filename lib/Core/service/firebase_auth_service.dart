@@ -63,4 +63,43 @@ class FirebaseAuthService {
       throw Exception('Failed to delete user: $e');
     }
   }
+
+  Future<User> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = credential.user!;
+      if (!user.emailVerified) {
+        await user.sendEmailVerification();
+        throw FirebaseFailure(
+          errorMessage:
+              'Please verify your email, We sent you a verification email.',
+        );
+      }
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseFailure.fromFirebaseAuthException(e);
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.signInWithEmailAndPassword: $e");
+      if (e is Failure) {
+        // Preserve the specific failure message (e.g., email not verified)
+        rethrow;
+      }
+      throw FirebaseFailure(errorMessage: 'Failed to sign in: $e');
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.signOut: $e");
+      throw FirebaseFailure(errorMessage: 'Failed to sign out.');
+    }
+  }
 }

@@ -89,4 +89,92 @@ class AuthRepoImplementation implements AuthRepo {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, UserModel>> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final user = await firebaseAuthServices.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final userModel = await firestoreService.getUser(user.uid);
+      if (userModel == null) {
+        return Left(
+          FirebaseFailure(
+            errorMessage: 'User data not found. Please contact support.',
+          ),
+        );
+      }
+
+      final updatedUserModel = userModel.copyWith(
+        isOnline: true,
+        lastSeen: DateTime.now(),
+      );
+
+      await firestoreService.saveUser(updatedUserModel);
+      return Right(updatedUserModel);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'An unexpected error occurred: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> signOut() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      // Update user's online status before signing out
+      if (currentUser != null) {
+        final userModel = await firestoreService.getUser(currentUser.uid);
+        if (userModel != null) {
+          final updatedUserModel = userModel.copyWith(
+            isOnline: false,
+            lastSeen: DateTime.now(),
+          );
+          await firestoreService.saveUser(updatedUserModel);
+        }
+      }
+
+      await firebaseAuthServices.signOut();
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(FirebaseFailure(errorMessage: 'Failed to sign out: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserModel>> getCurrentUserData() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser == null) {
+        return Left(
+          FirebaseFailure(errorMessage: 'No user currently signed in'),
+        );
+      }
+
+      final userModel = await firestoreService.getUser(currentUser.uid);
+
+      if (userModel == null) {
+        return Left(FirebaseFailure(errorMessage: 'User data not found'));
+      }
+
+      return Right(userModel);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to get current user data: $e'),
+      );
+    }
+  }
 }

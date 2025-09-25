@@ -11,4 +11,13 @@ abstract class AuthRepo {
     required String name,
     required File profilePic,
   });
+
+  Future<Either<Failure, UserModel>> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  });
+
+  Future<Either<Failure, void>> signOut();
+
+  Future<Either<Failure, UserModel>> getCurrentUserData();
 }

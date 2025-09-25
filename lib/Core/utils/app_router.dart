@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/service/getit_service.dart';
+import 'package:chatbox/Features/auth/manager/login/login_cubit.dart';
 import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dart';
@@ -27,7 +28,11 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kLoginRoute,
-        builder: (context, state) => const LoginView(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => LoginCubit(getIt<AuthRepo>()),
+              child: const LoginView(),
+            ),
       ),
       GoRoute(
         path: kSignupRoute,

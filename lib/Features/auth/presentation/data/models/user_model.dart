@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String name;
@@ -21,37 +23,47 @@ class UserModel {
     required this.lastSeen,
   });
 
-  // Convert UserModel to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
       'name': name,
       'email': email,
       'profilePic': profilePic,
-      'phoneNumber': phoneNumber,
-      'about': about,
+      'phoneNumber': phoneNumber ?? '',
+      'about': about ?? '',
       'isOnline': isOnline,
-      'createdAt': createdAt,
-      'lastSeen': lastSeen,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'lastSeen': lastSeen.millisecondsSinceEpoch,
     };
   }
 
-  // Create UserModel from Firestore Document
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    // تحويل Timestamp إلى DateTime إذا لزم الأمر
+    DateTime parseDateTime(dynamic date) {
+      if (date is Timestamp) {
+        return date.toDate();
+      } else if (date is int) {
+        return DateTime.fromMillisecondsSinceEpoch(date);
+      } else if (date is String) {
+        return DateTime.parse(date);
+      } else {
+        return DateTime.now();
+      }
+    }
+
     return UserModel(
-      uid: map['uid'] ?? '',
-      name: map['name'] ?? '',
-      email: map['email'] ?? '',
-      profilePic: map['profilePic'],
-      phoneNumber: map['phoneNumber'],
-      about: map['about'],
+      uid: map['uid']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      profilePic: map['profilePic']?.toString() ?? 'default_profile_pic_url',
+      phoneNumber: map['phoneNumber']?.toString(),
+      about: map['about']?.toString(),
       isOnline: map['isOnline'] ?? false,
-      createdAt: map['createdAt'] ?? DateTime.now(),
-      lastSeen: map['lastSeen'] ?? DateTime.now(),
+      createdAt: parseDateTime(map['createdAt']),
+      lastSeen: parseDateTime(map['lastSeen']),
     );
   }
 
-  // Helper method to update specific fields
   UserModel copyWith({
     String? name,
     String? email,

@@ -64,7 +64,7 @@ class _ChoosePictureScreenState extends State<ChoosePictureScreen> {
                   GoRouter.of(context).pushReplacement(AppRouter.kLoginRoute),
             );
           } else if (state is RegisterError) {
-            buildErrorBar(context, state);
+            buildErrorBar(context, state.errorMessage);
           }
         },
         child: ChoosePictureViewBody(
