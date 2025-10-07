@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:developer';
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firebase_auth_service.dart';
 import 'package:chatbox/Core/service/firestore_service.dart';
@@ -19,6 +19,44 @@ class AuthRepoImplementation implements AuthRepo {
     this.storageService,
     this.firestoreService,
   );
+  
+  /// Helper method to handle errors consistently across all repository methods
+  Either<Failure, T> _handleError<T>(dynamic error, String operation) {
+    log('Error during $operation: $error');
+    if (error is Failure) {
+      return Left(error);
+    } else {
+      return Left(FirebaseFailure(errorMessage: 'An unexpected error occurred during $operation: $error'));
+    }
+  }
+
+  /// Helper method to clean up resources when user creation fails
+  Future<void> _cleanupUserResources(User user, String? uploadedImageUrl) async {
+    final uid = user.uid;
+    // 1. Delete the uploaded image if it exists
+    if (uploadedImageUrl != null) {
+      try {
+        await storageService.deleteFile(uploadedImageUrl);
+      } catch (deleteError) {
+        // Log the error but don't throw it as we want to preserve the original error
+        log('Failed to delete image during rollback: $deleteError');
+      }
+    }
+    // 2. Delete any Firestore data that might have been created
+    try {
+      await firestoreService.deleteUser(uid);
+    } catch (deleteError) {
+      // Log the error but don't throw it as we want to preserve the original error
+      log('Failed to delete Firestore data during rollback: $deleteError');
+    }
+    // 3. Delete the user from Firebase Auth
+    try {
+      await firebaseAuthServices.deleteUser(uid);
+    } catch (deleteError) {
+      // Log the error but don't throw it as we want to preserve the original error
+      log('Failed to delete user during rollback: $deleteError');
+    }
+  }
 
   @override
   Future<Either<Failure, UserModel>> createUserWithEmailAndPassword({
@@ -63,69 +101,15 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       // Clean up resources if we failed after creating some of them
       if (user != null) {
-        final uid = user.uid;
-        
-        // 1. Delete the uploaded image if it exists
-        if (uploadedImageUrl != null) {
-          try {
-            await storageService.deleteFile(uploadedImageUrl);
-          } catch (deleteError) {
-            // Log the error but don't throw it as we want to preserve the original error
-            print('Failed to delete image during rollback: $deleteError');
-          }
-        }
-        
-        // 2. Delete any Firestore data that might have been created
-        try {
-          await firestoreService.deleteUser(uid);
-        } catch (deleteError) {
-          // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete Firestore data during rollback: $deleteError');
-        }
-        
-        // 3. Delete the user from Firebase Auth
-        try {
-          await firebaseAuthServices.deleteUser(uid);
-        } catch (deleteError) {
-          // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete user during rollback: $deleteError');
-        }
+        await _cleanupUserResources(user, uploadedImageUrl);
       }
       return Left(e);
     } catch (e) {
       // Clean up resources if we failed after creating some of them
       if (user != null) {
-        final uid = user.uid;
-        
-        // 1. Delete the uploaded image if it exists
-        if (uploadedImageUrl != null) {
-          try {
-            await storageService.deleteFile(uploadedImageUrl);
-          } catch (deleteError) {
-            // Log the error but don't throw it as we want to preserve the original error
-            print('Failed to delete image during rollback: $deleteError');
-          }
-        }
-        
-        // 2. Delete any Firestore data that might have been created
-        try {
-          await firestoreService.deleteUser(uid);
-        } catch (deleteError) {
-          // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete Firestore data during rollback: $deleteError');
-        }
-        
-        // 3. Delete the user from Firebase Auth
-        try {
-          await firebaseAuthServices.deleteUser(uid);
-        } catch (deleteError) {
-          // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete user during rollback: $deleteError');
-        }
+        await _cleanupUserResources(user, uploadedImageUrl);
       }
-      return Left(
-        FirebaseFailure(errorMessage: 'An unexpected error occurred: $e'),
-      );
+      return _handleError(e, 'user registration');
     }
   }
 
@@ -158,9 +142,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(
-        FirebaseFailure(errorMessage: 'An unexpected error occurred: $e'),
-      );
+      return _handleError(e, 'sign in');
     }
   }
 
@@ -186,7 +168,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(FirebaseFailure(errorMessage: 'Failed to sign out: $e'));
+      return _handleError(e, 'sign out');
     }
   }
 
@@ -211,9 +193,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(
-        FirebaseFailure(errorMessage: 'Failed to get current user data: $e'),
-      );
+      return _handleError(e, 'get current user data');
     }
   }
 
@@ -227,9 +207,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(
-        FirebaseFailure(errorMessage: 'Failed to send verification email: $e'),
-      );
+      return _handleError(e, 'send verification email');
     }
   }
 
@@ -243,11 +221,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(
-        FirebaseFailure(
-          errorMessage: 'Failed to check email verification status: $e',
-        ),
-      );
+      return _handleError(e, 'check email verification status');
     }
   }
 
@@ -277,7 +251,7 @@ class AuthRepoImplementation implements AuthRepo {
           await storageService.deleteFile(userModel.profilePic);
         } catch (e) {
           // Log error but continue with deletion process
-          print('Failed to delete profile picture: $e');
+          log('Failed to delete profile picture: $e');
         }
       }
 
@@ -291,9 +265,7 @@ class AuthRepoImplementation implements AuthRepo {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(
-        FirebaseFailure(errorMessage: 'Failed to delete user account: $e'),
-      );
+      return _handleError(e, 'delete user account');
     }
   }
 }
