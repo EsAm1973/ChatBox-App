@@ -15,6 +15,10 @@ class FirebaseAuthService {
           .createUserWithEmailAndPassword(email: email, password: password);
       user = credential.user!;
       await user.updateDisplayName(displayName);
+      
+      // Send email verification immediately after creating user
+      await user.sendEmailVerification();
+      
       await user.reload();
       user = FirebaseAuth.instance.currentUser!;
       return user;
@@ -75,10 +79,20 @@ class FirebaseAuthService {
       );
       final user = credential.user!;
       if (!user.emailVerified) {
-        await user.sendEmailVerification();
+        // Only resend verification email if it's been more than 5 minutes since last sent
+        // This prevents spamming the user with verification emails
+        final metadata = user.metadata;
+        final now = DateTime.now();
+        final lastSignInTime = metadata.lastSignInTime;
+        
+        if (lastSignInTime == null || 
+            now.difference(lastSignInTime).inMinutes > 5) {
+          await user.sendEmailVerification();
+        }
+        
         throw FirebaseFailure(
           errorMessage:
-              'Please verify your email, We sent you a verification email.',
+              'Please verify your email. We sent you a verification email.',
         );
       }
       return user;
@@ -100,6 +114,56 @@ class FirebaseAuthService {
     } catch (e) {
       log("Exception in FirebaseAuthServices.signOut: $e");
       throw FirebaseFailure(errorMessage: 'Failed to sign out.');
+    }
+  }
+  
+  // Send verification email to a specific email address
+  Future<void> sendEmailVerification({required String email}) async {
+    try {
+      // Check if user is signed in with this email
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      if (currentUser != null && currentUser.email == email) {
+        // User is already signed in with this email
+        await currentUser.sendEmailVerification();
+      } else {
+        // User is not signed in or signed in with different email
+        throw FirebaseFailure(
+          errorMessage: 'You must be signed in to request email verification.',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      log("Exception in FirebaseAuthServices.sendEmailVerification: $e");
+      throw FirebaseFailure.fromFirebaseAuthException(e);
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.sendEmailVerification: $e");
+      if (e is Failure) {
+        rethrow;
+      }
+      throw FirebaseFailure(errorMessage: 'Failed to send verification email: $e');
+    }
+  }
+  
+  // Check if a user's email is verified
+  Future<bool> isEmailVerified({required String email}) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      if (currentUser != null && currentUser.email == email) {
+        // Reload user to get the latest email verification status
+        await currentUser.reload();
+        return FirebaseAuth.instance.currentUser!.emailVerified;
+      } else {
+        throw FirebaseFailure(
+          errorMessage: 'You must be signed in to check email verification status.',
+        );
+      }
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.isEmailVerified: $e");
+      if (e is Failure) {
+        rethrow;
+      }
+      throw FirebaseFailure(errorMessage: 'Failed to check email verification status: $e');
     }
   }
 }

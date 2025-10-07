@@ -39,12 +39,16 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
           key: _formKey,
           child: BlocConsumer<LoginCubit, LoginState>(
             listener: (context, state) {
-              if (state is LoginError) {
+              if (state is LoginError || state is LoginEmailNotVerified) {
                 openErrorAnimatedDialog(
                   context,
                   'Error',
                   'Error in login',
-                  state.errorMessage,
+                  (state is LoginError)
+                      ? state.errorMessage
+                      : (state is LoginEmailNotVerified)
+                          ? state.errorMessage
+                          : 'Unknown error',
                   'Ok',
                   (context) {},
                 );

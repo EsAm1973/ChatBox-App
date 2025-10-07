@@ -20,4 +20,10 @@ abstract class AuthRepo {
   Future<Either<Failure, void>> signOut();
 
   Future<Either<Failure, UserModel>> getCurrentUserData();
+  
+  // Method to send or resend email verification
+  Future<Either<Failure, void>> sendEmailVerification({required String email});
+  
+  // Method to check if email is verified
+  Future<Either<Failure, bool>> isEmailVerified({required String email});
 }

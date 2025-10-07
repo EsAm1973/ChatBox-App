@@ -16,3 +16,12 @@ final class RegisterSuccess extends RegisterState {
   final UserModel user;
   RegisterSuccess({required this.user});
 }
+
+final class RegisterEmailVerificationSent extends RegisterState {
+  final String email;
+  final String message;
+  RegisterEmailVerificationSent({
+    required this.email,
+    this.message = 'Verification email sent. Please check your inbox.',
+  });
+}

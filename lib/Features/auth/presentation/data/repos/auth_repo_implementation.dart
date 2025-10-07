@@ -30,14 +30,14 @@ class AuthRepoImplementation implements AuthRepo {
     String? uploadedImageUrl;
     User? user;
     try {
-      // 2. Create user in Firebase Auth
+      // 1. Create user in Firebase Auth (email verification is sent automatically in the service)
       user = await firebaseAuthServices.createUserWithEmailAndPassword(
         email: email,
         password: password,
         displayName: name,
       );
 
-      // 1. First upload the image to Supabase
+      // 2. Upload the image to storage
       uploadedImageUrl = await storageService.uploadFile(
         profilePic,
         'user-image',
@@ -59,7 +59,6 @@ class AuthRepoImplementation implements AuthRepo {
 
       // 4. Save user to Firestore
       await firestoreService.saveUser(userModel);
-      await user.sendEmailVerification();
       return Right(userModel);
     } on Failure catch (e) {
       // If we uploaded an image but then failed, delete the image
@@ -174,6 +173,34 @@ class AuthRepoImplementation implements AuthRepo {
     } catch (e) {
       return Left(
         FirebaseFailure(errorMessage: 'Failed to get current user data: $e'),
+      );
+    }
+  }
+  
+  @override
+  Future<Either<Failure, void>> sendEmailVerification({required String email}) async {
+    try {
+      await firebaseAuthServices.sendEmailVerification(email: email);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to send verification email: $e'),
+      );
+    }
+  }
+  
+  @override
+  Future<Either<Failure, bool>> isEmailVerified({required String email}) async {
+    try {
+      final isVerified = await firebaseAuthServices.isEmailVerified(email: email);
+      return Right(isVerified);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to check email verification status: $e'),
       );
     }
   }

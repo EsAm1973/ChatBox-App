@@ -53,7 +53,7 @@ class _ChoosePictureScreenState extends State<ChoosePictureScreen> {
       appBar: const ChoosePictureAppBar(),
       body: BlocListener<RegisterCubit, RegisterState>(
         listener: (context, state) {
-          if (state is RegisterSuccess) {
+          if (state is RegisterEmailVerificationSent) {
             openSuccessAnimatedDialog(
               context,
               'success',
