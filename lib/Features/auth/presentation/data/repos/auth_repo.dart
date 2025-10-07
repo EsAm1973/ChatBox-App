@@ -26,4 +26,7 @@ abstract class AuthRepo {
   
   // Method to check if email is verified
   Future<Either<Failure, bool>> isEmailVerified({required String email});
+  
+  // Method to completely delete a user account including auth, Firestore data, and profile image
+  Future<Either<Failure, void>> deleteUserAccount();
 }

@@ -57,14 +57,18 @@ class FirebaseAuthService {
 
   Future<void> deleteUser(String uid) async {
     try {
-      // Note: This requires admin privileges or custom claims
-      // For production, you might need to use a Cloud Function
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.uid == uid) {
         await user.delete();
+        return;
       }
+      throw FirebaseFailure(errorMessage: 'Cannot delete account: User not authenticated or UID mismatch');
+    } on FirebaseAuthException catch (e) {
+      log("Exception in FirebaseAuthServices.deleteUser: $e");
+      throw FirebaseFailure.fromFirebaseAuthException(e);
     } catch (e) {
-      throw Exception('Failed to delete user: $e');
+      log("Exception in FirebaseAuthServices.deleteUser: $e");
+      throw FirebaseFailure(errorMessage: 'Failed to delete user: $e');
     }
   }
 

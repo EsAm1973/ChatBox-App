@@ -61,26 +61,66 @@ class AuthRepoImplementation implements AuthRepo {
       await firestoreService.saveUser(userModel);
       return Right(userModel);
     } on Failure catch (e) {
-      // If we uploaded an image but then failed, delete the image
-      if (uploadedImageUrl != null) {
+      // Clean up resources if we failed after creating some of them
+      if (user != null) {
+        final uid = user.uid;
+        
+        // 1. Delete the uploaded image if it exists
+        if (uploadedImageUrl != null) {
+          try {
+            await storageService.deleteFile(uploadedImageUrl);
+          } catch (deleteError) {
+            // Log the error but don't throw it as we want to preserve the original error
+            print('Failed to delete image during rollback: $deleteError');
+          }
+        }
+        
+        // 2. Delete any Firestore data that might have been created
         try {
-          await storageService.deleteFile(uploadedImageUrl);
-          await firebaseAuthServices.deleteUser(user!.uid);
+          await firestoreService.deleteUser(uid);
         } catch (deleteError) {
           // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete image during rollback: $deleteError');
+          print('Failed to delete Firestore data during rollback: $deleteError');
+        }
+        
+        // 3. Delete the user from Firebase Auth
+        try {
+          await firebaseAuthServices.deleteUser(uid);
+        } catch (deleteError) {
+          // Log the error but don't throw it as we want to preserve the original error
+          print('Failed to delete user during rollback: $deleteError');
         }
       }
       return Left(e);
     } catch (e) {
-      // If we uploaded an image but then failed, delete the image
-      if (uploadedImageUrl != null) {
+      // Clean up resources if we failed after creating some of them
+      if (user != null) {
+        final uid = user.uid;
+        
+        // 1. Delete the uploaded image if it exists
+        if (uploadedImageUrl != null) {
+          try {
+            await storageService.deleteFile(uploadedImageUrl);
+          } catch (deleteError) {
+            // Log the error but don't throw it as we want to preserve the original error
+            print('Failed to delete image during rollback: $deleteError');
+          }
+        }
+        
+        // 2. Delete any Firestore data that might have been created
         try {
-          await storageService.deleteFile(uploadedImageUrl);
-          await firebaseAuthServices.deleteUser(user!.uid);
+          await firestoreService.deleteUser(uid);
         } catch (deleteError) {
           // Log the error but don't throw it as we want to preserve the original error
-          print('Failed to delete image during rollback: $deleteError');
+          print('Failed to delete Firestore data during rollback: $deleteError');
+        }
+        
+        // 3. Delete the user from Firebase Auth
+        try {
+          await firebaseAuthServices.deleteUser(uid);
+        } catch (deleteError) {
+          // Log the error but don't throw it as we want to preserve the original error
+          print('Failed to delete user during rollback: $deleteError');
         }
       }
       return Left(
@@ -176,9 +216,11 @@ class AuthRepoImplementation implements AuthRepo {
       );
     }
   }
-  
+
   @override
-  Future<Either<Failure, void>> sendEmailVerification({required String email}) async {
+  Future<Either<Failure, void>> sendEmailVerification({
+    required String email,
+  }) async {
     try {
       await firebaseAuthServices.sendEmailVerification(email: email);
       return const Right(null);
@@ -190,17 +232,67 @@ class AuthRepoImplementation implements AuthRepo {
       );
     }
   }
-  
+
   @override
   Future<Either<Failure, bool>> isEmailVerified({required String email}) async {
     try {
-      final isVerified = await firebaseAuthServices.isEmailVerified(email: email);
+      final isVerified = await firebaseAuthServices.isEmailVerified(
+        email: email,
+      );
       return Right(isVerified);
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(
-        FirebaseFailure(errorMessage: 'Failed to check email verification status: $e'),
+        FirebaseFailure(
+          errorMessage: 'Failed to check email verification status: $e',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteUserAccount() async {
+    try {
+      // 1. Get current user data
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        return Left(
+          FirebaseFailure(errorMessage: 'No user currently signed in'),
+        );
+      }
+
+      final uid = currentUser.uid;
+
+      // 2. Get user model to access profile picture URL
+      final userModel = await firestoreService.getUser(uid);
+      if (userModel == null) {
+        return Left(FirebaseFailure(errorMessage: 'User data not found'));
+      }
+
+      // 3. Delete user's profile picture from Supabase storage
+      if (userModel.profilePic.isNotEmpty &&
+          userModel.profilePic != 'default_profile_pic_url') {
+        try {
+          await storageService.deleteFile(userModel.profilePic);
+        } catch (e) {
+          // Log error but continue with deletion process
+          print('Failed to delete profile picture: $e');
+        }
+      }
+
+      // 4. Delete user data from Firestore
+      await firestoreService.deleteUser(uid);
+
+      // 5. Delete user from Firebase Authentication
+      await firebaseAuthServices.deleteUser(uid);
+
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to delete user account: $e'),
       );
     }
   }
