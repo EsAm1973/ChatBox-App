@@ -1,4 +1,4 @@
-import 'package:chatbox/Core/helper%20functions/build_error_bar.dart';
+import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Core/widgets/custom_textfeild.dart';
@@ -40,7 +40,14 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
           child: BlocConsumer<LoginCubit, LoginState>(
             listener: (context, state) {
               if (state is LoginError) {
-                buildErrorBar(context, state.errorMessage);
+                openErrorAnimatedDialog(
+                  context,
+                  'Error',
+                  'Error in login',
+                  state.errorMessage,
+                  'Ok',
+                  (context) {},
+                );
               } else if (state is LoginSuccess) {
                 //GoRouter.of(context).pushReplacement(AppRouter.kHomeRoute);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +102,13 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                   BlocBuilder<LoginCubit, LoginState>(
                     builder: (context, state) {
                       if (state is LoginLoading) {
-                        return const CircularProgressIndicator();
+                        return Center(
+                          child: SizedBox(
+                            width: 32.w,
+                            height: 32.h,
+                            child: const CircularProgressIndicator(),
+                          ),
+                        );
                       }
                       return CustomBottom(
                         text: 'Login',
@@ -107,7 +120,7 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                               email: _emailController.text,
                               password: _passwordController.text,
                             );
-                          } else {}
+                          }
                         },
                       );
                     },

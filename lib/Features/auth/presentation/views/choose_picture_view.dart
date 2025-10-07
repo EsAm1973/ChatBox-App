@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:chatbox/Core/helper%20functions/animated_dialog.dart';
-import 'package:chatbox/Core/helper%20functions/build_error_bar.dart';
+import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
+import 'package:chatbox/Core/helper%20functions/animated_success_dialog.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/views/widgets/choose_picture_app_bar.dart';
@@ -54,7 +54,7 @@ class _ChoosePictureScreenState extends State<ChoosePictureScreen> {
       body: BlocListener<RegisterCubit, RegisterState>(
         listener: (context, state) {
           if (state is RegisterSuccess) {
-            openAnimatedDialog(
+            openSuccessAnimatedDialog(
               context,
               'success',
               'Welcome aboard!',
@@ -64,7 +64,14 @@ class _ChoosePictureScreenState extends State<ChoosePictureScreen> {
                   GoRouter.of(context).pushReplacement(AppRouter.kLoginRoute),
             );
           } else if (state is RegisterError) {
-            buildErrorBar(context, state.errorMessage);
+            openErrorAnimatedDialog(
+              context,
+              'Error',
+              'Error in register',
+              state.errorMessage,
+              'Ok',
+              (context) {},
+            );
           }
         },
         child: ChoosePictureViewBody(

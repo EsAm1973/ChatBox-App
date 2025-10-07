@@ -62,7 +62,7 @@ final ThemeData darkTheme = ThemeData(
     ),
   ),
 
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: AppColors.darkSurface,
     elevation: 1,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
