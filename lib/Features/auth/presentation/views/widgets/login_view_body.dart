@@ -2,8 +2,8 @@ import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Core/widgets/custom_textfeild.dart';
-import 'package:chatbox/Features/auth/manager/login/login_cubit.dart';
-import 'package:chatbox/Features/auth/presentation/data/mixins/auth_validator_mixin.dart';
+import 'package:chatbox/Features/auth/presentation/manager/login/login_cubit.dart';
+import 'package:chatbox/Features/auth/data/mixins/auth_validator_mixin.dart';
 import 'package:chatbox/Core/widgets/socialmedia_login_widget.dart';
 import 'package:chatbox/Core/widgets/or_divider.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +81,7 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                     ),
                   ),
                   SizedBox(height: 32.h),
-                  const SocialMediaLoginWidget(),
+                   const SocialMediaLoginWidget(),
                   SizedBox(height: 32.h),
                   const OrDivider(),
                   SizedBox(height: 32.h),

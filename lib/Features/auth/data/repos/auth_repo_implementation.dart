@@ -4,8 +4,8 @@ import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firebase_auth_service.dart';
 import 'package:chatbox/Core/service/firestore_service.dart';
 import 'package:chatbox/Core/service/storage_service.dart';
-import 'package:chatbox/Features/auth/presentation/data/models/user_model.dart';
-import 'package:chatbox/Features/auth/presentation/data/repos/auth_repo.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,19 +19,27 @@ class AuthRepoImplementation implements AuthRepo {
     this.storageService,
     this.firestoreService,
   );
-  
+
   /// Helper method to handle errors consistently across all repository methods
   Either<Failure, T> _handleError<T>(dynamic error, String operation) {
     log('Error during $operation: $error');
     if (error is Failure) {
       return Left(error);
     } else {
-      return Left(FirebaseFailure(errorMessage: 'An unexpected error occurred during $operation: $error'));
+      return Left(
+        FirebaseFailure(
+          errorMessage:
+              'An unexpected error occurred during $operation: $error',
+        ),
+      );
     }
   }
 
   /// Helper method to clean up resources when user creation fails
-  Future<void> _cleanupUserResources(User user, String? uploadedImageUrl) async {
+  Future<void> _cleanupUserResources(
+    User user,
+    String? uploadedImageUrl,
+  ) async {
     final uid = user.uid;
     // 1. Delete the uploaded image if it exists
     if (uploadedImageUrl != null) {
@@ -266,6 +274,53 @@ class AuthRepoImplementation implements AuthRepo {
       return Left(e);
     } catch (e) {
       return _handleError(e, 'delete user account');
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserModel>> signInWithGoogle() async {
+    try {
+      // 1. Authenticate with Google
+      final user = await firebaseAuthServices.signInWithGoogle();
+      
+      // 2. Check if user already exists in Firestore by email
+      UserModel? existingUser = await firestoreService.getUserByEmail(user.email!);
+      
+      if (existingUser != null) {
+        // User already exists, update online status and last seen
+        final updatedUserModel = existingUser.copyWith(
+          isOnline: true,
+          lastSeen: DateTime.now(),
+        );
+        
+        await firestoreService.saveUser(updatedUserModel);
+        return Right(updatedUserModel);
+      } else {
+        // User doesn't exist, create a new user
+        // Get profile image URL from Google or use a default
+        String profilePicUrl = user.photoURL ?? '';
+        
+        // Create new user model
+        final userModel = UserModel(
+          uid: user.uid,
+          name: user.displayName ?? 'Google User',
+          email: user.email!,
+          profilePic: profilePicUrl,
+          phoneNumber: user.phoneNumber ?? '',
+          about: '',
+          isOnline: true,
+          createdAt: DateTime.now(),
+          lastSeen: DateTime.now(),
+        );
+        
+        // Save user to Firestore
+        await firestoreService.saveUser(userModel);
+        return Right(userModel);
+      }
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return _handleError(e, 'Google sign in');
     }
   }
 }

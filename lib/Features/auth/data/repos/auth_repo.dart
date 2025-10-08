@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:chatbox/Core/errors/firebase_failures.dart';
-import 'package:chatbox/Features/auth/presentation/data/models/user_model.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class AuthRepo {
@@ -29,4 +29,6 @@ abstract class AuthRepo {
   
   // Method to completely delete a user account including auth, Firestore data, and profile image
   Future<Either<Failure, void>> deleteUserAccount();
+
+  Future<Either<Failure, UserModel>> signInWithGoogle();
 }

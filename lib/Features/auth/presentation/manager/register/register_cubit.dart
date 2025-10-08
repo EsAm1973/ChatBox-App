@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:chatbox/Features/auth/presentation/data/models/user_model.dart';
-import 'package:chatbox/Features/auth/presentation/data/repos/auth_repo.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:meta/meta.dart';
 
 part 'register_state.dart';

@@ -2,7 +2,7 @@ import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Core/widgets/custom_textfeild.dart';
-import 'package:chatbox/Features/auth/presentation/data/mixins/auth_validator_mixin.dart';
+import 'package:chatbox/Features/auth/data/mixins/auth_validator_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';

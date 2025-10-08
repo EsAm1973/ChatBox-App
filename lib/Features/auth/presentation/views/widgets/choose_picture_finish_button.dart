@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
-import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
+import 'package:chatbox/Features/auth/presentation/manager/register/register_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

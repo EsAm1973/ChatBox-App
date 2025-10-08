@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseAuthService {
   Future<User> createUserWithEmailAndPassword({
@@ -15,10 +16,10 @@ class FirebaseAuthService {
           .createUserWithEmailAndPassword(email: email, password: password);
       user = credential.user!;
       await user.updateDisplayName(displayName);
-      
+
       // Send email verification immediately after creating user
       await user.sendEmailVerification();
-      
+
       await user.reload();
       user = FirebaseAuth.instance.currentUser!;
       return user;
@@ -62,7 +63,10 @@ class FirebaseAuthService {
         await user.delete();
         return;
       }
-      throw FirebaseFailure(errorMessage: 'Cannot delete account: User not authenticated or UID mismatch');
+      throw FirebaseFailure(
+        errorMessage:
+            'Cannot delete account: User not authenticated or UID mismatch',
+      );
     } on FirebaseAuthException catch (e) {
       log("Exception in FirebaseAuthServices.deleteUser: $e");
       throw FirebaseFailure.fromFirebaseAuthException(e);
@@ -88,12 +92,12 @@ class FirebaseAuthService {
         final metadata = user.metadata;
         final now = DateTime.now();
         final lastSignInTime = metadata.lastSignInTime;
-        
-        if (lastSignInTime == null || 
+
+        if (lastSignInTime == null ||
             now.difference(lastSignInTime).inMinutes > 5) {
           await user.sendEmailVerification();
         }
-        
+
         throw FirebaseFailure(
           errorMessage:
               'Please verify your email. We sent you a verification email.',
@@ -120,13 +124,13 @@ class FirebaseAuthService {
       throw FirebaseFailure(errorMessage: 'Failed to sign out.');
     }
   }
-  
+
   // Send verification email to a specific email address
   Future<void> sendEmailVerification({required String email}) async {
     try {
       // Check if user is signed in with this email
       final currentUser = FirebaseAuth.instance.currentUser;
-      
+
       if (currentUser != null && currentUser.email == email) {
         // User is already signed in with this email
         await currentUser.sendEmailVerification();
@@ -144,22 +148,25 @@ class FirebaseAuthService {
       if (e is Failure) {
         rethrow;
       }
-      throw FirebaseFailure(errorMessage: 'Failed to send verification email: $e');
+      throw FirebaseFailure(
+        errorMessage: 'Failed to send verification email: $e',
+      );
     }
   }
-  
+
   // Check if a user's email is verified
   Future<bool> isEmailVerified({required String email}) async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
-      
+
       if (currentUser != null && currentUser.email == email) {
         // Reload user to get the latest email verification status
         await currentUser.reload();
         return FirebaseAuth.instance.currentUser!.emailVerified;
       } else {
         throw FirebaseFailure(
-          errorMessage: 'You must be signed in to check email verification status.',
+          errorMessage:
+              'You must be signed in to check email verification status.',
         );
       }
     } catch (e) {
@@ -167,7 +174,27 @@ class FirebaseAuthService {
       if (e is Failure) {
         rethrow;
       }
-      throw FirebaseFailure(errorMessage: 'Failed to check email verification status: $e');
+      throw FirebaseFailure(
+        errorMessage: 'Failed to check email verification status: $e',
+      );
     }
+  }
+
+  Future<User> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return (await FirebaseAuth.instance.signInWithCredential(credential)).user!;
   }
 }

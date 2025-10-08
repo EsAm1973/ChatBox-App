@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
 import 'package:chatbox/Core/helper%20functions/animated_success_dialog.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
-import 'package:chatbox/Features/auth/manager/register/register_cubit.dart';
+import 'package:chatbox/Features/auth/presentation/manager/register/register_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/views/widgets/choose_picture_app_bar.dart';
 import 'package:chatbox/Features/auth/presentation/views/widgets/choose_picture_view_body.dart';
 import 'package:flutter/material.dart';

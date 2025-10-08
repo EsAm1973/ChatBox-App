@@ -1,6 +1,6 @@
 // Add to your services
 import 'package:chatbox/Core/errors/firebase_failures.dart';
-import 'package:chatbox/Features/auth/presentation/data/models/user_model.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
@@ -63,6 +63,25 @@ class FirestoreService {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to fetch user data.');
+    }
+  }
+  
+  Future<UserModel?> getUserByEmail(String email) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      if (querySnapshot.docs.isNotEmpty) {
+        return UserModel.fromMap(querySnapshot.docs.first.data());
+      }
+      return null;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to fetch user data by email.');
     }
   }
 }
