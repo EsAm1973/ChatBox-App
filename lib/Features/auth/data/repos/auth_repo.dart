@@ -31,4 +31,6 @@ abstract class AuthRepo {
   Future<Either<Failure, void>> deleteUserAccount();
 
   Future<Either<Failure, UserModel>> signInWithGoogle();
+
+  Future<Either<Failure, UserModel>> signInWithFacebook();
 }

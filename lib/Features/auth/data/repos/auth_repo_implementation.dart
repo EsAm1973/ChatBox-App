@@ -282,24 +282,26 @@ class AuthRepoImplementation implements AuthRepo {
     try {
       // 1. Authenticate with Google
       final user = await firebaseAuthServices.signInWithGoogle();
-      
+
       // 2. Check if user already exists in Firestore by email
-      UserModel? existingUser = await firestoreService.getUserByEmail(user.email!);
-      
+      UserModel? existingUser = await firestoreService.getUserByEmail(
+        user.email!,
+      );
+
       if (existingUser != null) {
         // User already exists, update online status and last seen
         final updatedUserModel = existingUser.copyWith(
           isOnline: true,
           lastSeen: DateTime.now(),
         );
-        
+
         await firestoreService.saveUser(updatedUserModel);
         return Right(updatedUserModel);
       } else {
         // User doesn't exist, create a new user
         // Get profile image URL from Google or use a default
         String profilePicUrl = user.photoURL ?? '';
-        
+
         // Create new user model
         final userModel = UserModel(
           uid: user.uid,
@@ -312,7 +314,7 @@ class AuthRepoImplementation implements AuthRepo {
           createdAt: DateTime.now(),
           lastSeen: DateTime.now(),
         );
-        
+
         // Save user to Firestore
         await firestoreService.saveUser(userModel);
         return Right(userModel);
@@ -321,6 +323,55 @@ class AuthRepoImplementation implements AuthRepo {
       return Left(e);
     } catch (e) {
       return _handleError(e, 'Google sign in');
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserModel>> signInWithFacebook() async {
+    try {
+      // 1. Authenticate with Google
+      final user = await firebaseAuthServices.signInWithFacebook();
+
+      // 2. Check if user already exists in Firestore by email
+      UserModel? existingUser = await firestoreService.getUserByEmail(
+        user.email!,
+      );
+
+      if (existingUser != null) {
+        // User already exists, update online status and last seen
+        final updatedUserModel = existingUser.copyWith(
+          isOnline: true,
+          lastSeen: DateTime.now(),
+        );
+
+        await firestoreService.saveUser(updatedUserModel);
+        return Right(updatedUserModel);
+      } else {
+        // User doesn't exist, create a new user
+        // Get profile image URL from Google or use a default
+        String profilePicUrl = user.photoURL ?? '';
+
+        // Create new user model
+        final userModel = UserModel(
+          uid: user.uid,
+          name: user.displayName ?? 'Facebook User',
+          email: user.email!,
+          profilePic: profilePicUrl,
+          phoneNumber: user.phoneNumber ?? '',
+          about: '',
+          isOnline: true,
+          createdAt: DateTime.now(),
+          lastSeen: DateTime.now(),
+        );
+
+        // Save user to Firestore
+        await firestoreService.saveUser(userModel);
+        return Right(userModel);
+      }
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return _handleError(e, 'Facebook sign in');
     }
   }
 }
