@@ -212,4 +212,18 @@ class FirebaseAuthService {
       facebookAuthCredential,
     )).user!;
   }
+
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      log("Exception in FirebaseAuthServices.sendPasswordResetEmail: $e");
+      throw FirebaseFailure.fromFirebaseAuthException(e);
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.sendPasswordResetEmail: $e");
+      throw FirebaseFailure(
+        errorMessage: 'Failed to send password reset email.',
+      );
+    }
+  }
 }

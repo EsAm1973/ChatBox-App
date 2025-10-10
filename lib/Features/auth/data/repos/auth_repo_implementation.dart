@@ -374,4 +374,18 @@ class AuthRepoImplementation implements AuthRepo {
       return _handleError(e, 'Facebook sign in');
     }
   }
+
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail({
+    required String email,
+  }) async {
+    try {
+      await firebaseAuthServices.sendPasswordResetEmail(email: email);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return _handleError(e, 'send password reset email');
+    }
+  }
 }

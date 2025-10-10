@@ -1,5 +1,6 @@
 import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Features/auth/presentation/manager/login/login_cubit.dart';
+import 'package:chatbox/Features/auth/presentation/manager/recover%20password/recover_password_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/manager/register/register_cubit.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dart';
@@ -18,8 +19,6 @@ abstract class AppRouter {
   static const String kSignupRoute = '/signup';
   static const String kChoosePictureRoute = '/choose-picture';
   static const String kRecoverPasswordRoute = '/recover-password';
-  static const String kVerifyEmailRoute = '/verify-email';
-  static const String kResetPasswordRoute = '/reset-password';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -67,16 +66,12 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kRecoverPasswordRoute,
-        builder: (context, state) => const RecoverPassView(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => RecoverPasswordCubit(getIt<AuthRepo>()),
+              child: const RecoverPassView(),
+            ),
       ),
-      // GoRoute(
-      //   path: kVerifyEmailRoute,
-      //   builder: (context, state) => const VerifyEmailView(),
-      // ),
-      // GoRoute(
-      //   path: kResetPasswordRoute,
-      //   builder: (context, state) => const ResetPasswordView(),
-      // ),
     ],
   );
 }

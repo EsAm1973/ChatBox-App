@@ -20,17 +20,19 @@ abstract class AuthRepo {
   Future<Either<Failure, void>> signOut();
 
   Future<Either<Failure, UserModel>> getCurrentUserData();
-  
+
   // Method to send or resend email verification
   Future<Either<Failure, void>> sendEmailVerification({required String email});
-  
+
   // Method to check if email is verified
   Future<Either<Failure, bool>> isEmailVerified({required String email});
-  
+
   // Method to completely delete a user account including auth, Firestore data, and profile image
   Future<Either<Failure, void>> deleteUserAccount();
 
   Future<Either<Failure, UserModel>> signInWithGoogle();
 
   Future<Either<Failure, UserModel>> signInWithFacebook();
+
+  Future<Either<Failure, void>> sendPasswordResetEmail({required String email});
 }
