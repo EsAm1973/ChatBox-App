@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
+import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/custom_bottom.dart';
 import 'package:chatbox/Core/widgets/custom_textfeild.dart';
@@ -9,6 +10,7 @@ import 'package:chatbox/Core/widgets/or_divider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginViewBody extends StatefulWidget {
   const LoginViewBody({super.key});
@@ -47,8 +49,8 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                   (state is LoginError)
                       ? state.errorMessage
                       : (state is LoginEmailNotVerified)
-                          ? state.errorMessage
-                          : 'Unknown error',
+                      ? state.errorMessage
+                      : 'Unknown error',
                   'Ok',
                   (context) {},
                 );
@@ -81,7 +83,7 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                     ),
                   ),
                   SizedBox(height: 32.h),
-                   const SocialMediaLoginWidget(),
+                  const SocialMediaLoginWidget(),
                   SizedBox(height: 32.h),
                   const OrDivider(),
                   SizedBox(height: 32.h),
@@ -131,7 +133,11 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                   ),
                   SizedBox(height: 16.h),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      GoRouter.of(
+                        context,
+                      ).push(AppRouter.kRecoverPasswordRoute);
+                    },
                     child: Text(
                       'Forgot password?',
                       style: AppTextStyles.semiBold14.copyWith(

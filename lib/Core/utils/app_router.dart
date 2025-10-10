@@ -4,6 +4,7 @@ import 'package:chatbox/Features/auth/presentation/manager/register/register_cub
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
+import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
@@ -16,6 +17,9 @@ abstract class AppRouter {
   static const String kLoginRoute = '/login';
   static const String kSignupRoute = '/signup';
   static const String kChoosePictureRoute = '/choose-picture';
+  static const String kRecoverPasswordRoute = '/recover-password';
+  static const String kVerifyEmailRoute = '/verify-email';
+  static const String kResetPasswordRoute = '/reset-password';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -61,6 +65,18 @@ abstract class AppRouter {
           );
         },
       ),
+      GoRoute(
+        path: kRecoverPasswordRoute,
+        builder: (context, state) => const RecoverPassView(),
+      ),
+      // GoRoute(
+      //   path: kVerifyEmailRoute,
+      //   builder: (context, state) => const VerifyEmailView(),
+      // ),
+      // GoRoute(
+      //   path: kResetPasswordRoute,
+      //   builder: (context, state) => const ResetPasswordView(),
+      // ),
     ],
   );
 }
