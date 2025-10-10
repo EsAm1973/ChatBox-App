@@ -182,35 +182,75 @@ class FirebaseAuthService {
   }
 
   Future<User> signInWithGoogle() async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    try {
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
+      // Check if user canceled the sign-in
+      if (googleUser == null) {
+        throw FirebaseFailure(errorMessage: 'Sign in canceled by user');
+      }
 
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-    // Once signed in, return the UserCredential
-    return (await FirebaseAuth.instance.signInWithCredential(credential)).user!;
+      // Check if we have valid tokens
+      if (googleAuth.accessToken == null && googleAuth.idToken == null) {
+        throw FirebaseFailure(
+          errorMessage: 'Failed to obtain authentication tokens',
+        );
+      }
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      return (await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      )).user!;
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.signInWithGoogle: $e");
+      if (e is Failure) {
+        rethrow;
+      }
+      throw FirebaseFailure(errorMessage: 'Failed to sign in with Google: $e');
+    }
   }
 
   Future<User> signInWithFacebook() async {
-    // Trigger the sign-in flow
-    final LoginResult loginResult = await FacebookAuth.instance.login();
+    try {
+      // Trigger the sign-in flow
+      final LoginResult loginResult = await FacebookAuth.instance.login();
 
-    // Create a credential from the access token
-    final OAuthCredential facebookAuthCredential =
-        FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
+      // Check if login was successful and access token exists
+      if (loginResult.status != LoginStatus.success ||
+          loginResult.accessToken == null) {
+        throw FirebaseFailure(
+          errorMessage: 'Facebook sign in was canceled or failed',
+        );
+      }
 
-    // Once signed in, return the UserCredential
-    return (await FirebaseAuth.instance.signInWithCredential(
-      facebookAuthCredential,
-    )).user!;
+      // Create a credential from the access token
+      final OAuthCredential facebookAuthCredential =
+          FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
+
+      // Once signed in, return the UserCredential
+      return (await FirebaseAuth.instance.signInWithCredential(
+        facebookAuthCredential,
+      )).user!;
+    } catch (e) {
+      log("Exception in FirebaseAuthServices.signInWithFacebook: $e");
+      if (e is Failure) {
+        rethrow;
+      }
+      throw FirebaseFailure(
+        errorMessage: 'Failed to sign in with Facebook: $e',
+      );
+    }
   }
 
   Future<void> sendPasswordResetEmail({required String email}) async {

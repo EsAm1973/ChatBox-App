@@ -320,6 +320,11 @@ class AuthRepoImplementation implements AuthRepo {
         return Right(userModel);
       }
     } on Failure catch (e) {
+      // Handle specific cancellation error
+      if (e.errorMessage.contains('canceled by user')) {
+        log('Google sign-in was canceled by the user');
+        return Left(FirebaseFailure(errorMessage: 'Sign in was canceled'));
+      }
       return Left(e);
     } catch (e) {
       return _handleError(e, 'Google sign in');
@@ -329,7 +334,7 @@ class AuthRepoImplementation implements AuthRepo {
   @override
   Future<Either<Failure, UserModel>> signInWithFacebook() async {
     try {
-      // 1. Authenticate with Google
+      // 1. Authenticate with Facebook
       final user = await firebaseAuthServices.signInWithFacebook();
 
       // 2. Check if user already exists in Firestore by email
@@ -348,7 +353,7 @@ class AuthRepoImplementation implements AuthRepo {
         return Right(updatedUserModel);
       } else {
         // User doesn't exist, create a new user
-        // Get profile image URL from Google or use a default
+        // Get profile image URL from Facebook or use a default
         String profilePicUrl = user.photoURL ?? '';
 
         // Create new user model
@@ -369,6 +374,11 @@ class AuthRepoImplementation implements AuthRepo {
         return Right(userModel);
       }
     } on Failure catch (e) {
+      // Handle specific cancellation error
+      if (e.errorMessage.contains('canceled') || e.errorMessage.contains('failed')) {
+        log('Facebook sign-in was canceled by the user');
+        return Left(FirebaseFailure(errorMessage: 'Sign in was canceled'));
+      }
       return Left(e);
     } catch (e) {
       return _handleError(e, 'Facebook sign in');

@@ -27,7 +27,11 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kOnboardRoute,
-        builder: (context, state) => const OnboardView(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => LoginCubit(getIt<AuthRepo>()),
+              child: const OnboardView(),
+            ),
       ),
       GoRoute(
         path: kLoginRoute,
