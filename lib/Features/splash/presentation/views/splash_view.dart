@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/service/firebase_auth_service.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +21,13 @@ class _SplashViewState extends State<SplashView> {
   }
 
   void navigateToNextScreen() {
+    bool isLoggedIn = FirebaseAuthService().isLoggedIn();
     Future.delayed(const Duration(seconds: 2), () {
-      GoRouter.of(context).pushReplacement(AppRouter.kOnboardRoute);
+      if (isLoggedIn) {
+        GoRouter.of(context).pushReplacement(AppRouter.kHomeRoute);
+      } else {
+        GoRouter.of(context).pushReplacement(AppRouter.kOnboardRoute);
+      }
     });
   }
 

@@ -7,6 +7,7 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
+import 'package:chatbox/Features/home/presentation/views/home_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ abstract class AppRouter {
   static const String kSignupRoute = '/signup';
   static const String kChoosePictureRoute = '/choose-picture';
   static const String kRecoverPasswordRoute = '/recover-password';
+  static const String kHomeRoute = '/home';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -76,6 +78,7 @@ abstract class AppRouter {
               child: const RecoverPassView(),
             ),
       ),
+      GoRoute(path: kHomeRoute, builder: (context, state) => const HomeView()),
     ],
   );
 }
