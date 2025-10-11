@@ -1,3 +1,4 @@
+import 'package:chatbox/Features/home/presentation/views/widgets/home_appbar.dart';
 import 'package:chatbox/Features/home/presentation/views/widgets/home_view_body.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,10 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: HomeViewBody());
+    return Scaffold(
+      backgroundColor: const Color(0xFF000D07),
+      appBar: buildHomeAppBar(),
+      body: const SafeArea(child: HomeViewBody()),
+    );
   }
 }
