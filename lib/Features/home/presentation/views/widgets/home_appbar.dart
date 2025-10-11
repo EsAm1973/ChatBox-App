@@ -3,19 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:svg_flutter/svg.dart';
 
-PreferredSizeWidget buildHomeAppBar() {
+PreferredSizeWidget buildHomeAppBar(BuildContext context) {
   return PreferredSize(
     preferredSize: Size.fromHeight(100.h),
     child: Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 17.h),
+      padding: EdgeInsets.only(top: 17.h, left: 20.w, right: 20.w),
       child: AppBar(
-        backgroundColor: const Color(0xFF000D07),
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Home',
-          style: AppTextStyles.semiBold20.copyWith(color: Colors.white),
-        ),
+        title: Text('Home', style: AppTextStyles.semiBold20),
         leading: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -24,11 +20,7 @@ PreferredSizeWidget buildHomeAppBar() {
           child: IconButton(
             iconSize: 22.r,
             padding: EdgeInsets.zero,
-            icon: SvgPicture.asset(
-              'assets/search_icon.svg',
-              width: 26.r,
-              height: 26.r,
-            ),
+            icon: SvgPicture.asset(_getSearchIconPath(context)),
             onPressed: () {},
           ),
         ),
@@ -44,4 +36,10 @@ PreferredSizeWidget buildHomeAppBar() {
       ),
     ),
   );
+}
+
+String _getSearchIconPath(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? 'assets/search_icon.svg'
+      : 'assets/search_icon_dark.svg';
 }
