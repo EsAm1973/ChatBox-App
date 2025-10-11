@@ -21,11 +21,8 @@ class OnboardViewBody extends StatelessWidget {
     return BlocListener<LoginCubit, LoginState>(
       listener: (context, state) {
         if (state is LoginSuccess) {
-          //GoRouter.of(context).push(AppRouter.kHomeRoute);
           GoRouter.of(context).pop();
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+          GoRouter.of(context).push(AppRouter.kHomeRoute);
         } else if (state is LoginError) {
           GoRouter.of(context).pop();
           openErrorAnimatedDialog(

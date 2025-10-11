@@ -55,10 +55,7 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                   (context) {},
                 );
               } else if (state is LoginSuccess) {
-                //GoRouter.of(context).pushReplacement(AppRouter.kHomeRoute);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Login successful!')),
-                );
+                GoRouter.of(context).pushReplacement(AppRouter.kHomeRoute);
               }
             },
             builder: (context, state) {

@@ -17,10 +17,8 @@ class FirebaseAuthService {
           .createUserWithEmailAndPassword(email: email, password: password);
       user = credential.user!;
       await user.updateDisplayName(displayName);
-
       // Send email verification immediately after creating user
       await user.sendEmailVerification();
-
       await user.reload();
       user = FirebaseAuth.instance.currentUser!;
       return user;
@@ -28,7 +26,6 @@ class FirebaseAuthService {
       log(
         "Exception in FirebaseAuthServices.createUserWithEmailAndPassword: $e",
       );
-
       // If we created a user but then failed, delete the user
       if (user != null) {
         try {
@@ -37,13 +34,11 @@ class FirebaseAuthService {
           log("Failed to delete user during rollback: $deleteError");
         }
       }
-
       throw FirebaseFailure.fromFirebaseAuthException(e);
     } catch (e) {
       log(
         "Exception in FirebaseAuthServices.createUserWithEmailAndPassword: $e",
       );
-
       // If we created a user but then failed, delete the user
       if (user != null) {
         try {
@@ -52,7 +47,6 @@ class FirebaseAuthService {
           log("Failed to delete user during rollback: $deleteError");
         }
       }
-
       throw FirebaseFailure(errorMessage: 'Failed to create user.');
     }
   }
@@ -93,12 +87,10 @@ class FirebaseAuthService {
         final metadata = user.metadata;
         final now = DateTime.now();
         final lastSignInTime = metadata.lastSignInTime;
-
         if (lastSignInTime == null ||
             now.difference(lastSignInTime).inMinutes > 5) {
           await user.sendEmailVerification();
         }
-
         throw FirebaseFailure(
           errorMessage:
               'Please verify your email. We sent you a verification email.',
@@ -131,7 +123,6 @@ class FirebaseAuthService {
     try {
       // Check if user is signed in with this email
       final currentUser = FirebaseAuth.instance.currentUser;
-
       if (currentUser != null && currentUser.email == email) {
         // User is already signed in with this email
         await currentUser.sendEmailVerification();
@@ -159,7 +150,6 @@ class FirebaseAuthService {
   Future<bool> isEmailVerified({required String email}) async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
-
       if (currentUser != null && currentUser.email == email) {
         // Reload user to get the latest email verification status
         await currentUser.reload();
@@ -185,29 +175,24 @@ class FirebaseAuthService {
     try {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
       // Check if user canceled the sign-in
       if (googleUser == null) {
         throw FirebaseFailure(errorMessage: 'Sign in canceled by user');
       }
-
       // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-
       // Check if we have valid tokens
       if (googleAuth.accessToken == null && googleAuth.idToken == null) {
         throw FirebaseFailure(
           errorMessage: 'Failed to obtain authentication tokens',
         );
       }
-
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
       // Once signed in, return the UserCredential
       return (await FirebaseAuth.instance.signInWithCredential(
         credential,
@@ -225,7 +210,6 @@ class FirebaseAuthService {
     try {
       // Trigger the sign-in flow
       final LoginResult loginResult = await FacebookAuth.instance.login();
-
       // Check if login was successful and access token exists
       if (loginResult.status != LoginStatus.success ||
           loginResult.accessToken == null) {
@@ -233,11 +217,9 @@ class FirebaseAuthService {
           errorMessage: 'Facebook sign in was canceled or failed',
         );
       }
-
       // Create a credential from the access token
       final OAuthCredential facebookAuthCredential =
           FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
-
       // Once signed in, return the UserCredential
       return (await FirebaseAuth.instance.signInWithCredential(
         facebookAuthCredential,
@@ -266,4 +248,6 @@ class FirebaseAuthService {
       );
     }
   }
+
+  bool isLoggedIn() => FirebaseAuth.instance.currentUser != null;
 }
