@@ -3,10 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:svg_flutter/svg.dart';
 
-PreferredSizeWidget buildHomeAppBar(BuildContext context) {
-  return PreferredSize(
-    preferredSize: Size.fromHeight(100.h),
-    child: Padding(
+class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final VoidCallback onSearchPressed;
+
+  const HomeAppBar({super.key, required this.onSearchPressed});
+
+  @override
+  Size get preferredSize => Size.fromHeight(100.h);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
       padding: EdgeInsets.only(top: 17.h, left: 20.w, right: 20.w),
       child: AppBar(
         elevation: 0,
@@ -21,7 +28,7 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context) {
             iconSize: 22.r,
             padding: EdgeInsets.zero,
             icon: SvgPicture.asset(_getSearchIconPath(context)),
-            onPressed: () {},
+            onPressed: onSearchPressed,
           ),
         ),
         actions: [
@@ -34,12 +41,12 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context) {
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 
-String _getSearchIconPath(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? 'assets/search_icon.svg'
-      : 'assets/search_icon_dark.svg';
+  String _getSearchIconPath(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? 'assets/search_icon.svg'
+        : 'assets/search_icon_dark.svg';
+  }
 }
