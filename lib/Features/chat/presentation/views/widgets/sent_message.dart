@@ -13,7 +13,6 @@ class SentMessage extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        margin: EdgeInsets.only(top: 8.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,

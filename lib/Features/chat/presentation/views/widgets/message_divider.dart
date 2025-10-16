@@ -7,7 +7,7 @@ class MessageDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Divider(
         height: 1,
         color: Theme.of(context).dividerColor,

@@ -35,7 +35,9 @@ class SearchResultsView extends StatelessWidget {
             final user = state.results[index];
             return InkWell(
               onTap: () {
-                GoRouter.of(context).push(AppRouter.kChatScreenRoute);
+                GoRouter.of(
+                  context,
+                ).push(AppRouter.kChatScreenRoute, extra: user);
               },
               child: ListTile(
                 leading: CircleAvatar(

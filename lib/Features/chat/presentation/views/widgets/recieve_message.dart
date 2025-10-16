@@ -17,7 +17,7 @@ class ReceivedMessage extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.only(top: 8.h),
+        margin: EdgeInsets.only(top: 4.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,22 +33,25 @@ class ReceivedMessage extends StatelessWidget {
                     bottomRight: Radius.circular(16.r),
                   ),
                 ),
-                child: Text(
-                  message,
-                  style: AppTextStyles.regular14.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 4.h),
-              child: Text(
-                time,
-                style: AppTextStyles.regular12.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message,
+                      style: AppTextStyles.regular14.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: 7.h),
+                    Text(
+                      time,
+                      style: AppTextStyles.regular12.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

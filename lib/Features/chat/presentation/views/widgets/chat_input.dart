@@ -1,8 +1,49 @@
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class ChatInput extends StatelessWidget {
-  const ChatInput({super.key});
+class ChatInput extends StatefulWidget {
+  final String chatRoomId;
+  final UserModel otherUser;
+
+  const ChatInput({
+    super.key,
+    required this.chatRoomId,
+    required this.otherUser,
+  });
+
+  @override
+  State<ChatInput> createState() => _ChatInputState();
+}
+
+class _ChatInputState extends State<ChatInput> {
+  final TextEditingController _messageController = TextEditingController();
+  bool _isSending = false;
+
+  void _sendMessage() async {
+    if (_messageController.text.trim().isEmpty || _isSending) {
+      return;
+    }
+
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      await context.read<ChatCubit>().sendMessage(
+        text: _messageController.text.trim(),
+        receiverId: widget.otherUser.uid,
+      );
+
+      _messageController.clear();
+    } finally {
+      setState(() {
+        _isSending = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +58,7 @@ class ChatInput extends StatelessWidget {
               color: Theme.of(context).iconTheme.color,
               size: 28.r,
             ),
-            onPressed: () {},
+            onPressed: _isSending ? null : () {},
           ),
           Expanded(
             child: Container(
@@ -26,6 +67,7 @@ class ChatInput extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30.0.r),
               ),
               child: TextField(
+                controller: _messageController,
                 decoration: InputDecoration(
                   hintText: 'Write your message',
                   contentPadding: EdgeInsets.symmetric(
@@ -35,28 +77,47 @@ class ChatInput extends StatelessWidget {
                 ),
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
+                onSubmitted:
+                    (_isSending || _messageController.text.trim().isEmpty)
+                        ? null
+                        : (_) => _sendMessage(),
+                enabled: !_isSending,
               ),
             ),
           ),
-
           IconButton(
             icon: Icon(
               Icons.mic_none_outlined,
               color: Theme.of(context).iconTheme.color,
               size: 28.r,
             ),
-            onPressed: () {},
+            onPressed: _isSending ? null : () {},
           ),
-          IconButton(
-            icon: Icon(
-              Icons.send,
-              color: Theme.of(context).iconTheme.color,
-              size: 28.r,
-            ),
-            onPressed: () {},
-          ),
+          _isSending
+              ? Padding(
+                padding: EdgeInsets.all(8.0.r),
+                child: SizedBox(
+                  width: 20.r,
+                  height: 20.r,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+              : IconButton(
+                icon: Icon(
+                  Icons.send,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 28.r,
+                ),
+                onPressed: _sendMessage,
+              ),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/service/getit_service.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/auth/presentation/manager/login/login_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/manager/recover%20password/recover_password_cubit.dart';
 import 'package:chatbox/Features/auth/presentation/manager/register/register_cubit.dart';
@@ -7,6 +8,8 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
+import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
+import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
 import 'package:chatbox/Features/home/data/repos/home_repo.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
@@ -94,7 +97,11 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kChatScreenRoute,
-        builder: (context, state) => const ChatView(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => ChatCubit(chatRepository: getIt<ChatRepo>()),
+              child: ChatView(otherUser: state.extra as UserModel),
+            ),
       ),
     ],
   );

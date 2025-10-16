@@ -1,11 +1,12 @@
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:svg_flutter/svg_flutter.dart';
 
 class ChatAppBar extends StatelessWidget {
-  const ChatAppBar({super.key});
-
+  const ChatAppBar({super.key, required this.otherUser});
+  final UserModel otherUser;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -24,7 +25,7 @@ class ChatAppBar extends StatelessWidget {
             decoration: const BoxDecoration(shape: BoxShape.circle),
             child: CircleAvatar(
               radius: 24.r,
-              backgroundImage: const AssetImage('assets/user_pic_test.png'),
+              backgroundImage: NetworkImage(otherUser.profilePic),
             ),
           ),
           SizedBox(width: 12.w),
@@ -32,10 +33,10 @@ class ChatAppBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Jhon Abraham', style: AppTextStyles.semiBold16),
+                Text(otherUser.name, style: AppTextStyles.semiBold16),
                 SizedBox(height: 6.h),
                 Text(
-                  'Active now',
+                  otherUser.isOnline ? 'Active now' : 'Offline',
                   style: AppTextStyles.regular12.copyWith(
                     color: Theme.of(
                       context,
