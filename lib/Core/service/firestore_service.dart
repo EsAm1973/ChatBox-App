@@ -1,7 +1,10 @@
 // Add to your services
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/chat/data/models/chat_room.dart';
+import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService {
@@ -115,6 +118,193 @@ class FirestoreService {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to search users.');
+    }
+  }
+
+  Future<String> getOrCreateChatRoom(String otherUserId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final participants = [currentUserId, otherUserId]..sort();
+      final chatRoomId = participants.join('_');
+
+      final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await chatRoomRef.get();
+
+      if (!doc.exists) {
+        await chatRoomRef.set({
+          'id': chatRoomId,
+          'participants': participants,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastMessage': {},
+          'participantData': {
+            currentUserId: await _getUserBasicInfo(currentUserId),
+            otherUserId: await _getUserBasicInfo(otherUserId),
+          },
+        });
+      }
+
+      return chatRoomId;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to get or create chat room.');
+    }
+  }
+
+  Future<Unit> sendMessage({
+    required String chatRoomId,
+    required String text,
+    required String receiverId,
+  }) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final messageId =
+          _firestore
+              .collection('chat_rooms')
+              .doc(chatRoomId)
+              .collection('messages')
+              .doc()
+              .id;
+
+      final messageData = {
+        'id': messageId,
+        'chatRoomId': chatRoomId,
+        'senderId': currentUserId,
+        'text': text,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'type': 'text',
+      };
+
+      final batch = _firestore.batch();
+
+      // حفظ الرسالة
+      batch.set(
+        _firestore
+            .collection('chat_rooms')
+            .doc(chatRoomId)
+            .collection('messages')
+            .doc(messageId),
+        messageData,
+      );
+
+      // تحديث آخر رسالة في غرفة المحادثة
+      batch.update(_firestore.collection('chat_rooms').doc(chatRoomId), {
+        'lastMessage': {
+          'text': text,
+          'senderId': currentUserId,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+        },
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      return unit;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to send message.');
+    }
+  }
+
+  Stream<Object> getMessagesStream(String chatRoomId) {
+    return _firestore
+        .collection('chat_rooms')
+        .doc(chatRoomId)
+        .collection('messages')
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .map((snapshot) {
+          try {
+            final messages =
+                snapshot.docs
+                    .map((doc) => Message.fromMap(doc.data()))
+                    .toList();
+            return messages;
+          } catch (e) {
+            throw FirebaseFailure(
+              errorMessage: 'Failed to get messages stream.',
+            );
+          }
+        })
+        .handleError((error) {
+          if (error is FirebaseException) {
+            throw FirebaseFailure.fromFirestoreException(error);
+          }
+          throw FirebaseFailure(errorMessage: 'Failed to get messages stream.');
+        });
+  }
+
+  Stream<Object> getChatRoomsStream() {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    return _firestore
+        .collection('chat_rooms')
+        .where('participants', arrayContains: currentUserId)
+        .orderBy('lastUpdated', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          try {
+            final chatRooms =
+                snapshot.docs
+                    .map((doc) => ChatRoom.fromMap(doc.data()))
+                    .toList();
+            return chatRooms;
+          } catch (e) {
+            throw ();
+          }
+        })
+        .handleError((error) {
+          if (error is FirebaseException) {
+            return Left(FirebaseFailure.fromFirestoreException(error));
+          }
+          throw Left(
+            FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.'),
+          );
+        });
+  }
+
+  Future<Unit> markMessagesAsRead(String chatRoomId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final messages =
+          await _firestore
+              .collection('chat_rooms')
+              .doc(chatRoomId)
+              .collection('messages')
+              .where('senderId', isNotEqualTo: currentUserId)
+              .where('isRead', isEqualTo: false)
+              .get();
+
+      final batch = _firestore.batch();
+
+      for (final doc in messages.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+
+      await batch.commit();
+      return unit;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to mark messages as read.');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getUserBasicInfo(String userId) async {
+    try {
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data()!;
+        return {
+          'name': userData['name'],
+          'profilePic': userData['profilePic'],
+          'email': userData['email'],
+        };
+      }
+      return {'name': 'Unknown User', 'profilePic': '', 'email': ''};
+    } catch (e) {
+      return {'name': 'Unknown User', 'profilePic': '', 'email': ''};
     }
   }
 }
