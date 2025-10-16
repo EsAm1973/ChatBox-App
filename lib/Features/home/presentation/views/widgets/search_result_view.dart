@@ -1,7 +1,9 @@
+import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchResultsView extends StatelessWidget {
   const SearchResultsView({super.key});
@@ -31,12 +33,17 @@ class SearchResultsView extends StatelessWidget {
           itemCount: state.results.length,
           itemBuilder: (context, index) {
             final user = state.results[index];
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(user.profilePic),
+            return InkWell(
+              onTap: () {
+                GoRouter.of(context).push(AppRouter.kChatScreenRoute);
+              },
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(user.profilePic),
+                ),
+                title: Text(user.name),
+                subtitle: Text(user.email),
               ),
-              title: Text(user.name),
-              subtitle: Text(user.email),
             );
           },
         );

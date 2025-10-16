@@ -7,6 +7,7 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
+import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
 import 'package:chatbox/Features/home/data/repos/home_repo.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
@@ -23,6 +24,7 @@ abstract class AppRouter {
   static const String kChoosePictureRoute = '/choose-picture';
   static const String kRecoverPasswordRoute = '/recover-password';
   static const String kHomeRoute = '/home';
+  static const String kChatScreenRoute = '/chat-screen';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -89,6 +91,10 @@ abstract class AppRouter {
                       SearchUserCubit(homeRepository: getIt<HomeRepo>()),
               child: const HomeView(),
             ),
+      ),
+      GoRoute(
+        path: kChatScreenRoute,
+        builder: (context, state) => const ChatView(),
       ),
     ],
   );

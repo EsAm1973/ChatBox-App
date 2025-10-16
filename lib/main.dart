@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
         title: 'ChatBox',
-        theme: AppThemes.getLightTheme,
+        theme: AppThemes.getDarkTheme,
       ),
     );
   }
