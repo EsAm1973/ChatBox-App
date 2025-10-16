@@ -4,6 +4,8 @@ import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo_implementation.dart';
+import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
+import 'package:chatbox/Features/chat/data/repos/chat_repo_impl.dart';
 import 'package:chatbox/Features/home/data/repos/home_repo.dart';
 import 'package:chatbox/Features/home/data/repos/home_repo_impl.dart';
 import 'package:get_it/get_it.dart';
@@ -24,5 +26,9 @@ void setupGetIt() {
 
   getIt.registerSingleton<HomeRepo>(
     HomeRepoImpl(firestore: getIt<FirestoreService>()),
+  );
+
+  getIt.registerLazySingleton<ChatRepo>(
+    () => ChatRepoImpl(firestoreService: getIt<FirestoreService>()),
   );
 }
