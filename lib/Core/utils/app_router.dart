@@ -12,6 +12,7 @@ import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
 import 'package:chatbox/Features/home/data/repos/home_repo.dart';
+import 'package:chatbox/Features/home/presentation/manager/home%20chats/home_chats_cubit.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
@@ -88,10 +89,17 @@ abstract class AppRouter {
       GoRoute(
         path: kHomeRoute,
         builder:
-            (context, state) => BlocProvider(
-              create:
-                  (context) =>
-                      SearchUserCubit(homeRepository: getIt<HomeRepo>()),
+            (context, state) => MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create:
+                      (context) =>
+                          SearchUserCubit(homeRepository: getIt<HomeRepo>()),
+                ),
+                BlocProvider(
+                  create: (context) => HomeChatsCubit(getIt<HomeRepo>()),
+                ),
+              ],
               child: const HomeView(),
             ),
       ),

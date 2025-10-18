@@ -43,20 +43,6 @@ class FirestoreService {
     }
   }
 
-  // Helper method to delete user-related data in other collections
-  // Uncomment and implement if needed for your app
-  /*
-  Future<void> _deleteUserRelatedData(String uid) async {
-    // Example: Delete user messages
-    // final messagesQuery = await _firestore.collection('messages').where('userId', isEqualTo: uid).get();
-    // for (var doc in messagesQuery.docs) {
-    //   await doc.reference.delete();
-    // }
-    
-    // Add more collection cleanups as needed
-  }
-  */
-
   Future<UserModel?> getUser(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -236,32 +222,108 @@ class FirestoreService {
         });
   }
 
-  Stream<Object> getChatRoomsStream() {
-    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-    return _firestore
-        .collection('chat_rooms')
-        .where('participants', arrayContains: currentUserId)
-        .orderBy('lastUpdated', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          try {
-            final chatRooms =
-                snapshot.docs
-                    .map((doc) => ChatRoom.fromMap(doc.data()))
-                    .toList();
+  Stream<List<ChatRoom>> getChatRoomsStream() {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      return _firestore
+          .collection('chat_rooms')
+          .where('participants', arrayContains: currentUserId)
+          .orderBy('lastUpdated', descending: true)
+          .snapshots()
+          .asyncMap((snapshot) async {
+            final chatRooms = <ChatRoom>[];
+
+            for (final doc in snapshot.docs) {
+              try {
+                final chatRoomData = doc.data();
+                final chatRoom = ChatRoom.fromMap(chatRoomData);
+
+                // تحسين الأداء: جلب بيانات المشاركين فقط إذا كانت ناقصة
+                Map<String, dynamic>? updatedParticipantData;
+                if (chatRoom.participantData == null ||
+                    chatRoom.participantData!.isEmpty) {
+                  updatedParticipantData = await _getUpdatedParticipantData(
+                    chatRoom.participants,
+                  );
+                }
+
+                final updatedChatRoom = chatRoom.copyWith(
+                  participantData:
+                      updatedParticipantData ?? chatRoom.participantData,
+                );
+
+                chatRooms.add(updatedChatRoom);
+              } catch (e) {
+                print('Error parsing chat room ${doc.id}: $e');
+                continue;
+              }
+            }
+
             return chatRooms;
-          } catch (e) {
-            throw ();
-          }
-        })
-        .handleError((error) {
-          if (error is FirebaseException) {
-            return Left(FirebaseFailure.fromFirestoreException(error));
-          }
-          throw Left(
-            FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.'),
-          );
-        });
+          })
+          .handleError((error) {
+            if (error is FirebaseException) {
+              // معالجة خاصة لأخطاء الفهرس
+              if (error.code == 'failed-precondition') {
+                print('Firestore index needs to be created: ${error.message}');
+                // يمكنك إضافة منطق لإعلام المستخدم أو استخدام بديل
+              }
+              throw FirebaseFailure.fromFirestoreException(error);
+            }
+            throw FirebaseFailure(
+              errorMessage: 'Failed to get chat rooms stream.',
+            );
+          });
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.');
+    }
+  }
+
+  Stream<List<ChatRoom>> getChatRoomsStreamFallback() {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      return _firestore
+          .collection('chat_rooms')
+          .where('participants', arrayContains: currentUserId)
+          .snapshots() // بدون orderBy مؤقتاً
+          .asyncMap((snapshot) async {
+            final chatRooms = <ChatRoom>[];
+
+            for (final doc in snapshot.docs) {
+              try {
+                final chatRoomData = doc.data();
+                final chatRoom = ChatRoom.fromMap(chatRoomData);
+                chatRooms.add(chatRoom);
+              } catch (e) {
+                print('Error parsing chat room ${doc.id}: $e');
+                continue;
+              }
+            }
+
+            // ترتيب محلياً
+            chatRooms.sort((a, b) {
+              final aTime = a.lastMessage['timestamp'] as Timestamp?;
+              final bTime = b.lastMessage['timestamp'] as Timestamp?;
+
+              if (aTime == null || bTime == null) return 0;
+              return bTime.compareTo(aTime); // ترتيب تنازلي
+            });
+
+            return chatRooms;
+          })
+          .handleError((error) {
+            if (error is FirebaseException) {
+              throw FirebaseFailure.fromFirestoreException(error);
+            }
+            throw FirebaseFailure(
+              errorMessage: 'Failed to get chat rooms stream.',
+            );
+          });
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.');
+    }
   }
 
   Future<Unit> markMessagesAsRead(String chatRoomId) async {
@@ -305,6 +367,228 @@ class FirestoreService {
       return {'name': 'Unknown User', 'profilePic': '', 'email': ''};
     } catch (e) {
       return {'name': 'Unknown User', 'profilePic': '', 'email': ''};
+    }
+  }
+
+  Stream<List<ChatRoom>> getChatRoomsWithFilters({
+    DateTime? since,
+    int limit = 50,
+  }) {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      var query = _firestore
+          .collection('chat_rooms')
+          .where('participants', arrayContains: currentUserId)
+          .orderBy('lastUpdated', descending: true)
+          .limit(limit);
+
+      // إضافة فلتر التاريخ إذا كان موجود
+      if (since != null) {
+        query = query.where('lastUpdated', isGreaterThanOrEqualTo: since);
+      }
+
+      return query
+          .snapshots()
+          .asyncMap((snapshot) async {
+            final chatRooms = <ChatRoom>[];
+
+            for (final doc in snapshot.docs) {
+              try {
+                final chatRoomData = doc.data();
+                final chatRoom = ChatRoom.fromMap(chatRoomData);
+
+                // جلب معلومات محدثة عن المشاركين
+                final updatedParticipantData = await _getUpdatedParticipantData(
+                  chatRoom.participants,
+                );
+                final updatedChatRoom = chatRoom.copyWith(
+                  participantData: updatedParticipantData,
+                );
+
+                chatRooms.add(updatedChatRoom);
+              } catch (e) {
+                print('Error parsing chat room ${doc.id}: $e');
+                continue;
+              }
+            }
+
+            return chatRooms;
+          })
+          .handleError((error) {
+            if (error is FirebaseException) {
+              throw FirebaseFailure.fromFirestoreException(error);
+            }
+            throw FirebaseFailure(
+              errorMessage: 'Failed to get chat rooms stream.',
+            );
+          });
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.');
+    }
+  }
+
+  // جلب محادثة محددة
+  Future<ChatRoom?> getChatRoom(String chatRoomId) async {
+    try {
+      final doc =
+          await _firestore.collection('chat_rooms').doc(chatRoomId).get();
+
+      if (doc.exists) {
+        final chatRoom = ChatRoom.fromMap(doc.data()!);
+
+        // جلب معلومات محدثة عن المشاركين
+        final updatedParticipantData = await _getUpdatedParticipantData(
+          chatRoom.participants,
+        );
+        final updatedChatRoom = chatRoom.copyWith(
+          participantData: updatedParticipantData,
+        );
+
+        return updatedChatRoom;
+      }
+
+      return null;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to get chat room: $e');
+    }
+  }
+
+  // تحديث آخر رؤية للمحادثة
+  Future<void> updateChatRoomLastSeen(String chatRoomId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
+        'lastSeenBy.$currentUserId': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(
+        errorMessage: 'Failed to update chat room last seen: $e',
+      );
+    }
+  }
+
+  // حذف محادثة
+  Future<void> deleteChatRoom(String chatRoomId) async {
+    try {
+      final batch = _firestore.batch();
+
+      // حذف جميع الرسائل أولاً
+      final messagesSnapshot =
+          await _firestore
+              .collection('chat_rooms')
+              .doc(chatRoomId)
+              .collection('messages')
+              .get();
+
+      for (final doc in messagesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // ثم حذف غرفة المحادثة
+      batch.delete(_firestore.collection('chat_rooms').doc(chatRoomId));
+
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to delete chat room: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _getUpdatedParticipantData(
+    List<String> participantIds,
+  ) async {
+    final participantData = <String, dynamic>{};
+
+    for (final participantId in participantIds) {
+      try {
+        final userDoc =
+            await _firestore.collection('users').doc(participantId).get();
+        if (userDoc.exists) {
+          final userData = userDoc.data()!;
+          participantData[participantId] = {
+            'name': userData['name'],
+            'profilePic': userData['profilePic'],
+            'email': userData['email'],
+            'isOnline': userData['isOnline'] ?? false,
+            'lastSeen': userData['lastSeen'],
+          };
+        }
+      } catch (e) {
+        participantData[participantId] = {
+          'name': 'Unknown User',
+          'profilePic': '',
+          'email': '',
+          'isOnline': false,
+          'lastSeen': DateTime.now().millisecondsSinceEpoch,
+        };
+      }
+    }
+
+    return participantData;
+  }
+
+  // جلب عدد الرسائل غير المقروءة في محادثة
+  Future<int> getUnreadMessagesCount(String chatRoomId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      final unreadMessages =
+          await _firestore
+              .collection('chat_rooms')
+              .doc(chatRoomId)
+              .collection('messages')
+              .where('senderId', isNotEqualTo: currentUserId)
+              .where('isRead', isEqualTo: false)
+              .get();
+
+      return unreadMessages.size;
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(
+        errorMessage: 'Failed to get unread messages count: $e',
+      );
+    }
+  }
+
+  // تحديث كل الرسائل كمقروءة في محادثة
+  Future<void> markAllMessagesAsRead(String chatRoomId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      final unreadMessages =
+          await _firestore
+              .collection('chat_rooms')
+              .doc(chatRoomId)
+              .collection('messages')
+              .where('senderId', isNotEqualTo: currentUserId)
+              .where('isRead', isEqualTo: false)
+              .get();
+
+      final batch = _firestore.batch();
+
+      for (final doc in unreadMessages.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+
+      await batch.commit();
+
+      // تحديث آخر رسالة كمقروءة أيضاً
+      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
+        'lastMessage.isRead': true,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(
+        errorMessage: 'Failed to mark all messages as read: $e',
+      );
     }
   }
 }

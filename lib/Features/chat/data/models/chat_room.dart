@@ -32,9 +32,26 @@ class ChatRoom extends Equatable {
       participants: List<String>.from(map['participants'] ?? []),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       lastMessage: Map<String, dynamic>.from(map['lastMessage'] ?? {}),
-      participantData: map['participantData'] != null 
-          ? Map<String, dynamic>.from(map['participantData'])
-          : null,
+      participantData:
+          map['participantData'] != null
+              ? Map<String, dynamic>.from(map['participantData'])
+              : null,
+    );
+  }
+
+  ChatRoom copyWith({
+    String? id,
+    List<String>? participants,
+    DateTime? createdAt,
+    Map<String, dynamic>? lastMessage,
+    Map<String, dynamic>? participantData,
+  }) {
+    return ChatRoom(
+      id: id ?? this.id,
+      participants: participants ?? this.participants,
+      createdAt: createdAt ?? this.createdAt,
+      lastMessage: lastMessage ?? this.lastMessage,
+      participantData: participantData ?? this.participantData,
     );
   }
 
