@@ -10,7 +10,6 @@ class ChatListItem extends StatelessWidget {
   final String lastMessage;
   final String lastMessageTime;
   final bool isOnline;
-  final int unreadCount;
   final VoidCallback onTap;
   const ChatListItem({
     super.key,
@@ -20,7 +19,6 @@ class ChatListItem extends StatelessWidget {
     required this.lastMessage,
     required this.lastMessageTime,
     required this.isOnline,
-    required this.unreadCount,
     required this.onTap,
   });
   @override
@@ -76,7 +74,8 @@ class ChatListItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 7.h),
-                if (unreadCount > 0) _buildUnreadBadge(context),
+                if (chatRoom.unreadCount > 0)
+                  _buildUnreadBadge(context, chatRoom.unreadCount),
               ],
             ),
           ],
@@ -136,20 +135,16 @@ class ChatListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildUnreadBadge(BuildContext context) {
+  Widget _buildUnreadBadge(BuildContext context, int unreadCount) {
     return Container(
       padding: EdgeInsets.all(6.0.r),
-      constraints: BoxConstraints(
-        minWidth: 24.0.w, // Minimum width for single digit consistency
-        minHeight: 24.0.h,
-      ),
+      constraints: BoxConstraints(minWidth: 24.0.w, minHeight: 24.0.h),
       decoration: const BoxDecoration(
         color: Color(0xFFF04A4C),
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
-          // Display count, or 9+ if count is very large
           unreadCount > 99 ? '99+' : unreadCount.toString(),
           style: TextStyle(
             color: Colors.white,

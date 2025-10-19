@@ -94,9 +94,12 @@ class _ChatListState extends State<ChatList> {
                 lastMessage: lastMessageText,
                 lastMessageTime: lastMessageTime,
                 isOnline: otherUserData['isOnline'] ?? false,
-                unreadCount: 0,
                 onTap: () {
-                  // الانتقال لشاشة الدردشة
+                  // تحديث الرسائل كمقروءة عند الدخول للمحادثة
+                  context.read<HomeChatsCubit>().markAllMessagesAsRead(
+                    chatRoom.id,
+                  );
+
                   final otherUser = UserModel(
                     uid: otherParticipantId,
                     name: otherUserData['name'] ?? 'Unknown User',

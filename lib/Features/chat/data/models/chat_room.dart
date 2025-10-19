@@ -7,6 +7,7 @@ class ChatRoom extends Equatable {
   final DateTime createdAt;
   final Map<String, dynamic> lastMessage;
   final Map<String, dynamic>? participantData;
+  final int unreadCount; // إضافة هذا الحقل
 
   const ChatRoom({
     required this.id,
@@ -14,6 +15,7 @@ class ChatRoom extends Equatable {
     required this.createdAt,
     required this.lastMessage,
     this.participantData,
+    this.unreadCount = 0, // قيمة افتراضية
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class ChatRoom extends Equatable {
       'createdAt': Timestamp.fromDate(createdAt),
       'lastMessage': lastMessage,
       'participantData': participantData,
+      'unreadCount': unreadCount, // إضافة للـ map
     };
   }
 
@@ -36,6 +39,7 @@ class ChatRoom extends Equatable {
           map['participantData'] != null
               ? Map<String, dynamic>.from(map['participantData'])
               : null,
+      unreadCount: map['unreadCount'] ?? 0, // قراءة من الـ map
     );
   }
 
@@ -45,6 +49,7 @@ class ChatRoom extends Equatable {
     DateTime? createdAt,
     Map<String, dynamic>? lastMessage,
     Map<String, dynamic>? participantData,
+    int? unreadCount, // إضافة للـ copyWith
   }) {
     return ChatRoom(
       id: id ?? this.id,
@@ -52,9 +57,16 @@ class ChatRoom extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       lastMessage: lastMessage ?? this.lastMessage,
       participantData: participantData ?? this.participantData,
+      unreadCount: unreadCount ?? this.unreadCount,
     );
   }
 
   @override
-  List<Object?> get props => [id, participants, createdAt, lastMessage];
+  List<Object?> get props => [
+    id,
+    participants,
+    createdAt,
+    lastMessage,
+    unreadCount,
+  ];
 }

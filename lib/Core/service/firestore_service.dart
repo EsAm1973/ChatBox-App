@@ -239,18 +239,15 @@ class FirestoreService {
                 final chatRoomData = doc.data();
                 final chatRoom = ChatRoom.fromMap(chatRoomData);
 
-                // تحسين الأداء: جلب بيانات المشاركين فقط إذا كانت ناقصة
-                Map<String, dynamic>? updatedParticipantData;
-                if (chatRoom.participantData == null ||
-                    chatRoom.participantData!.isEmpty) {
-                  updatedParticipantData = await _getUpdatedParticipantData(
-                    chatRoom.participants,
-                  );
-                }
-
+                // حساب unread count حقيقي
+                final realUnreadCount = await getUnreadMessagesCount(
+                  chatRoom.id,
+                );
                 final updatedChatRoom = chatRoom.copyWith(
+                  unreadCount: realUnreadCount,
                   participantData:
-                      updatedParticipantData ?? chatRoom.participantData,
+                      chatRoom.participantData ??
+                      await _getUpdatedParticipantData(chatRoom.participants),
                 );
 
                 chatRooms.add(updatedChatRoom);
@@ -264,10 +261,8 @@ class FirestoreService {
           })
           .handleError((error) {
             if (error is FirebaseException) {
-              // معالجة خاصة لأخطاء الفهرس
               if (error.code == 'failed-precondition') {
                 print('Firestore index needs to be created: ${error.message}');
-                // يمكنك إضافة منطق لإعلام المستخدم أو استخدام بديل
               }
               throw FirebaseFailure.fromFirestoreException(error);
             }
@@ -533,6 +528,31 @@ class FirestoreService {
     return participantData;
   }
 
+  Stream<int> getUnreadMessagesCountStream(String chatRoomId) {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    return _firestore
+        .collection('chat_rooms')
+        .doc(chatRoomId)
+        .collection('messages')
+        .where('senderId', isNotEqualTo: currentUserId)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  Future<void> updateChatRoomUnreadCount(String chatRoomId, int count) async {
+    try {
+      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
+        'unreadCount': count,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update unread count: $e');
+    }
+  }
+
   // جلب عدد الرسائل غير المقروءة في محادثة
   Future<int> getUnreadMessagesCount(String chatRoomId) async {
     try {
@@ -577,12 +597,13 @@ class FirestoreService {
         batch.update(doc.reference, {'isRead': true});
       }
 
-      await batch.commit();
-
-      // تحديث آخر رسالة كمقروءة أيضاً
-      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
+      // تحديث lastMessage و unreadCount
+      batch.update(_firestore.collection('chat_rooms').doc(chatRoomId), {
         'lastMessage.isRead': true,
+        'unreadCount': 0, // إعادة تعيين العداد
       });
+
+      await batch.commit();
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
