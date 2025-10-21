@@ -1,30 +1,43 @@
-import 'package:equatable/equatable.dart';
+import 'package:chatbox/Features/chat/data/models/chat_room.dart';
+import 'package:chatbox/Features/chat/data/models/message.dart';
 
-abstract class ChatState extends Equatable {
-  const ChatState();
+abstract class ChatState {
+  final List<MessageModel> messages;
+  final List<ChatRoomModel> userChats;
 
-  @override
-  List<Object> get props => [];
+  const ChatState({this.messages = const [], this.userChats = const []});
 }
 
-class ChatInitial extends ChatState {}
+class ChatInitial extends ChatState {
+  const ChatInitial();
+}
 
-class ChatLoading extends ChatState {}
+class ChatLoading extends ChatState {
+  const ChatLoading();
+}
 
-class ChatRoomCreated extends ChatState {
-  final String chatRoomId;
+class MessagesLoaded extends ChatState {
+  const MessagesLoaded({required super.messages});
+}
 
-  const ChatRoomCreated({required this.chatRoomId});
+class UserChatsLoaded extends ChatState {
+  const UserChatsLoaded({required super.userChats});
+}
 
-  @override
-  List<Object> get props => [chatRoomId];
+class MessageSending extends ChatState {
+  const MessageSending({required super.messages});
+}
+
+class MessageSent extends ChatState {
+  const MessageSent({required super.messages});
 }
 
 class ChatError extends ChatState {
-  final String errorMessage;
+  final String error;
 
-  const ChatError({required this.errorMessage});
-
-  @override
-  List<Object> get props => [errorMessage];
+  const ChatError({
+    required this.error,
+    super.messages,
+    super.userChats,
+  });
 }

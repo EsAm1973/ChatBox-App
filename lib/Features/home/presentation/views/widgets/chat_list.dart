@@ -3,10 +3,10 @@ import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/home/presentation/manager/home%20chats/home_chats_cubit.dart';
 import 'package:chatbox/Features/home/presentation/manager/home%20chats/home_chats_state.dart';
 import 'package:chatbox/Features/home/presentation/views/widgets/chat_list_item.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 class ChatList extends StatefulWidget {
@@ -20,47 +20,67 @@ class _ChatListState extends State<ChatList> {
   @override
   void initState() {
     super.initState();
-    // نبدأ تحميل المحادثات عند تهيئة الـ State
-    context.read<HomeChatsCubit>().loadChatRooms();
+    _loadChats();
+  }
+
+  void _loadChats() {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    context.read<HomeCubit>().loadUserChats(currentUserId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeChatsCubit, HomeChatListState>(
+    return BlocConsumer<HomeCubit, HomeState>(
+      listener: (context, state) {
+        if (state is HomeError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
+          );
+        }
+      },
       builder: (context, state) {
-        if (state is ChatListLoading) {
+        if (state is HomeLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (state is HomeChatListError) {
+        } else if (state is HomeError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('Failed to load chats: ${state.errorMessage}'),
-                const SizedBox(height: 8),
+                Icon(Icons.error_outline, size: 48.r, color: Colors.red),
+                SizedBox(height: 16.h),
+                Text('Failed to load chats: ${state.error}'),
+                SizedBox(height: 8.h),
                 ElevatedButton(
                   onPressed: () {
-                    context.read<HomeChatsCubit>().loadChatRooms();
+                    final currentUserId =
+                        FirebaseAuth.instance.currentUser!.uid;
+                    context.read<HomeCubit>().loadUserChats(currentUserId);
                   },
                   child: const Text('Retry'),
                 ),
               ],
             ),
           );
-        } else if (state is HomeChatListLoaded) {
-          final chatRooms = state.chatRooms;
-          if (chatRooms.isEmpty) {
-            return const Center(
+        } else if (state is HomeLoaded) {
+          final chats = state.chats;
+          final usersCache = state.usersCache;
+          if (chats.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.chat_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No conversations yet'),
+                  Icon(
+                    Icons.chat_outlined,
+                    size: 64.r,
+                    color: Theme.of(context).iconTheme.color,
+                  ),
+                  SizedBox(height: 16.h),
+                  const Text('No conversations yet'),
                   Text(
                     'Start a new chat!',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ],
               ),
@@ -68,48 +88,35 @@ class _ChatListState extends State<ChatList> {
           }
 
           return ListView.builder(
-            itemCount: chatRooms.length,
+            itemCount: chats.length,
             itemBuilder: (context, index) {
-              final chatRoom = chatRooms[index];
+              final chat = chats[index];
               final currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
-              // الحصول على المستخدم الآخر
-              final otherParticipantId = chatRoom.participants.firstWhere(
+              final otherParticipantId = chat.participants.firstWhere(
                 (id) => id != currentUserId,
+                orElse: () => '',
               );
-              final otherUserData =
-                  chatRoom.participantData?[otherParticipantId] ?? {};
 
-              final lastMessage = chatRoom.lastMessage;
-              final lastMessageText = lastMessage['text'] ?? '';
-              final lastMessageTime =
-                  lastMessage['timestamp'] != null
-                      ? _formatLastMessageTime(lastMessage['timestamp'])
-                      : '';
+              if (otherParticipantId.isEmpty) {
+                return const SizedBox();
+              }
 
-              return ChatListItem(
-                chatRoom: chatRoom,
-                otherUserName: otherUserData['name'] ?? 'Unknown User',
-                otherUserProfilePic: otherUserData['profilePic'] ?? '',
-                lastMessage: lastMessageText,
-                lastMessageTime: lastMessageTime,
-                isOnline: otherUserData['isOnline'] ?? false,
-                onTap: () {
-                  // تحديث الرسائل كمقروءة عند الدخول للمحادثة
-                  context.read<HomeChatsCubit>().markAllMessagesAsRead(
-                    chatRoom.id,
-                  );
-
-                  final otherUser = UserModel(
+              final otherUser =
+                  usersCache[otherParticipantId] ??
+                  UserModel(
                     uid: otherParticipantId,
-                    name: otherUserData['name'] ?? 'Unknown User',
-                    email: otherUserData['email'] ?? '',
-                    profilePic: otherUserData['profilePic'] ?? '',
-                    isOnline: otherUserData['isOnline'] ?? false,
+                    name: 'User',
+                    email: '',
+                    profilePic: '',
+                    isOnline: false,
                     createdAt: DateTime.now(),
                     lastSeen: DateTime.now(),
                   );
-
+              return ChatListItem(
+                chat: chat,
+                otherUser: otherUser,
+                onTap: () {
                   GoRouter.of(
                     context,
                   ).push(AppRouter.kChatScreenRoute, extra: otherUser);
@@ -122,23 +129,5 @@ class _ChatListState extends State<ChatList> {
         }
       },
     );
-  }
-
-  String _formatLastMessageTime(Timestamp timestamp) {
-    final messageTime = timestamp.toDate();
-    final now = DateTime.now();
-    final difference = now.difference(messageTime);
-
-    if (difference.inMinutes < 1) {
-      return 'Now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d';
-    } else {
-      return '${messageTime.day}/${messageTime.month}';
-    }
   }
 }

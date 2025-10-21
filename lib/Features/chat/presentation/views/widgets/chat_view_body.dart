@@ -4,6 +4,7 @@ import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_sta
 import 'package:chatbox/Features/chat/presentation/views/widgets/chat_appbar.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/chat_input.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/message_list.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,11 +18,14 @@ class ChatViewBody extends StatefulWidget {
 }
 
 class _ChatViewBodyState extends State<ChatViewBody> {
-  late String chatRoomId;
   @override
   void initState() {
     super.initState();
-    context.read<ChatCubit>().getOrCreateChatRoom(widget.otherUser.uid);
+    // استخدام الـ Cubit الجديد لتهيئة الدردشة
+    context.read<ChatCubit>().initializeChat(
+      FirebaseAuth.instance.currentUser!.uid,
+      widget.otherUser.uid,
+    );
   }
 
   @override
@@ -30,21 +34,19 @@ class _ChatViewBodyState extends State<ChatViewBody> {
       listener: (context, state) {
         if (state is ChatError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
         }
       },
       builder: (context, state) {
-        if (state is ChatRoomCreated) {
-          chatRoomId = state.chatRoomId;
+        if (state is MessagesLoaded ||
+            state is MessageSent ||
+            state is MessageSending) {
           return Column(
             children: [
               ChatAppBar(otherUser: widget.otherUser),
-              Expanded(child: MessageList(chatRoomId: chatRoomId)),
-              ChatInput(chatRoomId: chatRoomId, otherUser: widget.otherUser),
+              Expanded(child: MessageList(messages: state.messages)),
+              ChatInput(otherUser: widget.otherUser),
             ],
           );
         } else if (state is ChatLoading) {
@@ -58,11 +60,12 @@ class _ChatViewBodyState extends State<ChatViewBody> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Error: ${state.errorMessage}'),
+                      Text('Error: ${state.error}'),
                       SizedBox(height: 16.h),
                       ElevatedButton(
                         onPressed: () {
-                          context.read<ChatCubit>().getOrCreateChatRoom(
+                          context.read<ChatCubit>().initializeChat(
+                            FirebaseAuth.instance.currentUser!.uid,
                             widget.otherUser.uid,
                           );
                         },

@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/auth/presentation/manager/login/login_cubit.dart';
@@ -11,7 +12,7 @@ import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
-import 'package:chatbox/Features/home/data/repos/home_repo.dart';
+import 'package:chatbox/Features/home/data/repos/user_search_repo.dart';
 import 'package:chatbox/Features/home/presentation/manager/home%20chats/home_chats_cubit.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
@@ -93,11 +94,14 @@ abstract class AppRouter {
               providers: [
                 BlocProvider(
                   create:
-                      (context) =>
-                          SearchUserCubit(homeRepository: getIt<HomeRepo>()),
+                      (context) => SearchUserCubit(
+                        homeRepository: getIt<SearchUserRepo>(),
+                      ),
                 ),
                 BlocProvider(
-                  create: (context) => HomeChatsCubit(getIt<HomeRepo>()),
+                  create:
+                      (context) =>
+                          HomeCubit(getIt<ChatRepo>(), getIt<UserRepo>()),
                 ),
               ],
               child: const HomeView(),
@@ -107,7 +111,7 @@ abstract class AppRouter {
         path: kChatScreenRoute,
         builder:
             (context, state) => BlocProvider(
-              create: (context) => ChatCubit(chatRepository: getIt<ChatRepo>()),
+              create: (context) => ChatCubit(getIt<ChatRepo>()),
               child: ChatView(otherUser: state.extra as UserModel),
             ),
       ),

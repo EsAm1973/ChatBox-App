@@ -1,91 +1,80 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
-import 'package:chatbox/Features/chat/data/models/chat_room.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_state.dart';
 
 class ChatCubit extends Cubit<ChatState> {
-  final ChatRepo chatRepository;
-  String? _currentChatRoomId;
+  final ChatRepo _chatRepo;
+  StreamSubscription? _messagesSubscription;
+  StreamSubscription? _chatsSubscription;
 
-  ChatCubit({required this.chatRepository}) : super(ChatInitial());
+  ChatCubit(this._chatRepo) : super(const ChatInitial());
 
-  Future<void> getOrCreateChatRoom(String otherUserId) async {
-    emit(ChatLoading());
-    try {
-      final result = await chatRepository.getOrCreateChatRoom(otherUserId);
+  /// Initializes chat room and starts listening to messages
+  void initializeChat(String user1, String user2) async {
+    emit(const ChatLoading());
+
+    final result = await _chatRepo.createChatRoom(user1, user2);
+
+    result.fold(
+      (failure) => emit(ChatError(error: failure.errorMessage)),
+      (chatId) => _listenToMessages(chatId),
+    );
+  }
+
+  /// Starts listening to messages for a specific chat
+  void _listenToMessages(String chatId) {
+    _messagesSubscription?.cancel();
+
+    _messagesSubscription = _chatRepo.getMessages(chatId).listen((result) {
       result.fold(
-        (failure) => emit(ChatError(errorMessage: failure.errorMessage)),
-        (chatRoomId) {
-          _currentChatRoomId = chatRoomId;
-          emit(ChatRoomCreated(chatRoomId: chatRoomId));
-        },
+        (failure) => emit(
+          ChatError(error: failure.errorMessage, messages: state.messages),
+        ),
+        (messages) => emit(MessagesLoaded(messages: messages)),
       );
-    } catch (e) {
-      emit(ChatError(errorMessage: 'Failed to create chat room: $e'));
-    }
-  }
-
-  Future<void> sendMessage({
-    required String text,
-    required String receiverId,
-  }) async {
-    if (_currentChatRoomId == null) {
-      emit(const ChatError(errorMessage: 'No active chat room'));
-      return;
-    }
-
-    try {
-      final result = await chatRepository.sendMessage(
-        chatRoomId: _currentChatRoomId!,
-        text: text,
-        receiverId: receiverId,
-      );
-
-      result.fold((failure) {
-        // نرسل خطأ ولكن لا نغير الحالة الرئيسية
-        emit(ChatError(errorMessage: failure.errorMessage));
-        // نعود للحالة الطبيعية بعد الخطأ
-        if (_currentChatRoomId != null) {
-          emit(ChatRoomCreated(chatRoomId: _currentChatRoomId!));
-        }
-      }, (_) {});
-    } catch (e) {
-      emit(ChatError(errorMessage: 'Failed to send message: $e'));
-      // نعود للحالة الطبيعية بعد الخطأ
-      if (_currentChatRoomId != null) {
-        emit(ChatRoomCreated(chatRoomId: _currentChatRoomId!));
-      }
-    }
-  }
-
-  Stream<List<Message>> listenToMessages(String chatRoomId) {
-    return chatRepository.getMessagesStream(chatRoomId).map((either) {
-      return either.fold((failure) {
-        emit(ChatError(errorMessage: failure.errorMessage));
-        return <Message>[];
-      }, (messages) => messages);
     });
   }
 
-  Stream<List<ChatRoom>> listenToChatRooms() {
-    return chatRepository.getChatRoomsStream().map((either) {
-      return either.fold((failure) {
-        emit(ChatError(errorMessage: failure.errorMessage));
-        return <ChatRoom>[];
-      }, (chatRooms) => chatRooms);
+  /// Sends a new message to the chat
+  void sendMessage(MessageModel message) async {
+    emit(MessageSending(messages: state.messages));
+
+    final result = await _chatRepo.sendMessage(message);
+
+    result.fold(
+      (failure) => emit(
+        ChatError(error: failure.errorMessage, messages: state.messages),
+      ),
+      (_) => emit(MessageSent(messages: state.messages)),
+    );
+  }
+
+  /// Loads user's chat conversations
+  void loadUserChats(String userId) {
+    _chatsSubscription?.cancel();
+
+    _chatsSubscription = _chatRepo.getUserChats(userId).listen((result) {
+      result.fold(
+        (failure) => emit(
+          ChatError(error: failure.errorMessage, userChats: state.userChats),
+        ),
+        (chats) => emit(UserChatsLoaded(userChats: chats)),
+      );
     });
   }
 
-  Future<void> markMessagesAsRead(String chatRoomId) async {
-    try {
-      final result = await chatRepository.markMessagesAsRead(chatRoomId);
-      result.fold(
-        (failure) => emit(ChatError(errorMessage: failure.errorMessage)),
-        (_) {},
-      );
-    } catch (e) {
-      emit(ChatError(errorMessage: 'Failed to mark messages as read: $e'));
-    }
+  /// Marks messages as seen for the current user
+  void markMessagesAsSeen(String chatId, String userId) async {
+    await _chatRepo.markMessagesAsSeen(chatId, userId);
+  }
+
+  @override
+  Future<void> close() {
+    _messagesSubscription?.cancel();
+    _chatsSubscription?.cancel();
+    return super.close();
   }
 }

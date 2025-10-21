@@ -5,8 +5,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class SentMessage extends StatelessWidget {
   final String message;
   final String time;
+  final bool isSeen;
 
-  const SentMessage({super.key, required this.message, required this.time});
+  const SentMessage({
+    super.key,
+    required this.message,
+    required this.time,
+    required this.isSeen,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +38,29 @@ class SentMessage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 7.h),
-            Text(
-              time,
-              style: AppTextStyles.regular12.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onPrimary.withValues(alpha: 0.7),
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: AppTextStyles.regular12.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onPrimary.withOpacity(0.7),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  isSeen ? Icons.done_all : Icons.done,
+                  size: 14.r,
+                  color:
+                      isSeen
+                          ? Colors.blue
+                          : Theme.of(
+                            context,
+                          ).colorScheme.onPrimary.withOpacity(0.7),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,54 +1,54 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ChatListItem extends StatelessWidget {
-  final ChatRoom chatRoom;
-  final String otherUserName;
-  final String otherUserProfilePic;
-  final String lastMessage;
-  final String lastMessageTime;
-  final bool isOnline;
+  final ChatRoomModel chat;
+  final UserModel otherUser;
   final VoidCallback onTap;
+
   const ChatListItem({
     super.key,
-    required this.chatRoom,
-    required this.otherUserName,
-    required this.otherUserProfilePic,
-    required this.lastMessage,
-    required this.lastMessageTime,
-    required this.isOnline,
+    required this.chat,
+    required this.otherUser,
     required this.onTap,
   });
+
   @override
   Widget build(BuildContext context) {
+    final lastMessage = chat.lastMessage;
+    final lastMessageTime = _formatLastMessageTime(chat.lastMessageTime);
+
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildAvatarWithStatusDot(context),
+            _buildAvatar(context),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    otherUserName,
+                    otherUser.name,
                     style: AppTextStyles.semiBold20,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 6.h),
                   Text(
-                    lastMessage,
+                    lastMessage.content,
                     style: AppTextStyles.regular12.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ).colorScheme.onSurface.withOpacity(0.6),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -56,12 +56,11 @@ class ChatListItem extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 15),
+            SizedBox(width: 15.w),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Time
                 Padding(
                   padding: EdgeInsets.only(top: 2.0.h),
                   child: Text(
@@ -74,8 +73,10 @@ class ChatListItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 7.h),
-                if (chatRoom.unreadCount > 0)
-                  _buildUnreadBadge(context, chatRoom.unreadCount),
+                if (!lastMessage.isRead &&
+                    lastMessage.senderId !=
+                        FirebaseAuth.instance.currentUser!.uid)
+                  _buildUnreadBadge(context),
               ],
             ),
           ],
@@ -84,75 +85,55 @@ class ChatListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarWithStatusDot(BuildContext context) {
-    double avatarRadius = 30.0.r;
-    double dotSize = 15.0.r;
-
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: avatarRadius,
-          backgroundImage: NetworkImage(otherUserProfilePic),
-        ),
-        // Status Dot
-        if (isOnline)
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: dotSize,
-              height: dotSize,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0FE16D),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  width: 2.0.w,
-                ),
-              ),
+  Widget _buildAvatar(BuildContext context) {
+    return CachedNetworkImage(
+      imageUrl: otherUser.profilePic,
+      imageBuilder:
+          (context, imageProvider) => Container(
+            width: 60.r,
+            height: 60.r,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
             ),
           ),
-        // Design shows a grey dot, which can represent "busy" or just a visual element.
-        // For demonstration, if not online (or if we want the grey dot):
-        if (!isOnline)
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: dotSize,
-              height: dotSize,
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  width: 2.0.w,
-                ),
-              ),
-            ),
+      placeholder:
+          (context, url) => CircleAvatar(
+            radius: 30.r,
+            backgroundColor: Colors.grey[200],
+            child: const Icon(Icons.person),
           ),
-      ],
+      errorWidget:
+          (context, url, error) =>
+              CircleAvatar(radius: 30.r, child: const Icon(Icons.error)),
     );
   }
 
-  Widget _buildUnreadBadge(BuildContext context, int unreadCount) {
+  Widget _buildUnreadBadge(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(6.0.r),
-      constraints: BoxConstraints(minWidth: 24.0.w, minHeight: 24.0.h),
+      width: 12.r,
+      height: 12.r,
       decoration: const BoxDecoration(
         color: Color(0xFFF04A4C),
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: Text(
-          unreadCount > 99 ? '99+' : unreadCount.toString(),
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12.0.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
     );
+  }
+
+  String _formatLastMessageTime(DateTime messageTime) {
+    final now = DateTime.now();
+    final difference = now.difference(messageTime);
+
+    if (difference.inMinutes < 1) {
+      return 'Now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}m';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}h';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d';
+    } else {
+      return '${messageTime.day}/${messageTime.month}';
+    }
   }
 }

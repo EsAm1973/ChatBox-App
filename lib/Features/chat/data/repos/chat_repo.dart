@@ -4,13 +4,21 @@ import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class ChatRepo {
-  Future<Either<Failure, String>> getOrCreateChatRoom(String otherUserId);
-  Future<Either<Failure, Unit>> sendMessage({
-    required String chatRoomId,
-    required String text,
-    required String receiverId,
-  });
-  Stream<Either<Failure, List<Message>>> getMessagesStream(String chatRoomId);
-  Stream<Either<Failure, List<ChatRoom>>> getChatRoomsStream();
-  Future<Either<Failure, Unit>> markMessagesAsRead(String chatRoomId);
+  /// Sends a message and returns success or failure
+  Future<Either<Failure, void>> sendMessage(MessageModel message);
+
+  /// Gets real-time stream of messages for a chat room
+  Stream<Either<Failure, List<MessageModel>>> getMessages(String chatRoomId);
+
+  /// Gets real-time stream of user's chat conversations
+  Stream<Either<Failure, List<ChatRoomModel>>> getUserChats(String userId);
+
+  /// Creates chat room if not exists and returns chat ID
+  Future<Either<Failure, String>> createChatRoom(String user1, String user2);
+
+  /// Marks messages as seen for the current user in a chat
+  Future<Either<Failure, void>> markMessagesAsSeen(
+    String chatId,
+    String userId,
+  );
 }

@@ -1,49 +1,27 @@
+import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
-import 'package:equatable/equatable.dart';
 
-abstract class HomeChatListState extends Equatable {
-  const HomeChatListState();
+abstract class HomeState {
+  final List<ChatRoomModel> chats;
+  final Map<String, UserModel> usersCache;
 
-  @override
-  List<Object> get props => [];
+  const HomeState({this.chats = const [], this.usersCache = const {}});
 }
 
-class HomeChatListInitial extends HomeChatListState {}
-
-class ChatListLoading extends HomeChatListState {}
-
-class HomeChatListLoaded extends HomeChatListState {
-  final List<ChatRoom> chatRooms;
-
-  const HomeChatListLoaded({required this.chatRooms});
-
-  @override
-  List<Object> get props => [chatRooms];
+class HomeInitial extends HomeState {
+  const HomeInitial();
 }
 
-class HomeChatListError extends HomeChatListState {
-  final String errorMessage;
-
-  const HomeChatListError({required this.errorMessage});
-
-  @override
-  List<Object> get props => [errorMessage];
+class HomeLoading extends HomeState {
+  const HomeLoading();
 }
 
-class HomeChatListDeleted extends HomeChatListState {
-  final String chatRoomId;
-
-  const HomeChatListDeleted({required this.chatRoomId});
-
-  @override
-  List<Object> get props => [chatRoomId];
+class HomeLoaded extends HomeState {
+  const HomeLoaded({required super.chats, required super.usersCache});
 }
 
-class MessagesMarkedAsRead extends HomeChatListState {
-  final String chatRoomId;
+class HomeError extends HomeState {
+  final String error;
 
-  const MessagesMarkedAsRead({required this.chatRoomId});
-
-  @override
-  List<Object> get props => [chatRoomId];
+  const HomeError({required this.error, super.chats, super.usersCache});
 }

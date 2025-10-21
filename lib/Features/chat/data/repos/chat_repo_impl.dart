@@ -1,99 +1,89 @@
+import 'dart:developer';
+
 import 'package:chatbox/Core/errors/firebase_failures.dart';
-import 'package:chatbox/Core/service/firestore_service.dart';
+import 'package:chatbox/Core/service/firestore_chat_service.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 
 class ChatRepoImpl implements ChatRepo {
-  final FirestoreService firestoreService;
+  final FirestoreChatService firestoreChatService;
 
-  ChatRepoImpl({required this.firestoreService});
-  @override
-  Stream<Either<Failure, List<ChatRoom>>> getChatRoomsStream() {
-    return firestoreService
-        .getChatRoomsStream()
-        .map(
-          (chatRooms) =>
-              Right<Failure, List<ChatRoom>>(chatRooms as List<ChatRoom>),
-        )
-        .handleError((error) {
-          if (error is Failure) {
-            return Left<Failure, List<ChatRoom>>(error);
-          }
-          return Left<Failure, List<ChatRoom>>(
-            FirebaseFailure(errorMessage: 'Failed to get chat rooms stream.'),
-          );
-        });
-  }
+  ChatRepoImpl({required this.firestoreChatService});
 
   @override
-  Stream<Either<Failure, List<Message>>> getMessagesStream(String chatRoomId) {
-    return firestoreService
-        .getMessagesStream(chatRoomId)
-        .map(
-          (messages) =>
-              Right<Failure, List<Message>>(messages as List<Message>),
-        )
-        .handleError((error) {
-          if (error is Failure) {
-            return Left<Failure, List<Message>>(error);
-          }
-          return Left<Failure, List<Message>>(
-            FirebaseFailure(errorMessage: 'Failed to get messages stream.'),
-          );
-        });
-  }
-
-  @override
-  Future<Either<Failure, String>> getOrCreateChatRoom(
-    String otherUserId,
+  Future<Either<Failure, String>> createChatRoom(
+    String user1,
+    String user2,
   ) async {
     try {
-      final chatRoomId = await firestoreService.getOrCreateChatRoom(
-        otherUserId,
+      final chatId = await firestoreChatService.createChatRoomIfNotExists(
+        user1,
+        user2,
       );
-      return Right(chatRoomId);
-    } on Failure catch (failure) {
-      return Left(failure);
+      return Right(chatId);
+    } on FirebaseException catch (e) {
+      return Left(FirebaseFailure.fromFirestoreException(e));
     } catch (e) {
       return Left(
-        FirebaseFailure(errorMessage: 'Failed to get or create chat room.'),
+        FirebaseFailure(errorMessage: 'Failed to create chat room: $e'),
       );
     }
   }
 
   @override
-  Future<Either<Failure, Unit>> markMessagesAsRead(String chatRoomId) async {
+  Stream<Either<Failure, List<MessageModel>>> getMessages(String chatRoomId) {
+    return firestoreChatService
+        .getMessagesStream(chatRoomId)
+        .map((messages) => Right<Failure, List<MessageModel>>(messages))
+        .handleError((error) {
+          return Left<Failure, List<MessageModel>>(
+            FirebaseFailure(errorMessage: 'Failed to get messages: $error'),
+          );
+        });
+  }
+
+  @override
+  Stream<Either<Failure, List<ChatRoomModel>>> getUserChats(String userId) {
+    return firestoreChatService
+        .getUserChatsStream(userId)
+        .map((chats) => Right<Failure, List<ChatRoomModel>>(chats))
+        .handleError((error) {
+          log('Error getting user chats: $error');
+          return Left<Failure, List<ChatRoomModel>>(
+            FirebaseFailure(errorMessage: 'Failed to get chat rooms: $error'),
+          );
+        });
+  }
+
+  @override
+  Future<Either<Failure, void>> markMessagesAsSeen(
+    String chatId,
+    String userId,
+  ) async {
     try {
-      await firestoreService.markMessagesAsRead(chatRoomId);
-      return const Right(unit);
-    } on Failure catch (failure) {
-      return Left(failure);
+      await firestoreChatService.markMessagesAsSeen(chatId, userId);
+      return const Right(null);
+    } on FirebaseException catch (e) {
+      return Left(FirebaseFailure.fromFirestoreException(e));
     } catch (e) {
       return Left(
-        FirebaseFailure(errorMessage: 'Failed to mark messages as read.'),
+        FirebaseFailure(errorMessage: 'Failed to mark messages as seen: $e'),
       );
     }
   }
 
   @override
-  Future<Either<Failure, Unit>> sendMessage({
-    required String chatRoomId,
-    required String text,
-    required String receiverId,
-  }) async {
+  Future<Either<Failure, void>> sendMessage(MessageModel message) async {
     try {
-      await firestoreService.sendMessage(
-        chatRoomId: chatRoomId,
-        text: text,
-        receiverId: receiverId,
-      );
-      return const Right(unit);
-    } on Failure catch (failure) {
-      return Left(failure);
+      await firestoreChatService.sendMessage(message);
+      return const Right(null);
+    } on FirebaseException catch (e) {
+      return Left(FirebaseFailure.fromFirestoreException(e));
     } catch (e) {
-      return Left(FirebaseFailure(errorMessage: 'Failed to send message.'));
+      return Left(FirebaseFailure(errorMessage: 'Failed to send message: $e'));
     }
   }
 }

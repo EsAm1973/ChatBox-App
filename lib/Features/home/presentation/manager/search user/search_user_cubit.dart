@@ -1,11 +1,11 @@
 import 'package:bloc/bloc.dart';
-import 'package:chatbox/Features/home/data/repos/home_repo.dart';
+import 'package:chatbox/Features/home/data/repos/user_search_repo.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_state.dart';
 
 class SearchUserCubit extends Cubit<SearchUserState> {
-  final HomeRepo _homeRepository;
+  final SearchUserRepo _homeRepository;
 
-  SearchUserCubit({required HomeRepo homeRepository})
+  SearchUserCubit({required SearchUserRepo homeRepository})
     : _homeRepository = homeRepository,
       super(const SearchUserState());
 
