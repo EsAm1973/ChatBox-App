@@ -22,7 +22,8 @@ class ChatListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final lastMessage = chat.lastMessage;
     final lastMessageTime = _formatLastMessageTime(chat.lastMessageTime);
-
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final unreadCount = chat.unreadCounts[currentUserId] ?? 0;
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -73,10 +74,7 @@ class ChatListItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 7.h),
-                if (!lastMessage.isRead &&
-                    lastMessage.senderId !=
-                        FirebaseAuth.instance.currentUser!.uid)
-                  _buildUnreadBadge(context),
+                if (unreadCount > 0) _buildUnreadBadge(context, unreadCount),
               ],
             ),
           ],
@@ -109,13 +107,17 @@ class ChatListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildUnreadBadge(BuildContext context) {
+  Widget _buildUnreadBadge(BuildContext context, int unreadCount) {
     return Container(
-      width: 12.r,
-      height: 12.r,
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
       decoration: const BoxDecoration(
         color: Color(0xFFF04A4C),
-        shape: BoxShape.circle,
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+      child: Text(
+        unreadCount > 99 ? '99+' : unreadCount.toString(),
+        style: AppTextStyles.regular12.copyWith(color: Colors.white),
       ),
     );
   }

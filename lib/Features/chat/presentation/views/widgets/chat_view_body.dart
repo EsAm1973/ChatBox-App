@@ -18,14 +18,59 @@ class ChatViewBody extends StatefulWidget {
 }
 
 class _ChatViewBodyState extends State<ChatViewBody> {
+  late String _chatId;
+  late String _currentUserId;
+  final ScrollController _scrollController = ScrollController();
+  bool _isAtBottom = true;
+
   @override
   void initState() {
     super.initState();
-    // استخدام الـ Cubit الجديد لتهيئة الدردشة
+    _currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    _chatId = _generateChatRoomId(_currentUserId, widget.otherUser.uid);
+
     context.read<ChatCubit>().initializeChat(
-      FirebaseAuth.instance.currentUser!.uid,
+      _currentUserId,
       widget.otherUser.uid,
     );
+
+    _scrollController.addListener(_onScroll);
+
+    // Mark existing messages as seen when opening
+    _markMessagesAsSeen();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    // Mark all messages as seen when leaving
+    _markMessagesAsSeen();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Check if user is at the bottom of the chat
+    final isAtBottom =
+        _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 50;
+
+    if (isAtBottom != _isAtBottom) {
+      _isAtBottom = isAtBottom;
+      if (_isAtBottom) {
+        // User scrolled to bottom, mark messages as seen
+        _markMessagesAsSeen();
+      }
+    }
+  }
+
+  String _generateChatRoomId(String user1, String user2) {
+    final sortedIds = [user1, user2]..sort();
+    return 'chat_${sortedIds[0]}_${sortedIds[1]}';
+  }
+
+  void _markMessagesAsSeen() {
+    context.read<ChatCubit>().markMessagesAsSeen(_chatId, _currentUserId);
   }
 
   @override
@@ -36,6 +81,11 @@ class _ChatViewBodyState extends State<ChatViewBody> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
+        } else if (state is MessagesLoaded) {
+          // Auto-mark as seen when new messages arrive and user is at bottom
+          if (_isAtBottom) {
+            _markMessagesAsSeen();
+          }
         }
       },
       builder: (context, state) {
@@ -45,7 +95,12 @@ class _ChatViewBodyState extends State<ChatViewBody> {
           return Column(
             children: [
               ChatAppBar(otherUser: widget.otherUser),
-              Expanded(child: MessageList(messages: state.messages)),
+              Expanded(
+                child: MessageList(
+                  messages: state.messages,
+                  scrollController: _scrollController,
+                ),
+              ),
               ChatInput(otherUser: widget.otherUser),
             ],
           );
@@ -65,7 +120,7 @@ class _ChatViewBodyState extends State<ChatViewBody> {
                       ElevatedButton(
                         onPressed: () {
                           context.read<ChatCubit>().initializeChat(
-                            FirebaseAuth.instance.currentUser!.uid,
+                            _currentUserId,
                             widget.otherUser.uid,
                           );
                         },

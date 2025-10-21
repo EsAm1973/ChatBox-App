@@ -6,12 +6,14 @@ class ChatRoomModel {
   final List<String> participants;
   final MessageModel lastMessage;
   final DateTime lastMessageTime;
+  final Map<String, int> unreadCounts;
 
   ChatRoomModel({
     required this.id,
     required this.participants,
     required this.lastMessage,
     required this.lastMessageTime,
+    required this.unreadCounts,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,9 +21,8 @@ class ChatRoomModel {
       'id': id,
       'participants': participants,
       'lastMessage': lastMessage.toMap(),
-      'lastMessageTime': Timestamp.fromDate(
-        lastMessageTime,
-      ), // تحويل إلى Firebase Timestamp
+      'lastMessageTime': Timestamp.fromDate(lastMessageTime),
+      'unreadCounts': unreadCounts,
     };
   }
 
@@ -42,6 +43,7 @@ class ChatRoomModel {
       participants: List<String>.from(map['participants'] ?? []),
       lastMessage: MessageModel.fromMap(map['lastMessage'] ?? {}),
       lastMessageTime: lastMessageTime,
+      unreadCounts: Map<String, int>.from(map['unreadCounts'] ?? {}),
     );
   }
 
@@ -50,12 +52,14 @@ class ChatRoomModel {
     List<String>? participants,
     MessageModel? lastMessage,
     DateTime? lastMessageTime,
+    Map<String, int>? unreadCounts,
   }) {
     return ChatRoomModel(
       id: id ?? this.id,
       participants: participants ?? this.participants,
       lastMessage: lastMessage ?? this.lastMessage,
       lastMessageTime: lastMessageTime ?? this.lastMessageTime,
+      unreadCounts: unreadCounts ?? this.unreadCounts,
     );
   }
 }

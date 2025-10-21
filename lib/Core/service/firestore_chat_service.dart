@@ -14,13 +14,13 @@ class FirestoreChatService {
   /// Creates a new chat room if it doesn't exist and returns the chat ID
   Future<String> createChatRoomIfNotExists(String user1, String user2) async {
     final chatId = _generateChatRoomId(user1, user2);
-
     final chatDoc = await _firestore.collection('chat_rooms').doc(chatId).get();
 
     if (!chatDoc.exists) {
       await _firestore.collection('chat_rooms').doc(chatId).set({
         'participants': [user1, user2],
         'createdAt': FieldValue.serverTimestamp(),
+        'unreadCounts': {user1: 0, user2: 0},
       });
     }
 
@@ -30,7 +30,6 @@ class FirestoreChatService {
   /// Sends a message to the specified chat room and updates last message
   Future<void> sendMessage(MessageModel message) async {
     final chatId = _generateChatRoomId(message.senderId, message.receiverId);
-
     final batch = _firestore.batch();
 
     // Add message to messages subcollection
@@ -39,14 +38,24 @@ class FirestoreChatService {
         .doc(chatId)
         .collection('messages')
         .doc(message.id);
-
     batch.set(messageRef, message.toMap());
 
-    // Update last message in chat room
-    final chatRoomRef = _firestore.collection('chat_rooms').doc(chatId);
-    batch.update(chatRoomRef, {
+    // Get current chat room to update unread counts
+    final chatRoomDoc =
+        await _firestore.collection('chat_rooms').doc(chatId).get();
+    final unreadCounts = Map<String, int>.from(
+      chatRoomDoc.data()?['unreadCounts'] ?? {},
+    );
+
+    // Increment unread count for receiver
+    unreadCounts[message.receiverId] =
+        (unreadCounts[message.receiverId] ?? 0) + 1;
+
+    // Update chat room
+    batch.update(_firestore.collection('chat_rooms').doc(chatId), {
       'lastMessage': message.toMap(),
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadCounts': unreadCounts,
     });
 
     await batch.commit();
@@ -88,23 +97,26 @@ class FirestoreChatService {
 
   /// Marks messages as seen for a specific chat and user
   Future<void> markMessagesAsSeen(String chatId, String userId) async {
+    final batch = _firestore.batch();
+
+    // Mark all unread messages as read for this user
     final messagesSnapshot =
         await _firestore
             .collection('chat_rooms')
             .doc(chatId)
             .collection('messages')
             .where('receiverId', isEqualTo: userId)
-            .where('isSeen', isEqualTo: false)
+            .where('isRead', isEqualTo: false)
             .get();
 
-    final batch = _firestore.batch();
-
     for (final doc in messagesSnapshot.docs) {
-      batch.update(doc.reference, {'isSeen': true});
+      batch.update(doc.reference, {'isRead': true});
     }
 
-    if (messagesSnapshot.docs.isNotEmpty) {
-      await batch.commit();
-    }
+    // Reset unread count for this user in chat room
+    final chatRoomRef = _firestore.collection('chat_rooms').doc(chatId);
+    batch.update(chatRoomRef, {'unreadCounts.$userId': 0});
+
+    await batch.commit();
   }
 }

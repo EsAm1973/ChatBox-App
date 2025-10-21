@@ -7,46 +7,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class MessageList extends StatefulWidget {
+class MessageList extends StatelessWidget {
   final List<MessageModel> messages;
-
-  const MessageList({super.key, required this.messages});
-
-  @override
-  State<MessageList> createState() => _MessageListState();
-}
-
-class _MessageListState extends State<MessageList> {
-  final ScrollController _scrollController = ScrollController();
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-  }
-
-  @override
-  void didUpdateWidget(MessageList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Auto-scroll عند وجود رسائل جديدة
-    if (widget.messages.length > oldWidget.messages.length) {
-      _scrollToBottom();
-    }
-  }
+  final ScrollController scrollController;
+  const MessageList({
+    super.key,
+    required this.messages,
+    required this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final messages = widget.messages;
+    final messages = this.messages;
 
     if (messages.isEmpty) {
       return const Center(
@@ -63,7 +35,7 @@ class _MessageListState extends State<MessageList> {
     }
 
     return ListView.builder(
-      controller: _scrollController,
+      controller: scrollController,
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       itemCount: messages.length,
       itemBuilder: (context, index) {
@@ -127,11 +99,5 @@ class _MessageListState extends State<MessageList> {
 
   String _formatTime(DateTime timestamp) {
     return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 }
