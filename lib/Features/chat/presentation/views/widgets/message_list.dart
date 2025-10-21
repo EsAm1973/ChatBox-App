@@ -18,9 +18,9 @@ class MessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final messages = this.messages;
+    final msgs = messages;
 
-    if (messages.isEmpty) {
+    if (msgs.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -37,18 +37,15 @@ class MessageList extends StatelessWidget {
     return ListView.builder(
       controller: scrollController,
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      itemCount: messages.length,
+      itemCount: msgs.length,
       itemBuilder: (context, index) {
-        final message = messages[index];
+        final message = msgs[index];
         final isMe = message.senderId == FirebaseAuth.instance.currentUser!.uid;
 
         return Column(
           children: [
             if (index == 0 ||
-                _isDifferentDay(
-                  messages[index - 1].timestamp,
-                  message.timestamp,
-                ))
+                _isDifferentDay(msgs[index - 1].timestamp, message.timestamp))
               DateHeader(date: _formatDate(message.timestamp)),
 
             if (isMe)
@@ -66,10 +63,7 @@ class MessageList extends StatelessWidget {
             const SizedBox(height: 10),
 
             if (index > 0 &&
-                _isDifferentDay(
-                  messages[index - 1].timestamp,
-                  message.timestamp,
-                ))
+                _isDifferentDay(msgs[index - 1].timestamp, message.timestamp))
               const MessageDivider(),
           ],
         );

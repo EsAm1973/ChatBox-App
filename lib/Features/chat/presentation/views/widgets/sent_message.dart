@@ -55,7 +55,7 @@ class SentMessage extends StatelessWidget {
                   size: 14.r,
                   color:
                       isSeen
-                          ? Colors.blue
+                          ? Theme.of(context).colorScheme.onPrimary
                           : Theme.of(
                             context,
                           ).colorScheme.onPrimary.withOpacity(0.7),

@@ -36,8 +36,12 @@ class _ChatViewBodyState extends State<ChatViewBody> {
 
     _scrollController.addListener(_onScroll);
 
-    // Mark existing messages as seen when opening
-    _markMessagesAsSeen();
+    // Scroll to bottom after first frame (when opening chat)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom(animated: true);
+      // Mark existing messages as seen when opening
+      _markMessagesAsSeen();
+    });
   }
 
   @override
@@ -50,15 +54,14 @@ class _ChatViewBodyState extends State<ChatViewBody> {
   }
 
   void _onScroll() {
-    // Check if user is at the bottom of the chat
     final isAtBottom =
+        _scrollController.hasClients &&
         _scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 50;
+            _scrollController.position.maxScrollExtent - 50;
 
     if (isAtBottom != _isAtBottom) {
       _isAtBottom = isAtBottom;
       if (_isAtBottom) {
-        // User scrolled to bottom, mark messages as seen
         _markMessagesAsSeen();
       }
     }
@@ -73,6 +76,20 @@ class _ChatViewBodyState extends State<ChatViewBody> {
     context.read<ChatCubit>().markMessagesAsSeen(_chatId, _currentUserId);
   }
 
+  void _scrollToBottom({bool animated = true}) {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position.maxScrollExtent;
+    if (animated) {
+      _scrollController.animateTo(
+        position,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    } else {
+      _scrollController.jumpTo(position);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ChatCubit, ChatState>(
@@ -81,8 +98,15 @@ class _ChatViewBodyState extends State<ChatViewBody> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error), backgroundColor: Colors.red),
           );
-        } else if (state is MessagesLoaded) {
-          // Auto-mark as seen when new messages arrive and user is at bottom
+        } else if (state is MessagesLoaded ||
+            state is MessageSent ||
+            state is MessageSending) {
+          // Ensure scroll happens after the new frame with updated messages
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToBottom(animated: true);
+          });
+
+          // If at bottom, mark seen immediately
           if (_isAtBottom) {
             _markMessagesAsSeen();
           }
@@ -92,12 +116,18 @@ class _ChatViewBodyState extends State<ChatViewBody> {
         if (state is MessagesLoaded ||
             state is MessageSent ||
             state is MessageSending) {
+          final messages =
+              (state is MessagesLoaded)
+                  ? state.messages
+                  : (state is MessageSent
+                      ? state.messages
+                      : (state as MessageSending).messages);
           return Column(
             children: [
               ChatAppBar(otherUser: widget.otherUser),
               Expanded(
                 child: MessageList(
-                  messages: state.messages,
+                  messages: messages,
                   scrollController: _scrollController,
                 ),
               ),
