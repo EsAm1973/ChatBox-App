@@ -16,14 +16,18 @@ class ChatRoomModel {
     required this.unreadCounts,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
+  Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
+    final map = {
       'id': id,
       'participants': participants,
-      'lastMessage': lastMessage.toMap(),
-      'lastMessageTime': Timestamp.fromDate(lastMessageTime),
+      'lastMessage': lastMessage.toMap(useServerTimestamp: useServerTimestamp),
       'unreadCounts': unreadCounts,
     };
+
+    // استخدام server timestamp دائمًا لـ lastMessageTime
+    map['lastMessageTime'] = FieldValue.serverTimestamp();
+
+    return map;
   }
 
   factory ChatRoomModel.fromMap(Map<String, dynamic> map) {
@@ -35,7 +39,7 @@ class ChatRoomModel {
         map['lastMessageTime'],
       );
     } else {
-      lastMessageTime = DateTime.now(); // fallback
+      lastMessageTime = DateTime.now();
     }
 
     return ChatRoomModel(

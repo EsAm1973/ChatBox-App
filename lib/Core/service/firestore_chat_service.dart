@@ -32,30 +32,22 @@ class FirestoreChatService {
     final chatId = _generateChatRoomId(message.senderId, message.receiverId);
     final batch = _firestore.batch();
 
+    // استخدام server timestamp للرسالة
+    final messageData = message.toMap(useServerTimestamp: true);
+
     // Add message to messages subcollection
     final messageRef = _firestore
         .collection('chat_rooms')
         .doc(chatId)
         .collection('messages')
         .doc(message.id);
-    batch.set(messageRef, message.toMap());
+    batch.set(messageRef, messageData);
 
-    // Get current chat room to update unread counts
-    final chatRoomDoc =
-        await _firestore.collection('chat_rooms').doc(chatId).get();
-    final unreadCounts = Map<String, int>.from(
-      chatRoomDoc.data()?['unreadCounts'] ?? {},
-    );
-
-    // Increment unread count for receiver
-    unreadCounts[message.receiverId] =
-        (unreadCounts[message.receiverId] ?? 0) + 1;
-
-    // Update chat room
+    // تحديث الـ chat room باستخدام FieldValue.increment الذري
     batch.update(_firestore.collection('chat_rooms').doc(chatId), {
-      'lastMessage': message.toMap(),
+      'lastMessage': messageData,
       'lastMessageTime': FieldValue.serverTimestamp(),
-      'unreadCounts': unreadCounts,
+      'unreadCounts.${message.receiverId}': FieldValue.increment(1),
     });
 
     await batch.commit();

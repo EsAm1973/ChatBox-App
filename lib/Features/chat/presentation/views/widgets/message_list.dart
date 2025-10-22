@@ -21,14 +21,21 @@ class MessageList extends StatelessWidget {
     final msgs = messages;
 
     if (msgs.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No messages yet'),
-            Text('Start a conversation!', style: TextStyle(color: Colors.grey)),
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 64.r,
+              color: Theme.of(context).iconTheme.color,
+            ),
+            SizedBox(height: 16.h),
+            const Text('No messages yet'),
+            Text(
+              'Start a conversation!',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ],
         ),
       );
@@ -41,29 +48,33 @@ class MessageList extends StatelessWidget {
       itemBuilder: (context, index) {
         final message = msgs[index];
         final isMe = message.senderId == FirebaseAuth.instance.currentUser!.uid;
-
+        final messageTimestamp = message.timestamp ?? DateTime.now();
+        final previousMessageTimestamp =
+            index > 0
+                ? (msgs[index - 1].timestamp ?? DateTime.now())
+                : DateTime.now();
         return Column(
           children: [
             if (index == 0 ||
-                _isDifferentDay(msgs[index - 1].timestamp, message.timestamp))
-              DateHeader(date: _formatDate(message.timestamp)),
+                _isDifferentDay(previousMessageTimestamp, messageTimestamp))
+              DateHeader(date: _formatDate(messageTimestamp)),
 
             if (isMe)
               SentMessage(
-                time: _formatTime(message.timestamp),
+                time: _formatTime(messageTimestamp),
                 message: message.content,
                 isSeen: message.isRead,
               )
             else
               ReceivedMessage(
-                time: _formatTime(message.timestamp),
+                time: _formatTime(messageTimestamp),
                 messages: [message.content],
               ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
 
             if (index > 0 &&
-                _isDifferentDay(msgs[index - 1].timestamp, message.timestamp))
+                _isDifferentDay(previousMessageTimestamp, messageTimestamp))
               const MessageDivider(),
           ],
         );

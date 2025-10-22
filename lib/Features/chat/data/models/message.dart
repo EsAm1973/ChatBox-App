@@ -5,7 +5,7 @@ class MessageModel {
   final String senderId;
   final String receiverId;
   final String content;
-  final DateTime timestamp;
+  final DateTime? timestamp; // جعلناها nullable لاستخدام server timestamp
   final bool isRead;
 
   MessageModel({
@@ -13,19 +13,29 @@ class MessageModel {
     required this.senderId,
     required this.receiverId,
     required this.content,
-    required this.timestamp,
+    this.timestamp, // لم نعد نطلب timestamp إجباري
     required this.isRead,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
+  Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
+    final map = {
       'id': id,
       'senderId': senderId,
       'receiverId': receiverId,
       'content': content,
-      'timestamp': Timestamp.fromDate(timestamp),
       'isRead': isRead,
     };
+
+    // استخدام server timestamp أو client timestamp بناءً على الإعداد
+    if (useServerTimestamp) {
+      map['timestamp'] = FieldValue.serverTimestamp();
+    } else if (timestamp != null) {
+      map['timestamp'] = Timestamp.fromDate(timestamp!);
+    } else {
+      map['timestamp'] = FieldValue.serverTimestamp();
+    }
+
+    return map;
   }
 
   factory MessageModel.fromMap(Map<String, dynamic> map) {
@@ -44,7 +54,7 @@ class MessageModel {
       receiverId: map['receiverId'] ?? '',
       content: map['content'] ?? '',
       timestamp: timestamp,
-      isRead: map['isRead'] ?? map['isSeen'] ?? false,
+      isRead: map['isRead'] ?? false,
     );
   }
 
