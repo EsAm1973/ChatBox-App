@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum MessageStatus { pending, sent, delivered, read, failed }
+
 class MessageModel {
   final String id;
   final String senderId;
@@ -7,6 +9,7 @@ class MessageModel {
   final String content;
   final DateTime? timestamp; // جعلناها nullable لاستخدام server timestamp
   final bool isRead;
+  final MessageStatus status;
 
   MessageModel({
     required this.id,
@@ -15,6 +18,7 @@ class MessageModel {
     required this.content,
     this.timestamp, // لم نعد نطلب timestamp إجباري
     required this.isRead,
+    this.status = MessageStatus.sent,
   });
 
   Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
@@ -24,6 +28,7 @@ class MessageModel {
       'receiverId': receiverId,
       'content': content,
       'isRead': isRead,
+      'status': status.name,
     };
 
     // استخدام server timestamp أو client timestamp بناءً على الإعداد
@@ -48,6 +53,18 @@ class MessageModel {
       timestamp = DateTime.now();
     }
 
+    MessageStatus status = MessageStatus.sent;
+    if (map['status'] != null) {
+      try {
+        status = MessageStatus.values.firstWhere(
+          (e) => e.name == map['status'],
+          orElse: () => MessageStatus.sent,
+        );
+      } catch (e) {
+        status = MessageStatus.sent;
+      }
+    }
+
     return MessageModel(
       id: map['id'] ?? '',
       senderId: map['senderId'] ?? '',
@@ -55,6 +72,7 @@ class MessageModel {
       content: map['content'] ?? '',
       timestamp: timestamp,
       isRead: map['isRead'] ?? false,
+      status: status,
     );
   }
 
@@ -65,6 +83,7 @@ class MessageModel {
     String? content,
     DateTime? timestamp,
     bool? isRead,
+    MessageStatus? status,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -73,6 +92,7 @@ class MessageModel {
       content: content ?? this.content,
       timestamp: timestamp ?? this.timestamp,
       isRead: isRead ?? this.isRead,
+      status: status ?? this.status,
     );
   }
 }

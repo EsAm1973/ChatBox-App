@@ -10,10 +10,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class MessageList extends StatelessWidget {
   final List<MessageModel> messages;
   final ScrollController scrollController;
+  final Function(MessageModel)? onRetryMessage;
   const MessageList({
     super.key,
     required this.messages,
     required this.scrollController,
+    this.onRetryMessage,
   });
 
   @override
@@ -60,10 +62,17 @@ class MessageList extends StatelessWidget {
               DateHeader(date: _formatDate(messageTimestamp)),
 
             if (isMe)
-              SentMessage(
-                time: _formatTime(messageTimestamp),
-                message: message.content,
-                isSeen: message.isRead,
+              GestureDetector(
+                onTap:
+                    message.status == MessageStatus.failed
+                        ? () => onRetryMessage?.call(message)
+                        : null,
+                child: SentMessage(
+                  time: _formatTime(messageTimestamp),
+                  message: message.content,
+                  status: message.status,
+                  isSeen: message.isRead,
+                ),
               )
             else
               ReceivedMessage(

@@ -15,11 +15,11 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SupabaseStorageService.initSupabaseStorage();
   setupGetIt();
-  runApp(const MyApp());
+  runApp(const ChatBox());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ChatBox extends StatelessWidget {
+  const ChatBox({super.key});
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(

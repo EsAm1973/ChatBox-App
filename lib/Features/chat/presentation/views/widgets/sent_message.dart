@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -6,12 +7,14 @@ class SentMessage extends StatelessWidget {
   final String message;
   final String time;
   final bool isSeen;
+  final MessageStatus status;
 
   const SentMessage({
     super.key,
     required this.message,
     required this.time,
     required this.isSeen,
+    required this.status,
   });
 
   @override
@@ -50,21 +53,43 @@ class SentMessage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 4.w),
-                Icon(
-                  isSeen ? Icons.done_all : Icons.done,
-                  size: 14.r,
-                  color:
-                      isSeen
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(
-                            context,
-                          ).colorScheme.onPrimary.withOpacity(0.7),
-                ),
+                _buildStatusIcon(context),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildStatusIcon(BuildContext context) {
+    if (status == MessageStatus.pending) {
+      return Icon(
+        Icons.watch_later_outlined,
+        size: 14.r,
+        color: Theme.of(context).colorScheme.onPrimary,
+      );
+    } else if (status == MessageStatus.failed) {
+      return Icon(
+        Icons.error_outline,
+        size: 14.r,
+        color: Theme.of(context).colorScheme.onPrimary,
+      );
+    } else if (status == MessageStatus.sent && !isSeen) {
+      return Icon(
+        Icons.done,
+        size: 14.r,
+        color: Theme.of(context).colorScheme.onPrimary,
+      );
+    } else if (status == MessageStatus.delivered ||
+        (status == MessageStatus.sent && isSeen)) {
+      return Icon(
+        Icons.done_all,
+        size: 14.r,
+        color: Theme.of(context).colorScheme.onPrimary,
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

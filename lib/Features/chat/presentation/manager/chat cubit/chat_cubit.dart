@@ -9,6 +9,7 @@ class ChatCubit extends Cubit<ChatState> {
   final ChatRepo _chatRepo;
   StreamSubscription? _messagesSubscription;
   StreamSubscription? _chatsSubscription;
+  final Map<String, MessageModel> _pendingMessages = {};
 
   ChatCubit(this._chatRepo) : super(const ChatInitial());
 
@@ -33,23 +34,72 @@ class ChatCubit extends Cubit<ChatState> {
         (failure) => emit(
           ChatError(error: failure.errorMessage, messages: state.messages),
         ),
-        (messages) => emit(MessagesLoaded(messages: messages)),
+        (messages) {
+          final allMessages = _mergeMessages(messages);
+          emit(MessagesLoaded(messages: allMessages));
+        },
       );
     });
   }
 
+  List<MessageModel> _mergeMessages(List<MessageModel> firestoreMessages) {
+    final mergedMessages = <MessageModel>[];
+    final firestoreIds = firestoreMessages.map((m) => m.id).toSet();
+
+    mergedMessages.addAll(firestoreMessages);
+
+    for (final pendingMessage in _pendingMessages.values) {
+      if (!firestoreIds.contains(pendingMessage.id)) {
+        mergedMessages.add(pendingMessage);
+      } else {
+        _pendingMessages.remove(pendingMessage.id);
+      }
+    }
+
+    mergedMessages.sort((a, b) {
+      final aTime = a.timestamp ?? DateTime.now();
+      final bTime = b.timestamp ?? DateTime.now();
+      return aTime.compareTo(bTime);
+    });
+
+    return mergedMessages;
+  }
+
   /// Sends a new message to the chat
   void sendMessage(MessageModel message) async {
-    emit(MessageSending(messages: state.messages));
+    final pendingMessage = message.copyWith(
+      status: MessageStatus.pending,
+      timestamp: DateTime.now(),
+    );
+
+    _pendingMessages[message.id] = pendingMessage;
+
+    final updatedMessages = _mergeMessages(
+      state.messages.where((m) => m.status != MessageStatus.pending).toList(),
+    );
+    emit(MessagesLoaded(messages: updatedMessages));
 
     final result = await _chatRepo.sendMessage(message);
 
-    result.fold(
-      (failure) => emit(
-        ChatError(error: failure.errorMessage, messages: state.messages),
-      ),
-      (_) => emit(MessageSent(messages: state.messages)),
-    );
+    result.fold((failure) {
+      _pendingMessages[message.id] = pendingMessage.copyWith(
+        status: MessageStatus.failed,
+      );
+
+      final updatedMessages = _mergeMessages(
+        state.messages.where((m) => m.id != message.id).toList(),
+      );
+      emit(MessagesLoaded(messages: updatedMessages));
+
+      emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
+    }, (_) {});
+  }
+
+  void retryMessage(MessageModel message) {
+    if (message.status == MessageStatus.failed) {
+      _pendingMessages.remove(message.id);
+      sendMessage(message.copyWith(status: MessageStatus.pending));
+    }
   }
 
   /// Loads user's chat conversations
@@ -75,6 +125,7 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> close() {
     _messagesSubscription?.cancel();
     _chatsSubscription?.cancel();
+    _pendingMessages.clear();
     return super.close();
   }
 }
