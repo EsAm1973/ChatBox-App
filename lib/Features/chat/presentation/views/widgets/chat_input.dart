@@ -21,7 +21,7 @@ class ChatInput extends StatefulWidget {
 
 class _ChatInputState extends State<ChatInput> {
   final TextEditingController _messageController = TextEditingController();
-  bool _isRecording = false; // جديد
+  bool _isRecording = false;
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -83,12 +83,7 @@ class _ChatInputState extends State<ChatInput> {
                   color: Theme.of(context).iconTheme.color,
                   size: 28.r,
                 ),
-                onPressed:
-                    isSending
-                        ? null
-                        : () {
-                          // TODO: إضافة وظيفة إرفاق الملفات
-                        },
+                onPressed: isSending ? null : () {},
               ),
               Expanded(
                 child: Container(
@@ -111,7 +106,6 @@ class _ChatInputState extends State<ChatInput> {
                     onSubmitted: isSending ? null : (_) => _sendMessage(),
                     enabled: !isSending,
                     onChanged: (value) {
-                      // إعادة بناء الواجهة لتغيير زر الإرسال/المايك
                       setState(() {});
                     },
                   ),

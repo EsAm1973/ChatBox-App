@@ -15,6 +15,7 @@ abstract class ChatRepo {
     required String senderId,
     required String receiverId,
     required int duration,
+    required String messageId,
   });
 
   /// Gets real-time stream of messages for a chat room

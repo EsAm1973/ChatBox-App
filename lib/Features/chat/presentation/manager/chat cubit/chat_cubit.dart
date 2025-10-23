@@ -102,12 +102,13 @@ class ChatCubit extends Cubit<ChatState> {
     required String receiverId,
     required int duration,
   }) async {
-    // إنشاء رسالة مؤقتة بحالة pending
+    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+
     final pendingMessage = MessageModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: messageId,
       senderId: senderId,
       receiverId: receiverId,
-      content: 'voice_pending', // قيمة مؤقتة
+      content: 'voice_pending',
       timestamp: DateTime.now(),
       isRead: false,
       type: MessageType.voice,
@@ -115,39 +116,35 @@ class ChatCubit extends Cubit<ChatState> {
       status: MessageStatus.pending,
     );
 
-    // إضافة الرسالة للـ pending messages
-    _pendingMessages[pendingMessage.id] = pendingMessage;
+    _pendingMessages[messageId] = pendingMessage;
 
-    // تحديث الـ UI فوراً بالرسالة المؤقتة
     final updatedMessages = _mergeMessages(
       state.messages.where((m) => m.status != MessageStatus.pending).toList(),
     );
     emit(MessagesLoaded(messages: updatedMessages));
 
-    // رفع الملف وإرساله في الخلفية
     final result = await _chatRepo.sendVoiceMessage(
       voiceFile: voiceFile,
       senderId: senderId,
       receiverId: receiverId,
       duration: duration,
+      messageId: messageId,
     );
 
     result.fold(
       (failure) {
-        // في حالة الفشل، تحديث الرسالة لحالة failed
-        _pendingMessages[pendingMessage.id] = pendingMessage.copyWith(
+        _pendingMessages[messageId] = pendingMessage.copyWith(
           status: MessageStatus.failed,
         );
 
         final updatedMessages = _mergeMessages(
-          state.messages.where((m) => m.id != pendingMessage.id).toList(),
+          state.messages.where((m) => m.id != messageId).toList(),
         );
         emit(MessagesLoaded(messages: updatedMessages));
         emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
       },
       (_) {
-        // في حالة النجاح، إزالة من pending (سيأتي من Firestore stream)
-        _pendingMessages.remove(pendingMessage.id);
+        _pendingMessages.remove(messageId);
       },
     );
   }

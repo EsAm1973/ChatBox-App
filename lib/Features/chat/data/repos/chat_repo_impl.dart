@@ -94,11 +94,13 @@ class ChatRepoImpl implements ChatRepo {
   }
 
   @override
+  @override
   Future<Either<Failure, void>> sendVoiceMessage({
     required File voiceFile,
     required String senderId,
     required String receiverId,
     required int duration,
+    required String messageId,
   }) async {
     try {
       final voiceUrl = await storageService.uploadVoiceRecord(
@@ -107,7 +109,7 @@ class ChatRepoImpl implements ChatRepo {
       );
 
       final message = MessageModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: messageId,
         senderId: senderId,
         receiverId: receiverId,
         content: voiceUrl,
