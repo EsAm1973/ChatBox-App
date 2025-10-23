@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/helper%20functions/formatted_date_and_days.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/date_header.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/message_divider.dart';
@@ -58,8 +59,8 @@ class MessageList extends StatelessWidget {
         return Column(
           children: [
             if (index == 0 ||
-                _isDifferentDay(previousMessageTimestamp, messageTimestamp))
-              DateHeader(date: _formatDate(messageTimestamp)),
+                isDifferentDay(previousMessageTimestamp, messageTimestamp))
+              DateHeader(date: formatDate(messageTimestamp)),
 
             if (isMe)
               GestureDetector(
@@ -68,7 +69,7 @@ class MessageList extends StatelessWidget {
                         ? () => onRetryMessage?.call(message)
                         : null,
                 child: SentMessage(
-                  time: _formatTime(messageTimestamp),
+                  time: formatTime(messageTimestamp),
                   message: message.content,
                   status: message.status,
                   isSeen: message.isRead,
@@ -76,42 +77,18 @@ class MessageList extends StatelessWidget {
               )
             else
               ReceivedMessage(
-                time: _formatTime(messageTimestamp),
+                time: formatTime(messageTimestamp),
                 messages: [message.content],
               ),
 
             SizedBox(height: 10.h),
 
             if (index > 0 &&
-                _isDifferentDay(previousMessageTimestamp, messageTimestamp))
+                isDifferentDay(previousMessageTimestamp, messageTimestamp))
               const MessageDivider(),
           ],
         );
       },
     );
-  }
-
-  bool _isDifferentDay(DateTime date1, DateTime date2) {
-    return date1.year != date2.year ||
-        date1.month != date2.month ||
-        date1.day != date2.day;
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final messageDate = DateTime(date.year, date.month, date.day);
-
-    if (messageDate == today) {
-      return 'Today';
-    } else if (messageDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
-
-  String _formatTime(DateTime timestamp) {
-    return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
   }
 }
