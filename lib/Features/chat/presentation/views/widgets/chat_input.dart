@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_state.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/voice_recorder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +21,7 @@ class ChatInput extends StatefulWidget {
 
 class _ChatInputState extends State<ChatInput> {
   final TextEditingController _messageController = TextEditingController();
+  bool _isRecording = false; // جديد
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -29,10 +33,25 @@ class _ChatInputState extends State<ChatInput> {
       content: _messageController.text.trim(),
       timestamp: DateTime.now(),
       isRead: false,
+      type: MessageType.text, // جديد
     );
 
     context.read<ChatCubit>().sendMessage(message);
     _messageController.clear();
+  }
+
+  // جديد: دالة إرسال الرسالة الصوتية
+  void _sendVoiceMessage(File voiceFile, int duration) {
+    context.read<ChatCubit>().sendVoiceMessage(
+      voiceFile: voiceFile,
+      senderId: FirebaseAuth.instance.currentUser!.uid,
+      receiverId: widget.otherUser.uid,
+      duration: duration,
+    );
+
+    setState(() {
+      _isRecording = false;
+    });
   }
 
   @override
@@ -40,6 +59,18 @@ class _ChatInputState extends State<ChatInput> {
     return BlocBuilder<ChatCubit, ChatState>(
       builder: (context, state) {
         final isSending = state is MessageSending;
+
+        // جديد: إذا كان التسجيل قيد التشغيل
+        if (_isRecording) {
+          return VoiceRecorderWidget(
+            onVoiceRecorded: _sendVoiceMessage,
+            onCancel: () {
+              setState(() {
+                _isRecording = false;
+              });
+            },
+          );
+        }
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 4.0.w, vertical: 8.0.h),
@@ -52,7 +83,12 @@ class _ChatInputState extends State<ChatInput> {
                   color: Theme.of(context).iconTheme.color,
                   size: 28.r,
                 ),
-                onPressed: isSending ? null : () {},
+                onPressed:
+                    isSending
+                        ? null
+                        : () {
+                          // TODO: إضافة وظيفة إرفاق الملفات
+                        },
               ),
               Expanded(
                 child: Container(
@@ -74,34 +110,49 @@ class _ChatInputState extends State<ChatInput> {
                     keyboardType: TextInputType.multiline,
                     onSubmitted: isSending ? null : (_) => _sendMessage(),
                     enabled: !isSending,
+                    onChanged: (value) {
+                      // إعادة بناء الواجهة لتغيير زر الإرسال/المايك
+                      setState(() {});
+                    },
                   ),
                 ),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.mic_none_outlined,
-                  color: Theme.of(context).iconTheme.color,
-                  size: 28.r,
-                ),
-                onPressed: isSending ? null : () {},
-              ),
-              isSending
-                  ? Padding(
-                    padding: EdgeInsets.all(8.0.r),
-                    child: SizedBox(
-                      width: 20.r,
-                      height: 20.r,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                  : IconButton(
-                    icon: Icon(
-                      Icons.send,
-                      color: Theme.of(context).iconTheme.color,
-                      size: 28.r,
-                    ),
-                    onPressed: _sendMessage,
+
+              // جديد: عرض زر المايك أو الإرسال حسب النص
+              if (_messageController.text.trim().isEmpty)
+                IconButton(
+                  icon: Icon(
+                    Icons.mic_none_outlined,
+                    color: Theme.of(context).iconTheme.color,
+                    size: 28.r,
                   ),
+                  onPressed:
+                      isSending
+                          ? null
+                          : () {
+                            setState(() {
+                              _isRecording = true;
+                            });
+                          },
+                )
+              else
+                isSending
+                    ? Padding(
+                      padding: EdgeInsets.all(8.0.r),
+                      child: SizedBox(
+                        width: 20.r,
+                        height: 20.r,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                    : IconButton(
+                      icon: Icon(
+                        Icons.send,
+                        color: Theme.of(context).iconTheme.color,
+                        size: 28.r,
+                      ),
+                      onPressed: _sendMessage,
+                    ),
             ],
           ),
         );

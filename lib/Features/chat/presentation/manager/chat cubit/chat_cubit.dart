@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
@@ -95,10 +96,76 @@ class ChatCubit extends Cubit<ChatState> {
     }, (_) {});
   }
 
+  void sendVoiceMessage({
+    required File voiceFile,
+    required String senderId,
+    required String receiverId,
+    required int duration,
+  }) async {
+    // إنشاء رسالة مؤقتة بحالة pending
+    final pendingMessage = MessageModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: senderId,
+      receiverId: receiverId,
+      content: 'voice_pending', // قيمة مؤقتة
+      timestamp: DateTime.now(),
+      isRead: false,
+      type: MessageType.voice,
+      voiceDuration: duration,
+      status: MessageStatus.pending,
+    );
+
+    // إضافة الرسالة للـ pending messages
+    _pendingMessages[pendingMessage.id] = pendingMessage;
+
+    // تحديث الـ UI فوراً بالرسالة المؤقتة
+    final updatedMessages = _mergeMessages(
+      state.messages.where((m) => m.status != MessageStatus.pending).toList(),
+    );
+    emit(MessagesLoaded(messages: updatedMessages));
+
+    // رفع الملف وإرساله في الخلفية
+    final result = await _chatRepo.sendVoiceMessage(
+      voiceFile: voiceFile,
+      senderId: senderId,
+      receiverId: receiverId,
+      duration: duration,
+    );
+
+    result.fold(
+      (failure) {
+        // في حالة الفشل، تحديث الرسالة لحالة failed
+        _pendingMessages[pendingMessage.id] = pendingMessage.copyWith(
+          status: MessageStatus.failed,
+        );
+
+        final updatedMessages = _mergeMessages(
+          state.messages.where((m) => m.id != pendingMessage.id).toList(),
+        );
+        emit(MessagesLoaded(messages: updatedMessages));
+        emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
+      },
+      (_) {
+        // في حالة النجاح، إزالة من pending (سيأتي من Firestore stream)
+        _pendingMessages.remove(pendingMessage.id);
+      },
+    );
+  }
+
   void retryMessage(MessageModel message) {
     if (message.status == MessageStatus.failed) {
       _pendingMessages.remove(message.id);
-      sendMessage(message.copyWith(status: MessageStatus.pending));
+
+      if (message.type == MessageType.voice) {
+        emit(
+          ChatError(
+            error: 'Cannot retry voice message. Please record again.',
+            messages: state.messages,
+          ),
+        );
+      } else {
+        sendMessage(message.copyWith(status: MessageStatus.pending));
+      }
     }
   }
 

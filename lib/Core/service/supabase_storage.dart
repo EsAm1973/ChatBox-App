@@ -15,7 +15,7 @@ class SupabaseStorageService implements StorageService {
   }
 
   @override
-  Future<String> uploadFile(File file, String path,String userId) async {
+  Future<String> uploadFile(File file, String path, String userId) async {
     try {
       String fileName = b.basenameWithoutExtension(file.path);
       String extensionName = b.extension(file.path);
@@ -38,19 +38,52 @@ class SupabaseStorageService implements StorageService {
   }
 
   @override
+  Future<String> uploadVoiceRecord(File file, String userId) async {
+    try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = b.extension(file.path);
+      final fileName = 'voice_$timestamp$extension';
+      final filePath = 'voice_records/$userId/$fileName';
+
+      await _supabase.client.storage
+          .from('voice-records')
+          .upload(
+            filePath,
+            file,
+            fileOptions: const FileOptions(
+              upsert: false,
+              contentType: 'audio/mpeg',
+            ),
+          );
+
+      String publicUrl = _supabase.client.storage
+          .from('voice-records')
+          .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Failed to upload voice record: $e');
+    }
+  }
+
+  @override
   Future<void> deleteFile(String fileUrl) async {
     try {
-      // Extract the file path from the URL
       final uri = Uri.parse(fileUrl);
       final pathSegments = uri.pathSegments;
       if (pathSegments.length < 3) {
         throw Exception('Invalid file URL format');
       }
 
-      // The path is everything after the bucket name (user-image)
+      // تحديد البucket بناءً على الرابط
+      String bucketName = 'user-image';
+      if (fileUrl.contains('voice-records')) {
+        bucketName = 'voice-records';
+      }
+
       final filePath = pathSegments.sublist(2).join('/');
 
-      await _supabase.client.storage.from('user-image').remove([filePath]);
+      await _supabase.client.storage.from(bucketName).remove([filePath]);
     } catch (e) {
       throw Exception('Failed to delete file: $e');
     }

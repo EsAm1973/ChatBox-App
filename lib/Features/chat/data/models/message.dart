@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum MessageStatus { pending, sent, delivered, read, failed }
 
+enum MessageType { text, voice, image, file }
+
 class MessageModel {
   final String id;
   final String senderId;
@@ -10,6 +12,8 @@ class MessageModel {
   final DateTime? timestamp; // جعلناها nullable لاستخدام server timestamp
   final bool isRead;
   final MessageStatus status;
+  final MessageType type;
+  final int? voiceDuration;
 
   MessageModel({
     required this.id,
@@ -19,6 +23,8 @@ class MessageModel {
     this.timestamp, // لم نعد نطلب timestamp إجباري
     required this.isRead,
     this.status = MessageStatus.sent,
+    this.type = MessageType.text,
+    this.voiceDuration,
   });
 
   Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
@@ -29,9 +35,10 @@ class MessageModel {
       'content': content,
       'isRead': isRead,
       'status': status.name,
+      'type': type.name,
+      if (voiceDuration != null) 'voiceDuration': voiceDuration,
     };
 
-    // استخدام server timestamp أو client timestamp بناءً على الإعداد
     if (useServerTimestamp) {
       map['timestamp'] = FieldValue.serverTimestamp();
     } else if (timestamp != null) {
@@ -65,6 +72,18 @@ class MessageModel {
       }
     }
 
+    MessageType type = MessageType.text;
+    if (map['type'] != null) {
+      try {
+        type = MessageType.values.firstWhere(
+          (e) => e.name == map['type'],
+          orElse: () => MessageType.text,
+        );
+      } catch (e) {
+        type = MessageType.text;
+      }
+    }
+
     return MessageModel(
       id: map['id'] ?? '',
       senderId: map['senderId'] ?? '',
@@ -73,9 +92,10 @@ class MessageModel {
       timestamp: timestamp,
       isRead: map['isRead'] ?? false,
       status: status,
+      type: type,
+      voiceDuration: map['voiceDuration'],
     );
   }
-
   MessageModel copyWith({
     String? id,
     String? senderId,
@@ -84,6 +104,8 @@ class MessageModel {
     DateTime? timestamp,
     bool? isRead,
     MessageStatus? status,
+    MessageType? type,
+    int? voiceDuration,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -93,6 +115,8 @@ class MessageModel {
       timestamp: timestamp ?? this.timestamp,
       isRead: isRead ?? this.isRead,
       status: status ?? this.status,
+      type: type ?? this.type,
+      voiceDuration: voiceDuration ?? this.voiceDuration,
     );
   }
 }

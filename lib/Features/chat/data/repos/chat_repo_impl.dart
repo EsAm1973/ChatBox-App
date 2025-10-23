@@ -1,7 +1,9 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firestore_chat_service.dart';
+import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
@@ -10,8 +12,12 @@ import 'package:dartz/dartz.dart';
 
 class ChatRepoImpl implements ChatRepo {
   final FirestoreChatService firestoreChatService;
+  final StorageService storageService;
 
-  ChatRepoImpl({required this.firestoreChatService});
+  ChatRepoImpl({
+    required this.firestoreChatService,
+    required this.storageService,
+  });
 
   @override
   Future<Either<Failure, String>> createChatRoom(
@@ -84,6 +90,41 @@ class ChatRepoImpl implements ChatRepo {
       return Left(FirebaseFailure.fromFirestoreException(e));
     } catch (e) {
       return Left(FirebaseFailure(errorMessage: 'Failed to send message: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendVoiceMessage({
+    required File voiceFile,
+    required String senderId,
+    required String receiverId,
+    required int duration,
+  }) async {
+    try {
+      final voiceUrl = await storageService.uploadVoiceRecord(
+        voiceFile,
+        senderId,
+      );
+
+      final message = MessageModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        senderId: senderId,
+        receiverId: receiverId,
+        content: voiceUrl,
+        timestamp: DateTime.now(),
+        isRead: false,
+        type: MessageType.voice,
+        voiceDuration: duration,
+      );
+
+      await firestoreChatService.sendMessage(message);
+      return const Right(null);
+    } on FirebaseException catch (e) {
+      return Left(FirebaseFailure.fromFirestoreException(e));
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to send voice message: $e'),
+      );
     }
   }
 }

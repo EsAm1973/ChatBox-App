@@ -3,7 +3,9 @@ import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/date_header.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/message_divider.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_message.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_voice_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/sent_message.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/sent_voice_message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -62,23 +64,40 @@ class MessageList extends StatelessWidget {
                 isDifferentDay(previousMessageTimestamp, messageTimestamp))
               DateHeader(date: formatDate(messageTimestamp)),
 
-            if (isMe)
+            if (message.type == MessageType.voice)
+              // عرض الرسالة الصوتية
+              isMe
+                  ? SentVoiceMessage(
+                    voiceUrl: message.content,
+                    duration: message.voiceDuration ?? 0,
+                    time: formatTime(messageTimestamp),
+                    isSeen: message.isRead,
+                    status: message.status,
+                  )
+                  : ReceivedVoiceMessage(
+                    voiceUrl: message.content,
+                    duration: message.voiceDuration ?? 0,
+                    time: formatTime(messageTimestamp),
+                  )
+            else
+              // عرض الرسالة النصية
               GestureDetector(
                 onTap:
                     message.status == MessageStatus.failed
                         ? () => onRetryMessage?.call(message)
                         : null,
-                child: SentMessage(
-                  time: formatTime(messageTimestamp),
-                  message: message.content,
-                  status: message.status,
-                  isSeen: message.isRead,
-                ),
-              )
-            else
-              ReceivedMessage(
-                time: formatTime(messageTimestamp),
-                messages: [message.content],
+                child:
+                    isMe
+                        ? SentMessage(
+                          time: formatTime(messageTimestamp),
+                          message: message.content,
+                          status: message.status,
+                          isSeen: message.isRead,
+                        )
+                        : ReceivedMessage(
+                          time: formatTime(messageTimestamp),
+                          messages: [message.content],
+                        ),
               ),
 
             SizedBox(height: 10.h),

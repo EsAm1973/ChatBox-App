@@ -36,6 +36,9 @@ void setupGetIt() {
   );
 
   getIt.registerLazySingleton<ChatRepo>(
-    () => ChatRepoImpl(firestoreChatService: getIt<FirestoreChatService>()),
+    () => ChatRepoImpl(
+      firestoreChatService: getIt<FirestoreChatService>(),
+      storageService: getIt<StorageService>(),
+    ),
   );
 }

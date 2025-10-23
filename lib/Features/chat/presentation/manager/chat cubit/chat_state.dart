@@ -35,9 +35,5 @@ class MessageSent extends ChatState {
 class ChatError extends ChatState {
   final String error;
 
-  const ChatError({
-    required this.error,
-    super.messages,
-    super.userChats,
-  });
+  const ChatError({required this.error, super.messages, super.userChats});
 }
