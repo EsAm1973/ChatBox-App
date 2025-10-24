@@ -254,7 +254,7 @@ class _SentVoiceMessageState extends State<SentVoiceMessage> {
                           children: [
                             Text(
                               _formatDuration(_position),
-                              style: AppTextStyles.semiBold14.copyWith(
+                              style: AppTextStyles.regular12.copyWith(
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onPrimary.withOpacity(0.8),
@@ -262,7 +262,7 @@ class _SentVoiceMessageState extends State<SentVoiceMessage> {
                             ),
                             Text(
                               _formatDuration(totalDuration),
-                              style: AppTextStyles.semiBold14.copyWith(
+                              style: AppTextStyles.regular12.copyWith(
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onPrimary.withOpacity(0.8),

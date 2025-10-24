@@ -198,7 +198,7 @@ class _ReceivedVoiceMessageState extends State<ReceivedVoiceMessage> {
                           children: [
                             Text(
                               _formatDuration(_position),
-                              style: AppTextStyles.semiBold14.copyWith(
+                              style: AppTextStyles.regular12.copyWith(
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onSurface.withOpacity(0.7),
@@ -206,7 +206,7 @@ class _ReceivedVoiceMessageState extends State<ReceivedVoiceMessage> {
                             ),
                             Text(
                               _formatDuration(totalDuration),
-                              style: AppTextStyles.semiBold14.copyWith(
+                              style: AppTextStyles.regular12.copyWith(
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onSurface.withOpacity(0.7),

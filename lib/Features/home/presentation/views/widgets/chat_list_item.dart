@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
+import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -44,16 +45,28 @@ class ChatListItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 6.h),
-                  Text(
-                    lastMessage.content,
-                    style: AppTextStyles.regular12.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                  if (lastMessage.type == MessageType.text)
+                    Text(
+                      lastMessage.content,
+                      style: AppTextStyles.regular12.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (lastMessage.type == MessageType.voice)
+                    Text(
+                      'Voice message',
+                      style: AppTextStyles.regular12.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
