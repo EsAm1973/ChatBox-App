@@ -149,14 +149,103 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
+  /// Sends an image attachment
+  void sendImageAttachment({
+    required File imageFile,
+    required String senderId,
+    required String receiverId,
+  }) {
+    _sendAttachment(
+      file: imageFile,
+      senderId: senderId,
+      receiverId: receiverId,
+      fileType: MessageType.image,
+    );
+  }
+
+  /// Sends a file attachment
+  void sendFileAttachment({
+    required File file,
+    required String senderId,
+    required String receiverId,
+  }) {
+    _sendAttachment(
+      file: file,
+      senderId: senderId,
+      receiverId: receiverId,
+      fileType: MessageType.file,
+    );
+  }
+
+  /// Common method for sending attachments
+  void _sendAttachment({
+    required File file,
+    required String senderId,
+    required String receiverId,
+    required MessageType fileType,
+  }) async {
+    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // Create pending message
+    final pendingMessage = MessageModel(
+      id: messageId,
+      senderId: senderId,
+      receiverId: receiverId,
+      content: '${fileType.name}_pending',
+      timestamp: DateTime.now(),
+      isRead: false,
+      type: fileType,
+      status: MessageStatus.pending,
+    );
+
+    _pendingMessages[messageId] = pendingMessage;
+
+    // Update state with pending message
+    final updatedMessages = _mergeMessages(
+      state.messages.where((m) => m.status != MessageStatus.pending).toList(),
+    );
+    emit(MessagesLoaded(messages: updatedMessages));
+
+    // Send attachment
+    final result = await _chatRepo.sendAttachment(
+      file: file,
+      senderId: senderId,
+      receiverId: receiverId,
+      fileType: fileType,
+      messageId: messageId,
+    );
+
+    result.fold(
+      (failure) {
+        // Update message status to failed
+        _pendingMessages[messageId] = pendingMessage.copyWith(
+          status: MessageStatus.failed,
+        );
+
+        final updatedMessages = _mergeMessages(
+          state.messages.where((m) => m.id != messageId).toList(),
+        );
+        emit(MessagesLoaded(messages: updatedMessages));
+        emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
+      },
+      (_) {
+        // Remove from pending messages on success
+        _pendingMessages.remove(messageId);
+      },
+    );
+  }
+
   void retryMessage(MessageModel message) {
     if (message.status == MessageStatus.failed) {
       _pendingMessages.remove(message.id);
 
-      if (message.type == MessageType.voice) {
+      if (message.type == MessageType.voice ||
+          message.type == MessageType.image ||
+          message.type == MessageType.file) {
         emit(
           ChatError(
-            error: 'Cannot retry voice message. Please record again.',
+            error:
+                'Cannot retry ${message.type.name} message. Please send again.',
             messages: state.messages,
           ),
         );

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chatbox/Core/service/file_picker_service.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
@@ -9,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChatInput extends StatefulWidget {
   final UserModel otherUser;
@@ -40,7 +42,6 @@ class _ChatInputState extends State<ChatInput> {
     _messageController.clear();
   }
 
-  // جديد: دالة إرسال الرسالة الصوتية
   void _sendVoiceMessage(File voiceFile, int duration) {
     context.read<ChatCubit>().sendVoiceMessage(
       voiceFile: voiceFile,
@@ -52,6 +53,95 @@ class _ChatInputState extends State<ChatInput> {
     setState(() {
       _isRecording = false;
     });
+  }
+
+  // جديد: دالة إرسال الصورة
+  void _sendImageAttachment(File imageFile) {
+    context.read<ChatCubit>().sendImageAttachment(
+      imageFile: imageFile,
+      senderId: FirebaseAuth.instance.currentUser!.uid,
+      receiverId: widget.otherUser.uid,
+    );
+  }
+
+  // جديد: دالة إرسال الملف
+  void _sendFileAttachment(File file) {
+    context.read<ChatCubit>().sendFileAttachment(
+      file: file,
+      senderId: FirebaseAuth.instance.currentUser!.uid,
+      receiverId: widget.otherUser.uid,
+    );
+  }
+
+  // جديد: فتح menu للاختيار بين الصور والملفات
+  void _showAttachmentMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo, color: Colors.green),
+                  title: const Text('Select Photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSendImage();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                  title: const Text('Take Photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _takeAndSendPhoto();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.attach_file, color: Colors.orange),
+                  title: const Text('Select File'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSendFile();
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  // جديد: اختيار صورة من المعرض
+  void _pickAndSendImage() async {
+    final files = await FilePickerService.pickImages();
+    if (files != null && files.isNotEmpty) {
+      final file = files.first;
+      _sendImageAttachment(file);
+    }
+  }
+
+  // جديد: التقاط صورة بالكاميرا
+  void _takeAndSendPhoto() async {
+    final picker = ImagePicker();
+    final XFile? photo = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+
+    if (photo != null) {
+      final file = File(photo.path);
+      _sendImageAttachment(file);
+    }
+  }
+
+  // جديد: اختيار ملف
+  void _pickAndSendFile() async {
+    final files = await FilePickerService.pickFiles();
+    if (files != null && files.isNotEmpty) {
+      final file = files.first;
+      _sendFileAttachment(file);
+    }
   }
 
   @override
@@ -76,13 +166,14 @@ class _ChatInputState extends State<ChatInput> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              // زر الإرفاق
               IconButton(
                 icon: Icon(
                   Icons.attachment,
                   color: Theme.of(context).iconTheme.color,
                   size: 28.r,
                 ),
-                onPressed: isSending ? null : () {},
+                onPressed: isSending ? null : _showAttachmentMenu,
               ),
               Expanded(
                 child: Container(
@@ -111,7 +202,7 @@ class _ChatInputState extends State<ChatInput> {
                 ),
               ),
 
-              // جديد: عرض زر المايك أو الإرسال حسب النص
+              // زر المايك أو الإرسال
               if (_messageController.text.trim().isEmpty)
                 IconButton(
                   icon: Icon(

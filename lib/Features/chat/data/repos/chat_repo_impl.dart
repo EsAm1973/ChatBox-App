@@ -129,4 +129,46 @@ class ChatRepoImpl implements ChatRepo {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, void>> sendAttachment({
+    required File file,
+    required String senderId,
+    required String receiverId,
+    required MessageType fileType,
+    required String messageId,
+  }) async {
+    try {
+      if (fileType != MessageType.image && fileType != MessageType.file) {
+        return Left(
+          FirebaseFailure(errorMessage: 'Invalid file type for attachment'),
+        );
+      }
+
+      final fileUrl = await storageService.uploadChatAttachment(
+        file,
+        senderId,
+        fileType,
+      );
+
+      final message = MessageModel(
+        id: messageId,
+        senderId: senderId,
+        receiverId: receiverId,
+        content: fileUrl,
+        timestamp: DateTime.now(),
+        isRead: false,
+        type: fileType,
+      );
+
+      await firestoreChatService.sendMessage(message);
+      return const Right(null);
+    } on FirebaseException catch (e) {
+      return Left(FirebaseFailure.fromFirestoreException(e));
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to send attachment: $e'),
+      );
+    }
+  }
 }

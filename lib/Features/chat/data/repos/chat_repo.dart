@@ -18,6 +18,15 @@ abstract class ChatRepo {
     required String messageId,
   });
 
+  /// Sends an attachment (image/file) and returns success or failure
+  Future<Either<Failure, void>> sendAttachment({
+    required File file,
+    required String senderId,
+    required String receiverId,
+    required MessageType fileType,
+    required String messageId,
+  });
+
   /// Gets real-time stream of messages for a chat room
   Stream<Either<Failure, List<MessageModel>>> getMessages(String chatRoomId);
 

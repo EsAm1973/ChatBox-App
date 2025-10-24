@@ -67,6 +67,40 @@ class ChatListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  if (lastMessage.type == MessageType.image)
+                    Row(
+                      children: [
+                        Icon(Icons.image, size: 16.r),
+                        SizedBox(width: 5.w),
+                        Text(
+                          'Image',
+                          style: AppTextStyles.regular12.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  if (lastMessage.type == MessageType.file)
+                    Row(
+                      children: [
+                        Icon(Icons.insert_drive_file, size: 16.r),
+                        SizedBox(width: 5.w),
+                        Text(
+                          'File',
+                          style: AppTextStyles.regular12.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

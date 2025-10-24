@@ -2,8 +2,10 @@ import 'package:chatbox/Core/helper%20functions/formatted_date_and_days.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/date_header.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/message_divider.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_attachment_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_voice_message.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/sent_attachment_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/sent_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/sent_voice_message.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +16,7 @@ class MessageList extends StatelessWidget {
   final List<MessageModel> messages;
   final ScrollController scrollController;
   final Function(MessageModel)? onRetryMessage;
+
   const MessageList({
     super.key,
     required this.messages,
@@ -58,14 +61,15 @@ class MessageList extends StatelessWidget {
             index > 0
                 ? (msgs[index - 1].timestamp ?? DateTime.now())
                 : DateTime.now();
+
         return Column(
           children: [
             if (index == 0 ||
                 isDifferentDay(previousMessageTimestamp, messageTimestamp))
               DateHeader(date: formatDate(messageTimestamp)),
 
+            // الرسائل الصوتية
             if (message.type == MessageType.voice)
-              // عرض الرسالة الصوتية
               isMe
                   ? SentVoiceMessage(
                     voiceUrl: message.content,
@@ -79,8 +83,8 @@ class MessageList extends StatelessWidget {
                     duration: message.voiceDuration ?? 0,
                     time: formatTime(messageTimestamp),
                   )
-            else
-              // عرض الرسالة النصية
+            // الرسائل النصية
+            else if (message.type == MessageType.text)
               GestureDetector(
                 onTap:
                     message.status == MessageStatus.failed
@@ -98,7 +102,29 @@ class MessageList extends StatelessWidget {
                           time: formatTime(messageTimestamp),
                           messages: [message.content],
                         ),
-              ),
+              )
+            // المرفقات (صور وملفات)
+            else if (message.type == MessageType.image ||
+                message.type == MessageType.file)
+              isMe
+                  ? SentAttachmentMessage(
+                    fileUrl: message.content,
+                    time: formatTime(messageTimestamp),
+                    isSeen: message.isRead,
+                    status: message.status,
+                    messageType: message.type,
+                    fileName: _getFileNameFromUrl(message.content),
+                    onRetry:
+                        message.status == MessageStatus.failed
+                            ? () => onRetryMessage?.call(message)
+                            : null,
+                  )
+                  : ReceivedAttachmentMessage(
+                    fileUrl: message.content,
+                    time: formatTime(messageTimestamp),
+                    messageType: message.type,
+                    fileName: _getFileNameFromUrl(message.content),
+                  ),
 
             SizedBox(height: 10.h),
 
@@ -109,5 +135,15 @@ class MessageList extends StatelessWidget {
         );
       },
     );
+  }
+
+  String? _getFileNameFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final pathSegments = uri.pathSegments;
+      return pathSegments.isNotEmpty ? pathSegments.last : null;
+    } catch (e) {
+      return null;
+    }
   }
 }

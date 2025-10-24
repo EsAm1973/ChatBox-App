@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chatbox/Core/service/storage_service.dart';
+import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as b;
 
@@ -67,6 +68,51 @@ class SupabaseStorageService implements StorageService {
   }
 
   @override
+  Future<String> uploadChatAttachment(
+    File file,
+    String userId,
+    MessageType fileType,
+  ) async {
+    try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = b.extension(file.path);
+      final fileName = '${fileType.name}_$timestamp$extension';
+
+      String bucketName;
+      String filePath;
+
+      switch (fileType) {
+        case MessageType.image:
+          bucketName = 'chat-images';
+          filePath = 'images/$userId/$fileName';
+          break;
+        case MessageType.file:
+          bucketName = 'chat-files';
+          filePath = 'files/$userId/$fileName';
+          break;
+        default:
+          throw Exception('Unsupported file type for attachment');
+      }
+
+      await _supabase.client.storage
+          .from(bucketName)
+          .upload(
+            filePath,
+            file,
+            fileOptions: const FileOptions(upsert: false),
+          );
+
+      String publicUrl = _supabase.client.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (e) {
+      throw Exception('Failed to upload chat attachment: $e');
+    }
+  }
+
+  @override
   Future<void> deleteFile(String fileUrl) async {
     try {
       final uri = Uri.parse(fileUrl);
@@ -75,14 +121,17 @@ class SupabaseStorageService implements StorageService {
         throw Exception('Invalid file URL format');
       }
 
-      // تحديد البucket بناءً على الرابط
+      // Determine bucket based on URL
       String bucketName = 'user-image';
       if (fileUrl.contains('voice-records')) {
         bucketName = 'voice-records';
+      } else if (fileUrl.contains('chat-images')) {
+        bucketName = 'chat-images';
+      } else if (fileUrl.contains('chat-files')) {
+        bucketName = 'chat-files';
       }
 
       final filePath = pathSegments.sublist(2).join('/');
-
       await _supabase.client.storage.from(bucketName).remove([filePath]);
     } catch (e) {
       throw Exception('Failed to delete file: $e');
