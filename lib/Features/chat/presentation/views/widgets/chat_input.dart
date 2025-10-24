@@ -33,7 +33,7 @@ class _ChatInputState extends State<ChatInput> {
       content: _messageController.text.trim(),
       timestamp: DateTime.now(),
       isRead: false,
-      type: MessageType.text, // جديد
+      type: MessageType.text,
     );
 
     context.read<ChatCubit>().sendMessage(message);
@@ -60,7 +60,6 @@ class _ChatInputState extends State<ChatInput> {
       builder: (context, state) {
         final isSending = state is MessageSending;
 
-        // جديد: إذا كان التسجيل قيد التشغيل
         if (_isRecording) {
           return VoiceRecorderWidget(
             onVoiceRecorded: _sendVoiceMessage,

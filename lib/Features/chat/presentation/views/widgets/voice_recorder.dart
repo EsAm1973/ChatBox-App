@@ -198,7 +198,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget> {
             child: IconButton(
               icon: Icon(
                 Icons.send,
-                color: Theme.of(context).iconTheme.color,
+                color: Theme.of(context).colorScheme.onPrimary,
                 size: 24.r,
               ),
               onPressed: _stopRecording,
