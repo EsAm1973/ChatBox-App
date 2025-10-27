@@ -1,12 +1,12 @@
 import 'package:chatbox/Core/errors/firebase_failures.dart';
-import 'package:chatbox/Core/service/firestore_service.dart';
+import 'package:chatbox/Core/service/firestore_user_service.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/home/data/repos/user_search_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 
 class UserSearchRepoImpl implements SearchUserRepo {
-  final FirestoreService firestore;
+  final FirestoreUserService firestore;
 
   UserSearchRepoImpl({required this.firestore});
 

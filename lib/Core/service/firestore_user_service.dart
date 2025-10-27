@@ -1,10 +1,9 @@
-// Add to your services
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class FirestoreService {
+class FirestoreUserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> saveUser(UserModel user) async {
@@ -19,20 +18,13 @@ class FirestoreService {
 
   Future<void> deleteUser(String uid) async {
     try {
-      // Get user data first to verify it exists
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (!userDoc.exists) {
         throw FirebaseFailure(
           errorMessage: 'User data not found in Firestore.',
         );
       }
-
-      // Delete the user document
       await _firestore.collection('users').doc(uid).delete();
-
-      // Delete any other user-related data in other collections if needed
-      // For example, if you have user messages, settings, etc.
-      // await _deleteUserRelatedData(uid);
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
@@ -61,7 +53,6 @@ class FirestoreService {
     final usersMap = <String, UserModel>{};
 
     try {
-      // نستخدم query where in لجلب جميع المستخدمين في طلب واحد
       final snapshot =
           await _firestore
               .collection('users')
@@ -72,14 +63,13 @@ class FirestoreService {
         usersMap[doc.id] = UserModel.fromMap({'uid': doc.id, ...doc.data()});
       }
 
-      // نملأ المستخدمين غير الموجودين بقيم افتراضية
       for (final userId in uniqueIds) {
         if (!usersMap.containsKey(userId)) {
           usersMap[userId] = UserModel(
             uid: userId,
             name: 'User',
             email: '',
-            profilePic: '',
+            profilePic: 'default_profile_pic_url',
             isOnline: false,
             createdAt: DateTime.now(),
             lastSeen: DateTime.now(),
@@ -90,13 +80,12 @@ class FirestoreService {
       return usersMap;
     } catch (e) {
       print('Error getting users batch: $e');
-      // في حالة الخطأ، نرجع مستخدمين افتراضيين
       for (final userId in uniqueIds) {
         usersMap[userId] = UserModel(
           uid: userId,
           name: 'User',
           email: '',
-          profilePic: '',
+          profilePic: 'default_profile_pic_url',
           isOnline: false,
           createdAt: DateTime.now(),
           lastSeen: DateTime.now(),
@@ -130,17 +119,15 @@ class FirestoreService {
 
   Future<List<UserModel>> searchUsersByEmail(String searchQuery) async {
     try {
-      // Convert to lowercase for case-insensitive search
       String query = searchQuery.toLowerCase();
       final querySnapshot =
           await _firestore
               .collection('users')
               .where('email', isGreaterThanOrEqualTo: query)
               .where('email', isLessThanOrEqualTo: '$query\uf8ff')
-              .limit(10) // Limits results for efficiency:cite[7]
+              .limit(10)
               .get();
 
-      // Convert documents to UserModel objects, filtering out any nulls
       return querySnapshot.docs
           .map((doc) => UserModel.fromMap(doc.data()))
           .where(
@@ -154,5 +141,101 @@ class FirestoreService {
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to search users.');
     }
+  }
+
+  Future<void> updateUserProfile(UserModel user) async {
+    try {
+      await _firestore.collection('users').doc(user.uid).update(user.toMap());
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update user profile.');
+    }
+  }
+
+  Future<void> updateProfilePicture(String uid, String imageUrl) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'profilePic': imageUrl,
+        'lastSeen': DateTime.now().millisecondsSinceEpoch,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update profile picture.');
+    }
+  }
+
+  Future<void> updateUserLastSeen(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'lastSeen': DateTime.now().millisecondsSinceEpoch,
+      });
+    } on FirebaseException catch (e) {
+      print('Error updating last seen: $e');
+    } catch (e) {
+      print('Error updating last seen: $e');
+    }
+  }
+
+  Future<void> updateUserOnlineStatus(String uid, bool isOnline) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'isOnline': isOnline,
+        'lastSeen': DateTime.now().millisecondsSinceEpoch,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update online status.');
+    }
+  }
+
+  Future<void> updateUserAbout(String uid, String about) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'about': about,
+        'lastSeen': DateTime.now().millisecondsSinceEpoch,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update about.');
+    }
+  }
+
+  Future<void> updateUserPhoneNumber(String uid, String phoneNumber) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'phoneNumber': phoneNumber,
+        'lastSeen': DateTime.now().millisecondsSinceEpoch,
+      });
+    } on FirebaseException catch (e) {
+      throw FirebaseFailure.fromFirestoreException(e);
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to update phone number.');
+    }
+  }
+
+  Stream<UserModel> getUserStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists) {
+            throw FirebaseFailure(errorMessage: 'User document does not exist');
+          }
+          return UserModel.fromMap(snapshot.data()!);
+        })
+        .handleError((error) {
+          if (error is FirebaseFailure) {
+            throw error;
+          } else if (error is FirebaseException) {
+            throw FirebaseFailure.fromFirestoreException(error);
+          } else {
+            throw FirebaseFailure(errorMessage: 'Stream error: $error');
+          }
+        });
   }
 }
