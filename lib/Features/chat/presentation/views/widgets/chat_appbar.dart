@@ -1,4 +1,5 @@
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,12 +22,14 @@ class ChatAppBar extends StatelessWidget {
         children: [
           BackButton(color: Theme.of(context).iconTheme.color),
           SizedBox(width: 12.w),
-          Container(
-            decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: CircleAvatar(
-              radius: 24.r,
-              backgroundImage: NetworkImage(otherUser.profilePic),
-            ),
+          buildAvatar(
+            context,
+            otherUser.profilePic,
+            50.w,
+            50.h,
+            30.r,
+            30.r,
+            BoxFit.cover,
           ),
           SizedBox(width: 12.w),
           Expanded(

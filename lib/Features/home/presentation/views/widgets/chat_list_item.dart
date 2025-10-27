@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/data/models/chat_room.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
@@ -32,7 +32,15 @@ class ChatListItem extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _buildAvatar(context),
+            buildAvatar(
+              context,
+              otherUser.profilePic,
+              60.w,
+              60.h,
+              30.r,
+              30.r,
+              BoxFit.cover,
+            ),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
@@ -127,30 +135,6 @@ class ChatListItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAvatar(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: otherUser.profilePic,
-      imageBuilder:
-          (context, imageProvider) => Container(
-            width: 60.r,
-            height: 60.r,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-            ),
-          ),
-      placeholder:
-          (context, url) => CircleAvatar(
-            radius: 30.r,
-            backgroundColor: Colors.grey[200],
-            child: const Icon(Icons.person),
-          ),
-      errorWidget:
-          (context, url, error) =>
-              CircleAvatar(radius: 30.r, child: const Icon(Icons.error)),
     );
   }
 

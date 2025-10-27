@@ -1,5 +1,8 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:svg_flutter/svg.dart';
 
@@ -32,12 +35,36 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
         actions: [
-          Container(
-            decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: CircleAvatar(
-              radius: 26.r,
-              backgroundImage: const AssetImage('assets/user_pic_test.png'),
-            ),
+          BlocBuilder<UserCubit, UserState>(
+            builder: (context, state) {
+              if (state is UserLoaded) {
+                return buildAvatar(
+                  context,
+                  state.user.profilePic,
+                  50.w,
+                  50.h,
+                  30.r,
+                  30.r,
+                  BoxFit.cover,
+                );
+              } else if (state is UserError) {
+                return Container(
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: CircleAvatar(
+                    radius: 26.r,
+                    backgroundImage: const AssetImage(
+                      'assets/user_pic_test.png',
+                    ),
+                  ),
+                );
+              } else if (state is UserLoading) {
+                return Container(
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: const CircularProgressIndicator(),
+                );
+              }
+              return Container();
+            },
           ),
         ],
       ),

@@ -1,3 +1,5 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
+import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
 import 'package:chatbox/Core/service/bloc_observer.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
@@ -15,7 +17,12 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SupabaseStorageService.initSupabaseStorage();
   setupGetIt();
-  runApp(const ChatBox());
+  runApp(
+    BlocProvider(
+      create: (context) => UserCubit(userRepo: getIt<UserRepo>()),
+      child: const ChatBox(),
+    ),
+  );
 }
 
 class ChatBox extends StatelessWidget {
