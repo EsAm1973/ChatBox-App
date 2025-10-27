@@ -68,15 +68,17 @@ class SupabaseStorageService implements StorageService {
   }
 
   @override
+  @override
   Future<String> uploadChatAttachment(
     File file,
     String userId,
     MessageType fileType,
   ) async {
     try {
+      String originalFileName = b.basename(file.path);
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final extension = b.extension(file.path);
-      final fileName = '${fileType.name}_$timestamp$extension';
+      final fileName = '${originalFileName}_$timestamp';
 
       String bucketName;
       String filePath;
