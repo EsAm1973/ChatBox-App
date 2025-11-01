@@ -94,7 +94,6 @@ class ChatRepoImpl implements ChatRepo {
   }
 
   @override
-  @override
   Future<Either<Failure, void>> sendVoiceMessage({
     required File voiceFile,
     required String senderId,
@@ -170,5 +169,55 @@ class ChatRepoImpl implements ChatRepo {
         FirebaseFailure(errorMessage: 'Failed to send attachment: $e'),
       );
     }
+  }
+
+  @override
+  Future<Either<Failure, String>> downloadImage(
+    String url,
+    String messageId,
+    Function(double)? onProgress,
+  ) async {
+    try {
+      final localPath = await storageService.downloadImage(
+        url,
+        messageId,
+        onProgress,
+      );
+      return Right(localPath);
+    } catch (e) {
+      return Left(
+        FirebaseFailure(errorMessage: 'Failed to download image: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> downloadFile(
+    String url,
+    String fileName,
+    String messageId,
+    Function(double)? onProgress,
+  ) async {
+    try {
+      final localPath = await storageService.downloadFile(
+        url,
+        fileName,
+        messageId,
+        onProgress,
+      );
+      return Right(localPath);
+    } catch (e) {
+      return Left(FirebaseFailure(errorMessage: 'Failed to download file: $e'));
+    }
+  }
+
+  @override
+  Future<bool> isFileDownloaded(String messageId) async {
+    return await storageService.isFileDownloaded(messageId);
+  }
+
+  @override
+  Future<String?> getLocalFilePath(String messageId) async {
+    return await storageService.getLocalFilePath(messageId);
   }
 }

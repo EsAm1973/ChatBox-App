@@ -11,4 +11,19 @@ abstract class StorageService {
     MessageType fileType,
   );
   Future<void> deleteFile(String filePath);
+
+  // New download methods
+  Future<String> downloadImage(
+    String url,
+    String messageId,
+    Function(double)? onProgress,
+  );
+  Future<String> downloadFile(
+    String url,
+    String fileName,
+    String messageId,
+    Function(double)? onProgress,
+  );
+  Future<bool> isFileDownloaded(String messageId);
+  Future<String?> getLocalFilePath(String messageId);
 }

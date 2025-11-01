@@ -124,6 +124,7 @@ class MessageList extends StatelessWidget {
                     time: formatTime(messageTimestamp),
                     messageType: message.type,
                     fileName: _getFileNameFromUrl(message.content),
+                    message: message,
                   ),
 
             SizedBox(height: 10.h),

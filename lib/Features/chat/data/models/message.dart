@@ -4,6 +4,8 @@ enum MessageStatus { pending, sent, delivered, read, failed }
 
 enum MessageType { text, voice, image, file }
 
+enum DownloadStatus { notDownloaded, downloading, downloaded, failed }
+
 class MessageModel {
   final String id;
   final String senderId;
@@ -14,7 +16,9 @@ class MessageModel {
   final MessageStatus status;
   final MessageType type;
   final int? voiceDuration;
-
+  final DownloadStatus downloadStatus;
+  final double? downloadProgress;
+  final String? localFilePath;
   MessageModel({
     required this.id,
     required this.senderId,
@@ -25,6 +29,9 @@ class MessageModel {
     this.status = MessageStatus.sent,
     this.type = MessageType.text,
     this.voiceDuration,
+    this.downloadStatus = DownloadStatus.notDownloaded,
+    this.downloadProgress,
+    this.localFilePath,
   });
 
   Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
@@ -106,6 +113,9 @@ class MessageModel {
     MessageStatus? status,
     MessageType? type,
     int? voiceDuration,
+    DownloadStatus? downloadStatus,
+    double? downloadProgress,
+    String? localFilePath,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -117,6 +127,9 @@ class MessageModel {
       status: status ?? this.status,
       type: type ?? this.type,
       voiceDuration: voiceDuration ?? this.voiceDuration,
+      downloadStatus: downloadStatus ?? this.downloadStatus,
+      downloadProgress: downloadProgress ?? this.downloadProgress,
+      localFilePath: localFilePath ?? this.localFilePath,
     );
   }
 }

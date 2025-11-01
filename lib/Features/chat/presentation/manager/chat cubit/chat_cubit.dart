@@ -5,16 +5,17 @@ import 'package:bloc/bloc.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_state.dart';
+import 'package:open_file/open_file.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final ChatRepo _chatRepo;
   StreamSubscription? _messagesSubscription;
   StreamSubscription? _chatsSubscription;
   final Map<String, MessageModel> _pendingMessages = {};
+  final Map<String, MessageModel> _downloadingMessages = {};
 
   ChatCubit(this._chatRepo) : super(const ChatInitial());
 
-  /// Initializes chat room and starts listening to messages
   void initializeChat(String user1, String user2) async {
     emit(const ChatLoading());
 
@@ -26,7 +27,6 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  /// Starts listening to messages for a specific chat
   void _listenToMessages(String chatId) {
     _messagesSubscription?.cancel();
 
@@ -35,12 +35,43 @@ class ChatCubit extends Cubit<ChatState> {
         (failure) => emit(
           ChatError(error: failure.errorMessage, messages: state.messages),
         ),
-        (messages) {
-          final allMessages = _mergeMessages(messages);
+        (messages) async {
+          // Check download status for each message
+          final updatedMessages = await _checkDownloadStatus(messages);
+          final allMessages = _mergeMessages(updatedMessages);
           emit(MessagesLoaded(messages: allMessages));
         },
       );
     });
+  }
+
+  Future<List<MessageModel>> _checkDownloadStatus(
+    List<MessageModel> messages,
+  ) async {
+    final updatedMessages = <MessageModel>[];
+
+    for (final message in messages) {
+      if (message.type == MessageType.image ||
+          message.type == MessageType.file) {
+        final isDownloaded = await _chatRepo.isFileDownloaded(message.id);
+        final localPath = await _chatRepo.getLocalFilePath(message.id);
+
+        updatedMessages.add(
+          message.copyWith(
+            downloadStatus:
+                isDownloaded
+                    ? DownloadStatus.downloaded
+                    : DownloadStatus.notDownloaded,
+            localFilePath: localPath,
+            downloadProgress: isDownloaded ? 1.0 : 0.0,
+          ),
+        );
+      } else {
+        updatedMessages.add(message);
+      }
+    }
+
+    return updatedMessages;
   }
 
   List<MessageModel> _mergeMessages(List<MessageModel> firestoreMessages) {
@@ -57,6 +88,17 @@ class ChatCubit extends Cubit<ChatState> {
       }
     }
 
+    for (final downloadingMessage in _downloadingMessages.values) {
+      final index = mergedMessages.indexWhere(
+        (m) => m.id == downloadingMessage.id,
+      );
+      if (index != -1) {
+        mergedMessages[index] = downloadingMessage;
+      } else {
+        mergedMessages.add(downloadingMessage);
+      }
+    }
+
     mergedMessages.sort((a, b) {
       final aTime = a.timestamp ?? DateTime.now();
       final bTime = b.timestamp ?? DateTime.now();
@@ -66,7 +108,6 @@ class ChatCubit extends Cubit<ChatState> {
     return mergedMessages;
   }
 
-  /// Sends a new message to the chat
   void sendMessage(MessageModel message) async {
     final pendingMessage = message.copyWith(
       status: MessageStatus.pending,
@@ -91,7 +132,6 @@ class ChatCubit extends Cubit<ChatState> {
         state.messages.where((m) => m.id != message.id).toList(),
       );
       emit(MessagesLoaded(messages: updatedMessages));
-
       emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
     }, (_) {});
   }
@@ -149,7 +189,6 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  /// Sends an image attachment
   void sendImageAttachment({
     required File imageFile,
     required String senderId,
@@ -163,7 +202,6 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  /// Sends a file attachment
   void sendFileAttachment({
     required File file,
     required String senderId,
@@ -177,7 +215,6 @@ class ChatCubit extends Cubit<ChatState> {
     );
   }
 
-  /// Common method for sending attachments
   void _sendAttachment({
     required File file,
     required String senderId,
@@ -186,7 +223,6 @@ class ChatCubit extends Cubit<ChatState> {
   }) async {
     final messageId = DateTime.now().millisecondsSinceEpoch.toString();
 
-    // Create pending message
     final pendingMessage = MessageModel(
       id: messageId,
       senderId: senderId,
@@ -200,13 +236,11 @@ class ChatCubit extends Cubit<ChatState> {
 
     _pendingMessages[messageId] = pendingMessage;
 
-    // Update state with pending message
     final updatedMessages = _mergeMessages(
       state.messages.where((m) => m.status != MessageStatus.pending).toList(),
     );
     emit(MessagesLoaded(messages: updatedMessages));
 
-    // Send attachment
     final result = await _chatRepo.sendAttachment(
       file: file,
       senderId: senderId,
@@ -217,7 +251,6 @@ class ChatCubit extends Cubit<ChatState> {
 
     result.fold(
       (failure) {
-        // Update message status to failed
         _pendingMessages[messageId] = pendingMessage.copyWith(
           status: MessageStatus.failed,
         );
@@ -229,10 +262,143 @@ class ChatCubit extends Cubit<ChatState> {
         emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
       },
       (_) {
-        // Remove from pending messages on success
         _pendingMessages.remove(messageId);
       },
     );
+  }
+
+  void downloadImage(MessageModel message) async {
+    if (message.downloadStatus == DownloadStatus.downloading ||
+        message.downloadStatus == DownloadStatus.downloaded) {
+      return;
+    }
+
+    // Start download - set initial progress
+    final downloadingMessage = message.copyWith(
+      downloadStatus: DownloadStatus.downloading,
+      downloadProgress: 0.0,
+    );
+
+    _downloadingMessages[message.id] = downloadingMessage;
+    _updateMessagesInState();
+
+    // Download with progress callback
+    final result = await _chatRepo.downloadImage(message.content, message.id, (
+      progress,
+    ) {
+      // Update progress in real-time
+      final updatingMessage = message.copyWith(
+        downloadStatus: DownloadStatus.downloading,
+        downloadProgress: progress,
+      );
+      _downloadingMessages[message.id] = updatingMessage;
+      _updateMessagesInState();
+    });
+
+    result.fold(
+      (failure) {
+        final failedMessage = message.copyWith(
+          downloadStatus: DownloadStatus.failed,
+          downloadProgress: 0.0, // Reset progress on failure
+        );
+        _downloadingMessages[message.id] = failedMessage;
+        _updateMessagesInState();
+        emit(ChatError(error: failure.errorMessage, messages: state.messages));
+      },
+      (localPath) {
+        // Download complete - update message with downloaded path
+        final downloadedMessage = message.copyWith(
+          downloadStatus: DownloadStatus.downloaded,
+          downloadProgress: 1.0, // Set to 100%
+          localFilePath: localPath, // Set the local file path
+        );
+
+        // Update in downloading messages first
+        _downloadingMessages[message.id] = downloadedMessage;
+        _updateMessagesInState();
+
+        // Then remove from downloading map after a short delay
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _downloadingMessages.remove(message.id);
+          _updateMessagesInState();
+        });
+      },
+    );
+  }
+
+  void downloadAndOpenFile(MessageModel message, String fileName) async {
+    if (message.downloadStatus == DownloadStatus.downloaded &&
+        message.localFilePath != null) {
+      await OpenFile.open(message.localFilePath!);
+      return;
+    }
+
+    if (message.downloadStatus == DownloadStatus.downloading) {
+      return;
+    }
+
+    // Start download - set initial progress
+    final downloadingMessage = message.copyWith(
+      downloadStatus: DownloadStatus.downloading,
+      downloadProgress: 0.0,
+    );
+
+    _downloadingMessages[message.id] = downloadingMessage;
+    _updateMessagesInState();
+
+    // Download with progress callback
+    final result = await _chatRepo.downloadFile(
+      message.content,
+      fileName,
+      message.id,
+      (progress) {
+        // Update progress in real-time
+        final updatingMessage = message.copyWith(
+          downloadStatus: DownloadStatus.downloading,
+          downloadProgress: progress,
+        );
+        _downloadingMessages[message.id] = updatingMessage;
+        _updateMessagesInState();
+      },
+    );
+
+    result.fold(
+      (failure) {
+        final failedMessage = message.copyWith(
+          downloadStatus: DownloadStatus.failed,
+          downloadProgress: 0.0, // Reset progress on failure
+        );
+        _downloadingMessages[message.id] = failedMessage;
+        _updateMessagesInState();
+        emit(ChatError(error: failure.errorMessage, messages: state.messages));
+      },
+      (localPath) async {
+        // Download complete - update message with downloaded path
+        final downloadedMessage = message.copyWith(
+          downloadStatus: DownloadStatus.downloaded,
+          downloadProgress: 1.0, // Set to 100%
+          localFilePath: localPath, // Set the local file path
+        );
+
+        // Update in downloading messages first
+        _downloadingMessages[message.id] = downloadedMessage;
+        _updateMessagesInState();
+
+        // Then remove from downloading map after a short delay
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _downloadingMessages.remove(message.id);
+          _updateMessagesInState();
+        });
+
+        // Open file
+        await OpenFile.open(localPath);
+      },
+    );
+  }
+
+  void _updateMessagesInState() {
+    final updatedMessages = _mergeMessages(state.messages);
+    emit(MessagesLoaded(messages: updatedMessages));
   }
 
   void retryMessage(MessageModel message) {
@@ -255,7 +421,6 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  /// Loads user's chat conversations
   void loadUserChats(String userId) {
     _chatsSubscription?.cancel();
 
@@ -269,7 +434,6 @@ class ChatCubit extends Cubit<ChatState> {
     });
   }
 
-  /// Marks messages as seen for the current user
   void markMessagesAsSeen(String chatId, String userId) async {
     await _chatRepo.markMessagesAsSeen(chatId, userId);
   }
@@ -279,6 +443,7 @@ class ChatCubit extends Cubit<ChatState> {
     _messagesSubscription?.cancel();
     _chatsSubscription?.cancel();
     _pendingMessages.clear();
+    _downloadingMessages.clear();
     return super.close();
   }
 }

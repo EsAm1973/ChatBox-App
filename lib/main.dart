@@ -2,6 +2,7 @@ import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
 import 'package:chatbox/Core/service/bloc_observer.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
+import 'package:chatbox/Core/service/shared_prefrences_sengelton.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_theme.dart';
@@ -15,7 +16,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = CustomBlocObserver();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Prefs.init();
   await SupabaseStorageService.initSupabaseStorage();
+  await SupabaseStorageService.initializeDownloadedFiles();
   setupGetIt();
   runApp(
     BlocProvider(

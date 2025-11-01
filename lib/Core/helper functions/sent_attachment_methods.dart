@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
+import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ImageMethods {
-  // Build image content widget
+  // Build image content widget (للرسائل المرسلة)
   static Widget buildImageContent(
     BuildContext context, {
     required String fileUrl,
@@ -85,7 +87,7 @@ class ImageMethods {
     );
   }
 
-  // Build file content widget
+  // Build file content widget (للرسائل المرسلة)
   static Widget buildFileContent(
     BuildContext context, {
     required String fileUrl,
@@ -99,7 +101,7 @@ class ImageMethods {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          Icons.insert_drive_file,
+          _getFileIcon(actualFileName),
           size: 32.r,
           color: Theme.of(context).colorScheme.onPrimary,
         ),
@@ -129,17 +131,6 @@ class ImageMethods {
             ],
           ),
         ),
-        if (status != MessageStatus.pending && status != MessageStatus.failed)
-          IconButton(
-            icon: Icon(
-              Icons.download,
-              size: 20.r,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            onPressed: () {
-              downloadFile(context, fileUrl, actualFileName);
-            },
-          ),
       ],
     );
   }
@@ -223,109 +214,322 @@ class ImageMethods {
     );
   }
 
+  // 🔥 FIXED: Build received image content with download support
   static Widget buildReceivedImageContent(
     BuildContext context, {
     required String fileUrl,
+    required MessageModel message,
   }) {
+    final chatCubit = context.read<ChatCubit>();
+
     return GestureDetector(
       onTap: () {
-        showFullScreenImage(context, fileUrl);
+        // إذا تم التحميل، فتح الصورة بشاشة كاملة
+        if (message.downloadStatus == DownloadStatus.downloaded) {
+          showFullScreenImage(context, fileUrl);
+        }
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.r),
         child: Container(
           constraints: BoxConstraints(maxWidth: 200.r, maxHeight: 200.r),
-          child: CachedNetworkImage(
-            imageUrl: fileUrl,
-            fit: BoxFit.cover,
-            placeholder:
-                (context, url) => Container(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.1),
-                  child: const Center(child: CircularProgressIndicator()),
+          child: Stack(
+            children: [
+              // Show local image if downloaded
+              if (message.downloadStatus == DownloadStatus.downloaded &&
+                  message.localFilePath != null)
+                Image.file(
+                  File(message.localFilePath!),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
+              else
+                CachedNetworkImage(
+                  imageUrl: fileUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholder:
+                      (context, url) => Container(
+                        color: Colors.grey[300],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  errorWidget:
+                      (context, url, error) => Container(
+                        color: Colors.grey[300],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error, color: Colors.red, size: 40.r),
+                            Text(
+                              'Failed to load',
+                              style: AppTextStyles.regular12,
+                            ),
+                          ],
+                        ),
+                      ),
                 ),
-            errorWidget:
-                (context, url, error) => Container(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.1),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Error loading image',
-                        style: AppTextStyles.regular12,
-                      ),
-                    ],
+
+              // Download overlay
+              if (message.downloadStatus != DownloadStatus.downloaded)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black45,
+                    child: Center(
+                      child: _buildDownloadButton(message, chatCubit),
+                    ),
                   ),
                 ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  // Download button for images
+  static Widget _buildDownloadButton(MessageModel message, ChatCubit cubit) {
+    switch (message.downloadStatus) {
+      case DownloadStatus.notDownloaded:
+        return IconButton(
+          icon: Icon(Icons.download, size: 40.r, color: Colors.white),
+          onPressed: () => cubit.downloadImage(message),
+        );
+
+      case DownloadStatus.downloading:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 60.r,
+              height: 60.r,
+              child: CircularProgressIndicator(
+                value: message.downloadProgress,
+                backgroundColor: Colors.white30,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 4,
+              ),
+            ),
+            Text(
+              '${((message.downloadProgress ?? 0) * 100).toInt()}%',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        );
+
+      case DownloadStatus.failed:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.refresh, size: 40.r, color: Colors.red),
+              onPressed: () => cubit.downloadImage(message),
+            ),
+            Text(
+              'Retry',
+              style: TextStyle(color: Colors.white, fontSize: 12.sp),
+            ),
+          ],
+        );
+
+      case DownloadStatus.downloaded:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // 🔥 FIXED: Build received file content with download support
   static Widget buildReceivedFileContent(
     BuildContext context, {
     required String fileUrl,
     String? fileName,
+    required MessageModel message,
   }) {
+    final chatCubit = context.read<ChatCubit>();
     final file = File(fileUrl);
     final actualFileName = fileName ?? file.uri.pathSegments.last;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.insert_drive_file,
-          size: 32.r,
-          color: Theme.of(context).colorScheme.onSurface,
+    return InkWell(
+      onTap: () {
+        // Download and open file
+        chatCubit.downloadAndOpenFile(message, actualFileName);
+      },
+      borderRadius: BorderRadius.circular(8.r),
+      child: Container(
+        padding: EdgeInsets.all(8.r),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8.r),
         ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                actualFileName,
-                style: AppTextStyles.regular14.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6.r),
               ),
-            ],
-          ),
+              child: Icon(
+                _getFileIcon(actualFileName),
+                size: 32.r,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    actualFileName,
+                    style: AppTextStyles.regular14.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    _getFileStatusText(message.downloadStatus),
+                    style: AppTextStyles.regular12.copyWith(
+                      color: _getFileStatusColor(
+                        message.downloadStatus,
+                        context,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8.w),
+            _buildFileActionButton(message, chatCubit, actualFileName, context),
+          ],
         ),
-        IconButton(
-          icon: Icon(
-            Icons.download,
-            size: 20.r,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          onPressed: () {
-            downloadFile(context, fileUrl, actualFileName);
-          },
-        ),
-      ],
+      ),
     );
   }
 
-  // Download file
-  static void downloadFile(
-    BuildContext context,
-    String fileUrl,
+  // File action button (download/open)
+  static Widget _buildFileActionButton(
+    MessageModel message,
+    ChatCubit cubit,
     String fileName,
-  ) async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Downloading file: $fileName')));
+    BuildContext context,
+  ) {
+    switch (message.downloadStatus) {
+      case DownloadStatus.notDownloaded:
+        return IconButton(
+          icon: Icon(
+            Icons.download,
+            size: 24.r,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          onPressed: () => cubit.downloadAndOpenFile(message, fileName),
+        );
+
+      case DownloadStatus.downloading:
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 32.r,
+              height: 32.r,
+              child: CircularProgressIndicator(
+                value: message.downloadProgress,
+                strokeWidth: 2.5,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            Text(
+              '${((message.downloadProgress ?? 0) * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 8.sp,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
+        );
+
+      case DownloadStatus.downloaded:
+        return IconButton(
+          icon: Icon(Icons.open_in_new, size: 24.r, color: Colors.green),
+          onPressed: () => cubit.downloadAndOpenFile(message, fileName),
+        );
+
+      case DownloadStatus.failed:
+        return IconButton(
+          icon: Icon(Icons.refresh, size: 24.r, color: Colors.red),
+          onPressed: () => cubit.downloadAndOpenFile(message, fileName),
+        );
+    }
+  }
+
+  // Get file status text
+  static String _getFileStatusText(DownloadStatus status) {
+    switch (status) {
+      case DownloadStatus.notDownloaded:
+        return 'Tap to download';
+      case DownloadStatus.downloading:
+        return 'Downloading...';
+      case DownloadStatus.downloaded:
+        return 'Downloaded • Tap to open';
+      case DownloadStatus.failed:
+        return 'Failed • Tap to retry';
+    }
+  }
+
+  // Get file status color
+  static Color _getFileStatusColor(
+    DownloadStatus status,
+    BuildContext context,
+  ) {
+    switch (status) {
+      case DownloadStatus.notDownloaded:
+        return Colors.grey[600]!;
+      case DownloadStatus.downloading:
+        return Theme.of(context).colorScheme.primary;
+      case DownloadStatus.downloaded:
+        return Colors.green;
+      case DownloadStatus.failed:
+        return Colors.red;
+    }
+  }
+
+  // Get file icon based on extension
+  static IconData _getFileIcon(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart;
+      case 'ppt':
+      case 'pptx':
+        return Icons.slideshow;
+      case 'zip':
+      case 'rar':
+        return Icons.folder_zip;
+      case 'txt':
+        return Icons.text_snippet;
+      case 'apk':
+        return Icons.android;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      default:
+        return Icons.insert_drive_file;
+    }
   }
 }
