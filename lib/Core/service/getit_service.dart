@@ -52,7 +52,6 @@ void setupGetIt() {
   getIt.registerLazySingleton<CallRepo>(
     () => CallRepoImpl(
       firestoreCallService: getIt<FirestoreCallService>(),
-      zegoCloudService: getIt<ZegoCloudService>(),
     ),
   );
 }

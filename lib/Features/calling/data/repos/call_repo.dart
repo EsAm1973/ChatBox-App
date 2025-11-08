@@ -24,20 +24,7 @@ abstract class CallRepo {
   Stream<Either<Failure, CallModel?>> getCallUpdates(String callId);
   Stream<Either<Failure, List<CallModel>>> getCallHistory(String userId);
 
-  // ZEGOCLOUD methods
-  Future<Either<Failure, void>> joinVoiceCall({
-    required String roomId,
-    required String userId,
-    required String userName,
-    required String streamID,
-  });
-
-  Future<Either<Failure, void>> startPlayingStream(String streamID);
-  Future<Either<Failure, void>> leaveVoiceCall();
-  Future<Either<Failure, void>> toggleMicrophone(bool isMuted);
-  Future<Either<Failure, void>> toggleSpeaker(bool useSpeaker);
-
-  // Helper methods
-  String generateRoomId(String callerEmail, String receiverEmail);
-  String generateStreamId(String callId);
+  // Helper methods for ZegoUIKit
+  String generateCallId();
+  String generateCallIdForUsers(String user1, String user2);
 }

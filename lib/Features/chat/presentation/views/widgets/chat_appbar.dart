@@ -5,6 +5,7 @@ import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -60,38 +61,65 @@ class ChatAppBar extends StatelessWidget {
           IconButton(
             padding: EdgeInsets.zero,
             onPressed: () async {
-              // Fire cubit's initiate flow. Cubit should emit CallInvitationSent with currentCall.
-              await voiceCallCubit.initiateCall(
-                callerId: currentUser!.uid,
-                callerEmail: currentUser.email,
-                receiverId: otherUser.uid,
-                receiverEmail: otherUser.email,
-                callType: CallType.voice,
-              );
-
-              // After initiate, the cubit in your real project will emit a state containing the created CallModel.
-              // Here we assume cubit.state has that call (CallInvitationSent). Adapt this part to your state model.
-              final state = voiceCallCubit.state;
-              // Replace this conditional with your actual state check in production
-              if (state.currentCall != null) {
-                final createdCall = state.currentCall as CallModel;
-
-                // Navigate to Zego UI
-                await GoRouter.of(context).push(
-                  AppRouter.kVoiceCallViewRoute,
-                  extra: {
-                    'call': createdCall,
-                    'localUserId': currentUser.uid,
-                    'localUserName': currentUser.name,
-                  },
+              try {
+                // Show loading state
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Initiating call...')),
                 );
 
-                // After returning, notify cubit to end call
-                await voiceCallCubit.endCall(createdCall);
-              } else {
-                // handle failure case (show snackbar)
+                // Create the call
+                await voiceCallCubit.initiateCall(
+                  callerId: currentUser!.uid,
+                  callerEmail: currentUser.email,
+                  receiverId: otherUser.uid,
+                  receiverEmail: otherUser.email,
+                  callType: CallType.voice,
+                );
+
+                // Get the created call from the updated state
+                final currentState = voiceCallCubit.state;
+                if (currentState is CallInvitationSent &&
+                    currentState.currentCall != null) {
+                  final call = currentState.currentCall!;
+
+                  // Navigate to Zego UI
+                  await GoRouter.of(context).push(
+                    AppRouter.kVoiceCallViewRoute,
+                    extra: {
+                      'call': call,
+                      'localUserId': currentUser.uid,
+                      'localUserName': currentUser.name,
+                    },
+                  );
+                } else {
+                  // Check for error state
+                  if (currentState is CallError) {
+                    throw Exception(currentState.error);
+                  }
+                  // Fallback - try to get call from Firestore using a generated ID
+                  final fallbackCall = CallModel(
+                    callId: 'call_${DateTime.now().millisecondsSinceEpoch}',
+                    callerId: currentUser.uid,
+                    callerEmail: currentUser.email,
+                    receiverId: otherUser.uid,
+                    receiverEmail: otherUser.email,
+                    callType: CallType.voice,
+                    status: CallStatus.calling,
+                    startedAt: DateTime.now(),
+                  );
+
+                  await GoRouter.of(context).push(
+                    AppRouter.kVoiceCallViewRoute,
+                    extra: {
+                      'call': fallbackCall,
+                      'localUserId': currentUser.uid,
+                      'localUserName': currentUser.name,
+                    },
+                  );
+                }
+              } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to create call')),
+                  SnackBar(content: Text('Failed to create call: $e')),
                 );
               }
             },

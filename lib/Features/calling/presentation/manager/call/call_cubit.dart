@@ -50,46 +50,22 @@ class CallCubit extends Cubit<CallState> {
     });
   }
 
-  /// Join a call as the caller
+  /// Join a call as the caller (for ZegoUIKit, this is handled automatically)
   Future<void> joinCallAsCaller(CallModel call) async {
-    if (call.zegoRoomId == null || call.streamID == null) {
-      emit(CallError(error: 'Missing room ID or stream ID', currentCall: call));
-      return;
-    }
-
-    emit(const CallLoading());
-
-    final result = await _callRepo.joinVoiceCall(
-      roomId: call.zegoRoomId!,
-      userId: call.callerId,
-      userName: call.callerEmail,
-      streamID: call.streamID!,
+    // For ZegoUIKit, the call is joined automatically when the CallView is opened
+    // We just need to update the status
+    _callRepo.updateCallStatus(
+      callId: call.callId,
+      status: CallStatus.in_progress,
     );
-
-    result.fold(
-      (failure) =>
-          emit(CallError(error: failure.errorMessage, currentCall: call)),
-      (_) {
-        // Update call status to in_progress
-        _callRepo.updateCallStatus(
-          callId: call.callId,
-          status: CallStatus.in_progress,
-        );
-        emit(CallInProgress(currentCall: call));
-      },
-    );
+    emit(CallInProgress(currentCall: call));
   }
 
-  /// Accept an incoming call
+  /// Accept an incoming call (ZegoUIKit handles the actual call joining)
   Future<void> acceptCall(CallModel call) async {
-    if (call.zegoRoomId == null || call.streamID == null) {
-      emit(CallError(error: 'Missing room ID or stream ID', currentCall: call));
-      return;
-    }
-
     emit(const CallLoading());
 
-    // First update call status to in_progress
+    // Update call status to in_progress
     final updateResult = await _callRepo.updateCallStatus(
       callId: call.callId,
       status: CallStatus.in_progress,
@@ -98,27 +74,11 @@ class CallCubit extends Cubit<CallState> {
     updateResult.fold(
       (failure) =>
           emit(CallError(error: failure.errorMessage, currentCall: call)),
-      (_) async {
-        // Join the voice call
-        final joinResult = await _callRepo.joinVoiceCall(
-          roomId: call.zegoRoomId!,
-          userId: call.receiverId,
-          userName: call.receiverEmail,
-          streamID: call.streamID!,
-        );
-
-        joinResult.fold(
-          (failure) =>
-              emit(CallError(error: failure.errorMessage, currentCall: call)),
-          (_) {
-            // Start playing the caller's stream
-            _callRepo.startPlayingStream(call.streamID!);
-            emit(
-              CallInProgress(
-                currentCall: call.copyWith(status: CallStatus.in_progress),
-              ),
-            );
-          },
+      (_) {
+        emit(
+          CallInProgress(
+            currentCall: call.copyWith(status: CallStatus.in_progress),
+          ),
         );
       },
     );
@@ -159,9 +119,7 @@ class CallCubit extends Cubit<CallState> {
     result.fold(
       (failure) =>
           emit(CallError(error: failure.errorMessage, currentCall: call)),
-      (_) async {
-        // Leave the voice call
-        await _callRepo.leaveVoiceCall();
+      (_) {
         final endedCall = call.copyWith(
           status: CallStatus.completed,
           duration: duration,
@@ -222,15 +180,8 @@ class CallCubit extends Cubit<CallState> {
     });
   }
 
-  /// Toggle microphone
-  Future<void> toggleMicrophone(bool isMuted) async {
-    await _callRepo.toggleMicrophone(isMuted);
-  }
-
-  /// Toggle speaker
-  Future<void> toggleSpeaker(bool useSpeaker) async {
-    await _callRepo.toggleSpeaker(useSpeaker);
-  }
+  // Note: Microphone and speaker controls are handled by ZegoUIKit internally
+  // No need for separate toggle methods in the cubit
 
   /// Load call history
   void loadCallHistory(String userId) {
