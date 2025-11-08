@@ -9,6 +9,10 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
+import 'package:chatbox/Features/calling/data/models/call_model.dart';
+import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
+import 'package:chatbox/Features/calling/presentation/views/call_view.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
@@ -30,6 +34,7 @@ abstract class AppRouter {
   static const String kRecoverPasswordRoute = '/recover-password';
   static const String kHomeRoute = '/home';
   static const String kChatScreenRoute = '/chat-screen';
+  static const String kVoiceCallViewRoute = '/voice-call';
   static final router = GoRouter(
     routes: [
       GoRoute(
@@ -110,10 +115,27 @@ abstract class AppRouter {
       GoRoute(
         path: kChatScreenRoute,
         builder:
-            (context, state) => BlocProvider(
-              create: (context) => ChatCubit(getIt<ChatRepo>()),
+            (context, state) => MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (context) => ChatCubit(getIt<ChatRepo>())),
+                BlocProvider(create: (context) => CallCubit(getIt<CallRepo>())),
+              ],
               child: ChatView(otherUser: state.extra as UserModel),
             ),
+      ),
+      GoRoute(
+        path: kVoiceCallViewRoute,
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          return BlocProvider(
+            create: (context) => CallCubit(getIt<CallRepo>()),
+            child: CallView(
+              call: data['call'] as CallModel,
+              localUserId: data['localUserId'] as String,
+              localUserName: data['localUserName'] as String,
+            ),
+          );
+        },
       ),
     ],
   );

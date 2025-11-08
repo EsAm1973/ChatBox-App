@@ -1,8 +1,14 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
+import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/calling/data/models/call_model.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:svg_flutter/svg_flutter.dart';
 
 class ChatAppBar extends StatelessWidget {
@@ -10,6 +16,8 @@ class ChatAppBar extends StatelessWidget {
   final UserModel otherUser;
   @override
   Widget build(BuildContext context) {
+    final voiceCallCubit = context.read<CallCubit>();
+    final currentUser = context.read<UserCubit>().getCurrentUser();
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 16.h),
       decoration: BoxDecoration(
@@ -51,7 +59,42 @@ class ChatAppBar extends StatelessWidget {
           ),
           IconButton(
             padding: EdgeInsets.zero,
-            onPressed: () {},
+            onPressed: () async {
+              // Fire cubit's initiate flow. Cubit should emit CallInvitationSent with currentCall.
+              await voiceCallCubit.initiateCall(
+                callerId: currentUser!.uid,
+                callerEmail: currentUser.email,
+                receiverId: otherUser.uid,
+                receiverEmail: otherUser.email,
+                callType: CallType.voice,
+              );
+
+              // After initiate, the cubit in your real project will emit a state containing the created CallModel.
+              // Here we assume cubit.state has that call (CallInvitationSent). Adapt this part to your state model.
+              final state = voiceCallCubit.state;
+              // Replace this conditional with your actual state check in production
+              if (state.currentCall != null) {
+                final createdCall = state.currentCall as CallModel;
+
+                // Navigate to Zego UI
+                await GoRouter.of(context).push(
+                  AppRouter.kVoiceCallViewRoute,
+                  extra: {
+                    'call': createdCall,
+                    'localUserId': currentUser.uid,
+                    'localUserName': currentUser.name,
+                  },
+                );
+
+                // After returning, notify cubit to end call
+                await voiceCallCubit.endCall(createdCall);
+              } else {
+                // handle failure case (show snackbar)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to create call')),
+                );
+              }
+            },
             icon: SvgPicture.asset(
               _getCallIconPath(context),
               height: 28.h,
