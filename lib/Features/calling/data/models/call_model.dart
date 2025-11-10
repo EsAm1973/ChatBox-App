@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // models/call_model.dart
+
 enum CallStatus {
   calling, // Calling another user
   ringing, // Receiving a call
@@ -27,9 +28,7 @@ class CallModel {
   final DateTime startedAt;
   final DateTime? endedAt;
   final int duration; // in seconds
-  final String? zegoRoomId;
   final String? callChannel; // For Firestore real-time updates
-  final String? streamID; // ⭐ Added for ZEGOCLOUD stream
 
   CallModel({
     required this.callId,
@@ -42,9 +41,7 @@ class CallModel {
     required this.startedAt,
     this.endedAt,
     this.duration = 0,
-    this.zegoRoomId,
     this.callChannel,
-    this.streamID, // ⭐ Added
   });
 
   Map<String, dynamic> toMap({bool useServerTimestamp = false}) {
@@ -57,9 +54,7 @@ class CallModel {
       'callType': callType.name,
       'status': status.name,
       'duration': duration,
-      if (zegoRoomId != null) 'zegoRoomId': zegoRoomId,
       if (callChannel != null) 'callChannel': callChannel,
-      if (streamID != null) 'streamID': streamID,
     };
 
     if (useServerTimestamp) {
@@ -123,9 +118,7 @@ class CallModel {
       startedAt: parseDateTime(map['startedAt']),
       endedAt: map['endedAt'] != null ? parseDateTime(map['endedAt']) : null,
       duration: map['duration'] ?? 0,
-      zegoRoomId: map['zegoRoomId'],
       callChannel: map['callChannel'],
-      streamID: map['streamID'],
     );
   }
 
@@ -140,9 +133,7 @@ class CallModel {
     DateTime? startedAt,
     DateTime? endedAt,
     int? duration,
-    String? zegoRoomId,
     String? callChannel,
-    String? streamID,
   }) {
     return CallModel(
       callId: callId ?? this.callId,
@@ -155,9 +146,7 @@ class CallModel {
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
       duration: duration ?? this.duration,
-      zegoRoomId: zegoRoomId ?? this.zegoRoomId,
       callChannel: callChannel ?? this.callChannel,
-      streamID: streamID ?? this.streamID,
     );
   }
 

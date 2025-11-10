@@ -5,12 +5,12 @@ import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
 import 'package:dartz/dartz.dart';
 
+
 class CallRepoImpl implements CallRepo {
   final FirestoreCallService _firestoreCallService;
 
-  CallRepoImpl({
-    required FirestoreCallService firestoreCallService,
-  }) : _firestoreCallService = firestoreCallService;
+  CallRepoImpl({required FirestoreCallService firestoreCallService})
+    : _firestoreCallService = firestoreCallService;
 
   @override
   Future<Either<Failure, String>> initiateCall({
@@ -21,15 +21,12 @@ class CallRepoImpl implements CallRepo {
     CallType callType = CallType.voice,
   }) async {
     try {
-      // Create call in Firestore - ZegoUIKit will handle the actual call setup
       final createdCallId = await _firestoreCallService.createCall(
         callerId: callerId,
         callerEmail: callerEmail,
         receiverId: receiverId,
         receiverEmail: receiverEmail,
         callType: callType,
-        zegoRoomId: null, // Will be set by ZegoUIKit
-        streamID: null, // Will be set by ZegoUIKit
       );
 
       return Right(createdCallId);
@@ -119,22 +116,13 @@ class CallRepoImpl implements CallRepo {
         .map((calls) => Right<Failure, List<CallModel>>(calls))
         .handleError((error) {
           return Left<Failure, List<CallModel>>(
-            FirebaseFailure(
-              errorMessage: 'Failed to get call history: $error',
-            ),
+            FirebaseFailure(errorMessage: 'Failed to get call history: $error'),
           );
         });
   }
 
-  // Helper methods for ZegoUIKit
   @override
   String generateCallId() {
     return _firestoreCallService.generateCallId();
-  }
-
-  @override
-  String generateCallIdForUsers(String user1, String user2) {
-    final sortedIds = [user1, user2]..sort();
-    return 'call_${sortedIds[0]}_${sortedIds[1]}_${DateTime.now().millisecondsSinceEpoch}';
   }
 }

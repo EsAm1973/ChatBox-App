@@ -64,6 +64,7 @@ dependencies:
   shared_preferences: ^2.5.3
   zego_uikit_prebuilt_call: ^4.21.1
   zego_express_engine: ^3.22.1
+  zego_uikit_signaling_plugin: ^2.8.19
 
 dev_dependencies:
   flutter_test:

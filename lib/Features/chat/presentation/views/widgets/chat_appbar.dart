@@ -1,24 +1,22 @@
-import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
-import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
-import 'package:chatbox/Features/calling/data/models/call_model.dart';
-import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
-import 'package:chatbox/Features/calling/presentation/manager/call/call_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:svg_flutter/svg_flutter.dart';
 
 class ChatAppBar extends StatelessWidget {
-  const ChatAppBar({super.key, required this.otherUser});
+  const ChatAppBar({
+    super.key,
+    required this.otherUser,
+    this.onVoiceCall,
+    this.onVideoCall,
+  });
   final UserModel otherUser;
+  final VoidCallback? onVoiceCall;
+  final VoidCallback? onVideoCall;
   @override
   Widget build(BuildContext context) {
-    final voiceCallCubit = context.read<CallCubit>();
-    final currentUser = context.read<UserCubit>().getCurrentUser();
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 16.h),
       decoration: BoxDecoration(
@@ -60,78 +58,18 @@ class ChatAppBar extends StatelessWidget {
           ),
           IconButton(
             padding: EdgeInsets.zero,
-            onPressed: () async {
-              try {
-                // Show loading state
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Initiating call...')),
-                );
-
-                // Create the call
-                await voiceCallCubit.initiateCall(
-                  callerId: currentUser!.uid,
-                  callerEmail: currentUser.email,
-                  receiverId: otherUser.uid,
-                  receiverEmail: otherUser.email,
-                  callType: CallType.voice,
-                );
-
-                // Get the created call from the updated state
-                final currentState = voiceCallCubit.state;
-                if (currentState is CallInvitationSent &&
-                    currentState.currentCall != null) {
-                  final call = currentState.currentCall!;
-
-                  // Navigate to Zego UI
-                  await GoRouter.of(context).push(
-                    AppRouter.kVoiceCallViewRoute,
-                    extra: {
-                      'call': call,
-                      'localUserId': currentUser.uid,
-                      'localUserName': currentUser.name,
-                    },
-                  );
-                } else {
-                  // Check for error state
-                  if (currentState is CallError) {
-                    throw Exception(currentState.error);
-                  }
-                  // Fallback - try to get call from Firestore using a generated ID
-                  final fallbackCall = CallModel(
-                    callId: 'call_${DateTime.now().millisecondsSinceEpoch}',
-                    callerId: currentUser.uid,
-                    callerEmail: currentUser.email,
-                    receiverId: otherUser.uid,
-                    receiverEmail: otherUser.email,
-                    callType: CallType.voice,
-                    status: CallStatus.calling,
-                    startedAt: DateTime.now(),
-                  );
-
-                  await GoRouter.of(context).push(
-                    AppRouter.kVoiceCallViewRoute,
-                    extra: {
-                      'call': fallbackCall,
-                      'localUserId': currentUser.uid,
-                      'localUserName': currentUser.name,
-                    },
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to create call: $e')),
-                );
-              }
-            },
+            onPressed: onVoiceCall,
             icon: SvgPicture.asset(
               _getCallIconPath(context),
               height: 28.h,
               width: 28.w,
             ),
+            tooltip: 'Voice Call',
           ),
           IconButton(
             padding: EdgeInsets.zero,
-            onPressed: () {},
+            tooltip: 'Video Call',
+            onPressed: onVideoCall,
             icon: SvgPicture.asset(
               _getVideoIconPath(context),
               height: 28.h,

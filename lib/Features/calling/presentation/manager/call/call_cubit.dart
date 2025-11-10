@@ -5,6 +5,7 @@ import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
 import 'package:chatbox/Features/calling/presentation/manager/call/call_state.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CallCubit extends Cubit<CallState> {
   final CallRepo _callRepo;
@@ -34,7 +35,6 @@ class CallCubit extends Cubit<CallState> {
     result.fold((failure) => emit(CallError(error: failure.errorMessage)), (
       callId,
     ) async {
-      // Get the created call to get room ID and stream ID
       final callResult = await _callRepo.getCall(callId);
       callResult.fold(
         (failure) => emit(CallError(error: failure.errorMessage)),
@@ -50,22 +50,10 @@ class CallCubit extends Cubit<CallState> {
     });
   }
 
-  /// Join a call as the caller (for ZegoUIKit, this is handled automatically)
-  Future<void> joinCallAsCaller(CallModel call) async {
-    // For ZegoUIKit, the call is joined automatically when the CallView is opened
-    // We just need to update the status
-    _callRepo.updateCallStatus(
-      callId: call.callId,
-      status: CallStatus.in_progress,
-    );
-    emit(CallInProgress(currentCall: call));
-  }
-
-  /// Accept an incoming call (ZegoUIKit handles the actual call joining)
+  /// Accept an incoming call
   Future<void> acceptCall(CallModel call) async {
     emit(const CallLoading());
 
-    // Update call status to in_progress
     final updateResult = await _callRepo.updateCallStatus(
       callId: call.callId,
       status: CallStatus.in_progress,
@@ -102,14 +90,26 @@ class CallCubit extends Cubit<CallState> {
     );
   }
 
+  /// Cancel a call (for the caller)
+  Future<void> cancelCall(CallModel call) async {
+    final result = await _callRepo.updateCallStatus(
+      callId: call.callId,
+      status: CallStatus.cancelled,
+    );
+
+    result.fold(
+      (failure) =>
+          emit(CallError(error: failure.errorMessage, currentCall: call)),
+      (_) => emit(
+        CallEnded(callHistory: [call.copyWith(status: CallStatus.cancelled)]),
+      ),
+    );
+  }
+
   /// End an ongoing call
   Future<void> endCall(CallModel call) async {
-    emit(const CallLoading());
-
-    // Calculate duration
     final duration = DateTime.now().difference(call.startedAt).inSeconds;
 
-    // Update call status and duration
     final result = await _callRepo.updateCallStatus(
       callId: call.callId,
       status: CallStatus.completed,
@@ -171,6 +171,7 @@ class CallCubit extends Cubit<CallState> {
             case CallStatus.cancelled:
             case CallStatus.failed:
               emit(CallEnded(callHistory: [call]));
+              _callUpdatesSubscription?.cancel();
               break;
             default:
               break;
@@ -180,9 +181,6 @@ class CallCubit extends Cubit<CallState> {
     });
   }
 
-  // Note: Microphone and speaker controls are handled by ZegoUIKit internally
-  // No need for separate toggle methods in the cubit
-
   /// Load call history
   void loadCallHistory(String userId) {
     _callRepo.getCallHistory(userId).listen((result) {
@@ -191,6 +189,11 @@ class CallCubit extends Cubit<CallState> {
         (callHistory) => emit(CallHistoryLoaded(callHistory: callHistory)),
       );
     });
+  }
+
+  /// Stop listening to incoming calls
+  void stopListeningForIncomingCalls() {
+    _incomingCallsSubscription?.cancel();
   }
 
   @override

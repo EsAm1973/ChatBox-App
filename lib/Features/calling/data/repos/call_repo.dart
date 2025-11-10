@@ -2,6 +2,7 @@ import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:dartz/dartz.dart';
 
+
 abstract class CallRepo {
   Future<Either<Failure, String>> initiateCall({
     required String callerId,
@@ -24,7 +25,5 @@ abstract class CallRepo {
   Stream<Either<Failure, CallModel?>> getCallUpdates(String callId);
   Stream<Either<Failure, List<CallModel>>> getCallHistory(String userId);
 
-  // Helper methods for ZegoUIKit
   String generateCallId();
-  String generateCallIdForUsers(String user1, String user2);
 }

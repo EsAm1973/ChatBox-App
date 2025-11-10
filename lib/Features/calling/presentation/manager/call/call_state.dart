@@ -40,3 +40,4 @@ class CallError extends CallState {
 
   const CallError({required this.error, super.currentCall, super.callHistory});
 }
+

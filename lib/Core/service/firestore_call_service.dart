@@ -1,9 +1,6 @@
-// services/firestore_call_service.dart
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// services/firestore_call_service.dart
 
 class FirestoreCallService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,8 +23,6 @@ class FirestoreCallService {
     required String receiverId,
     required String receiverEmail,
     CallType callType = CallType.voice,
-    String? zegoRoomId,
-    String? streamID, // ⭐ Added streamID parameter
   }) async {
     try {
       final callId = generateCallId();
@@ -43,8 +38,6 @@ class FirestoreCallService {
         status: CallStatus.calling,
         startedAt: DateTime.now(),
         callChannel: callChannel,
-        zegoRoomId: zegoRoomId,
-        streamID: streamID, // ⭐ Added
       ).toMap(useServerTimestamp: true);
 
       await _firestore.collection('calls').doc(callId).set(callData);
@@ -79,26 +72,6 @@ class FirestoreCallService {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to update call status: $e');
-    }
-  }
-
-  /// Update call room ID and stream ID
-  Future<void> updateCallRoomAndStream({
-    required String callId,
-    required String roomId,
-    required String streamID,
-  }) async {
-    try {
-      await _firestore.collection('calls').doc(callId).update({
-        'zegoRoomId': roomId,
-        'streamID': streamID,
-      });
-    } on FirebaseException catch (e) {
-      throw FirebaseFailure.fromFirestoreException(e);
-    } catch (e) {
-      throw FirebaseFailure(
-        errorMessage: 'Failed to update call room and stream: $e',
-      );
     }
   }
 

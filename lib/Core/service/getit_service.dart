@@ -6,7 +6,6 @@ import 'package:chatbox/Core/service/firestore_chat_service.dart';
 import 'package:chatbox/Core/service/firestore_user_service.dart';
 import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
-import 'package:chatbox/Core/service/zego_cloud_service.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo_implementation.dart';
 import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
@@ -20,16 +19,17 @@ import 'package:get_it/get_it.dart';
 final getIt = GetIt.instance;
 
 void setupGetIt() {
+  // Services
   getIt.registerSingleton<FirebaseAuthService>(FirebaseAuthService());
   getIt.registerSingleton<FirestoreUserService>(FirestoreUserService());
   getIt.registerSingleton<FirestoreChatService>(FirestoreChatService());
   getIt.registerSingleton<StorageService>(SupabaseStorageService());
   getIt.registerLazySingleton(() => FirestoreCallService());
-  getIt.registerLazySingleton(() => ZegoCloudService());
 
   getIt.registerSingleton<UserRepo>(
     UserRepoImpl(firestoreUserService: getIt<FirestoreUserService>()),
   );
+
   getIt.registerSingleton<AuthRepo>(
     AuthRepoImplementation(
       getIt<FirebaseAuthService>(),
@@ -50,8 +50,6 @@ void setupGetIt() {
   );
 
   getIt.registerLazySingleton<CallRepo>(
-    () => CallRepoImpl(
-      firestoreCallService: getIt<FirestoreCallService>(),
-    ),
+    () => CallRepoImpl(firestoreCallService: getIt<FirestoreCallService>()),
   );
 }

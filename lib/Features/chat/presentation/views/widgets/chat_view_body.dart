@@ -1,13 +1,19 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
+import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/calling/data/models/call_model.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_state.dart';
+import 'package:chatbox/Features/calling/presentation/views/widgets/incoming_call_screen.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_state.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/chat_appbar.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/chat_input.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/message_list.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class ChatViewBody extends StatefulWidget {
   const ChatViewBody({super.key, required this.otherUser});
@@ -26,13 +32,17 @@ class _ChatViewBodyState extends State<ChatViewBody> {
   @override
   void initState() {
     super.initState();
-    _currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    _currentUserId = context.read<UserCubit>().getCurrentUser()!.uid;
     _chatId = _generateChatRoomId(_currentUserId, widget.otherUser.uid);
 
+    // Initialize chat
     context.read<ChatCubit>().initializeChat(
       _currentUserId,
       widget.otherUser.uid,
     );
+
+    // ✅ Start listening for incoming calls
+    context.read<CallCubit>().listenForIncomingCalls(_currentUserId);
 
     _scrollController.addListener(_onScroll);
 
@@ -50,6 +60,8 @@ class _ChatViewBodyState extends State<ChatViewBody> {
     _scrollController.dispose();
     // Mark all messages as seen when leaving
     _markMessagesAsSeen();
+    // ✅ Stop listening for calls
+    context.read<CallCubit>().stopListeningForIncomingCalls();
     super.dispose();
   }
 
@@ -90,82 +102,183 @@ class _ChatViewBodyState extends State<ChatViewBody> {
     }
   }
 
+  // ✅ Initiate call method
+  void _initiateCall(CallType callType) async {
+    final currentUserEmail = context.read<UserCubit>().getCurrentUser()?.email;
+    if (currentUserEmail == null) return;
+
+    await context.read<CallCubit>().initiateCall(
+      callerId: _currentUserId,
+      callerEmail: currentUserEmail,
+      receiverId: widget.otherUser.uid,
+      receiverEmail: widget.otherUser.email,
+      callType: callType,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ChatCubit, ChatState>(
-      listener: (context, state) {
-        if (state is ChatError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error), backgroundColor: Colors.red),
-          );
-        } else if (state is MessagesLoaded ||
-            state is MessageSent ||
-            state is MessageSending) {
-          // Ensure scroll happens after the new frame with updated messages
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollToBottom(animated: true);
-          });
-
-          // If at bottom, mark seen immediately
-          if (_isAtBottom) {
-            _markMessagesAsSeen();
-          }
-        }
-      },
-      builder: (context, state) {
-        if (state is MessagesLoaded ||
-            state is MessageSent ||
-            state is MessageSending) {
-          final messages =
-              (state is MessagesLoaded)
-                  ? state.messages
-                  : (state is MessageSent
-                      ? state.messages
-                      : (state as MessageSending).messages);
-          return Column(
-            children: [
-              ChatAppBar(otherUser: widget.otherUser),
-              Expanded(
-                child: MessageList(
-                  messages: messages,
-                  scrollController: _scrollController,
+    return MultiBlocListener(
+      listeners: [
+        // ✅ Listen for Chat state changes
+        BlocListener<ChatCubit, ChatState>(
+          listener: (context, state) {
+            if (state is ChatError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
                 ),
-              ),
-              ChatInput(otherUser: widget.otherUser),
-            ],
-          );
-        } else if (state is ChatLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is ChatError) {
-          return Column(
-            children: [
-              ChatAppBar(otherUser: widget.otherUser),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: ${state.error}'),
-                      SizedBox(height: 16.h),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<ChatCubit>().initializeChat(
-                            _currentUserId,
-                            widget.otherUser.uid,
-                          );
-                        },
-                        child: const Text('Try Again'),
-                      ),
-                    ],
+              );
+            } else if (state is MessagesLoaded ||
+                state is MessageSent ||
+                state is MessageSending) {
+              // Ensure scroll happens after the new frame with updated messages
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _scrollToBottom(animated: true);
+              });
+
+              // If at bottom, mark seen immediately
+              if (_isAtBottom) {
+                _markMessagesAsSeen();
+              }
+            }
+          },
+        ),
+        // ✅ Listen for Call state changes
+        BlocListener<CallCubit, CallState>(
+          listener: (context, state) {
+            if (state is CallInvitationSent) {
+              // Navigate to call view when invitation is sent
+              GoRouter.of(context).push(
+                AppRouter.kVoiceCallViewRoute,
+                extra: {
+                  'call': state.currentCall!,
+                  'localUserId': _currentUserId,
+                  'localUserName':
+                      context.read<UserCubit>().getCurrentUser()?.name ??
+                      'User',
+                },
+              );
+            } else if (state is CallInvitationReceived) {
+              // Show incoming call widget as dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder:
+                    (dialogContext) => BlocProvider.value(
+                      value: context.read<CallCubit>(),
+                      child: IncomingCallWidget(call: state.currentCall!),
+                    ),
+              );
+            } else if (state is CallEnded) {
+              // Dismiss any dialogs when call ends
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            } else if (state is CallError) {
+              // Dismiss dialog if open
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+              // Show error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: BlocBuilder<ChatCubit, ChatState>(
+        builder: (context, state) {
+          if (state is MessagesLoaded ||
+              state is MessageSent ||
+              state is MessageSending) {
+            final messages =
+                (state is MessagesLoaded)
+                    ? state.messages
+                    : (state is MessageSent
+                        ? state.messages
+                        : (state as MessageSending).messages);
+            return Column(
+              children: [
+                // ✅ ChatAppBar with call buttons
+                ChatAppBar(
+                  otherUser: widget.otherUser,
+                  onVoiceCall: () => _initiateCall(CallType.voice),
+                  onVideoCall: () => _initiateCall(CallType.video),
+                ),
+                Expanded(
+                  child: MessageList(
+                    messages: messages,
+                    scrollController: _scrollController,
                   ),
                 ),
-              ),
-            ],
-          );
-        } else {
-          return const Center(child: CircularProgressIndicator());
-        }
-      },
+                ChatInput(otherUser: widget.otherUser),
+              ],
+            );
+          } else if (state is ChatLoading) {
+            return Column(
+              children: [
+                ChatAppBar(
+                  otherUser: widget.otherUser,
+                  onVoiceCall: () => _initiateCall(CallType.voice),
+                  onVideoCall: () => _initiateCall(CallType.video),
+                ),
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            );
+          } else if (state is ChatError) {
+            return Column(
+              children: [
+                ChatAppBar(
+                  otherUser: widget.otherUser,
+                  onVoiceCall: () => _initiateCall(CallType.voice),
+                  onVideoCall: () => _initiateCall(CallType.video),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: ${state.error}'),
+                        SizedBox(height: 16.h),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ChatCubit>().initializeChat(
+                              _currentUserId,
+                              widget.otherUser.uid,
+                            );
+                          },
+                          child: const Text('Try Again'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return Column(
+              children: [
+                ChatAppBar(
+                  otherUser: widget.otherUser,
+                  onVoiceCall: () => _initiateCall(CallType.voice),
+                  onVideoCall: () => _initiateCall(CallType.video),
+                ),
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            );
+          }
+        },
+      ),
     );
   }
 }
