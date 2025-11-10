@@ -33,6 +33,11 @@ class _CallViewState extends State<CallView> {
     });
   }
 
+  String _generateCallRoomId() {
+    final sortedIds = [widget.call.callerId, widget.call.receiverId]..sort();
+    return 'call_room_${sortedIds[0]}_${sortedIds[1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     // Configure call based on type
@@ -56,7 +61,8 @@ class _CallViewState extends State<CallView> {
           appSign: appSignZegoCloud,
           userID: widget.localUserId,
           userName: widget.localUserName,
-          callID: widget.call.callId,
+          // ✅ FIX: Use consistent room ID instead of unique callId
+          callID: _generateCallRoomId(),
           config: config,
         ),
       ),
