@@ -22,6 +22,7 @@ import 'package:chatbox/Features/home/presentation/manager/search%20user/search_
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
+import 'package:chatbox/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,7 +36,9 @@ abstract class AppRouter {
   static const String kHomeRoute = '/home';
   static const String kChatScreenRoute = '/chat-screen';
   static const String kVoiceCallViewRoute = '/voice-call';
+  
   static final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     routes: [
       GoRoute(
         path: kSplashRoute,
@@ -123,20 +126,20 @@ abstract class AppRouter {
               child: ChatView(otherUser: state.extra as UserModel),
             ),
       ),
-      GoRoute(
-        path: kVoiceCallViewRoute,
-        builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>;
-          return BlocProvider(
-            create: (context) => CallCubit(getIt<CallRepo>()),
-            child: CallView(
-              call: data['call'] as CallModel,
-              localUserId: data['localUserId'] as String,
-              localUserName: data['localUserName'] as String,
-            ),
-          );
-        },
-      ),
+      // GoRoute(
+      //   path: kVoiceCallViewRoute,
+      //   builder: (context, state) {
+      //     final data = state.extra as Map<String, dynamic>;
+      //     return BlocProvider(
+      //       create: (context) => CallCubit(getIt<CallRepo>()),
+      //       child: CallView(
+      //         call: data['call'] as CallModel,
+      //         localUserId: data['localUserId'] as String,
+      //         localUserName: data['localUserName'] as String,
+      //       ),
+      //     );
+      //   },
+      // ),
     ],
   );
 }

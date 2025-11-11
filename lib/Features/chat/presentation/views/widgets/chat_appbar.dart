@@ -1,6 +1,7 @@
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/zego_send_call_invite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:svg_flutter/svg_flutter.dart';
@@ -56,26 +57,8 @@ class ChatAppBar extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            padding: EdgeInsets.zero,
-            onPressed: onVoiceCall,
-            icon: SvgPicture.asset(
-              _getCallIconPath(context),
-              height: 28.h,
-              width: 28.w,
-            ),
-            tooltip: 'Voice Call',
-          ),
-          IconButton(
-            padding: EdgeInsets.zero,
-            tooltip: 'Video Call',
-            onPressed: onVideoCall,
-            icon: SvgPicture.asset(
-              _getVideoIconPath(context),
-              height: 28.h,
-              width: 28.w,
-            ),
-          ),
+          acctionButton(false, otherUser.uid, otherUser.name),
+          acctionButton(true, otherUser.uid, otherUser.name),
         ],
       ),
     );

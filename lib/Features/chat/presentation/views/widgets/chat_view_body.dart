@@ -146,51 +146,51 @@ class _ChatViewBodyState extends State<ChatViewBody> {
           },
         ),
         // ✅ Listen for Call state changes
-        BlocListener<CallCubit, CallState>(
-          listener: (context, state) {
-            if (state is CallInvitationSent) {
-              // Navigate to call view when invitation is sent
-              GoRouter.of(context).push(
-                AppRouter.kVoiceCallViewRoute,
-                extra: {
-                  'call': state.currentCall!,
-                  'localUserId': _currentUserId,
-                  'localUserName':
-                      context.read<UserCubit>().getCurrentUser()?.name ??
-                      'User',
-                },
-              );
-            } else if (state is CallInvitationReceived) {
-              // Show incoming call widget as dialog
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder:
-                    (dialogContext) => BlocProvider.value(
-                      value: context.read<CallCubit>(),
-                      child: IncomingCallWidget(call: state.currentCall!),
-                    ),
-              );
-            } else if (state is CallEnded) {
-              // Dismiss any dialogs when call ends
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            } else if (state is CallError) {
-              // Dismiss dialog if open
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-              // Show error message
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-        ),
+        // BlocListener<CallCubit, CallState>(
+        //   listener: (context, state) {
+        //     if (state is CallInvitationSent) {
+        //       // Navigate to call view when invitation is sent
+        //       GoRouter.of(context).push(
+        //         AppRouter.kVoiceCallViewRoute,
+        //         extra: {
+        //           'call': state.currentCall!,
+        //           'localUserId': _currentUserId,
+        //           'localUserName':
+        //               context.read<UserCubit>().getCurrentUser()?.name ??
+        //               'User',
+        //         },
+        //       );
+        //     } else if (state is CallInvitationReceived) {
+        //       // Show incoming call widget as dialog
+        //       showDialog(
+        //         context: context,
+        //         barrierDismissible: false,
+        //         builder:
+        //             (dialogContext) => BlocProvider.value(
+        //               value: context.read<CallCubit>(),
+        //               child: IncomingCallWidget(call: state.currentCall!),
+        //             ),
+        //       );
+        //     } else if (state is CallEnded) {
+        //       // Dismiss any dialogs when call ends
+        //       if (Navigator.canPop(context)) {
+        //         Navigator.pop(context);
+        //       }
+        //     } else if (state is CallError) {
+        //       // Dismiss dialog if open
+        //       if (Navigator.canPop(context)) {
+        //         Navigator.pop(context);
+        //       }
+        //       // Show error message
+        //       ScaffoldMessenger.of(context).showSnackBar(
+        //         SnackBar(
+        //           content: Text(state.error),
+        //           backgroundColor: Colors.red,
+        //         ),
+        //       );
+        //     }
+        //   },
+        // ),
       ],
       child: BlocBuilder<ChatCubit, ChatState>(
         builder: (context, state) {
