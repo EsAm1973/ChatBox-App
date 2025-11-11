@@ -4,18 +4,11 @@ import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/zego_send_call_invite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:svg_flutter/svg_flutter.dart';
 
 class ChatAppBar extends StatelessWidget {
-  const ChatAppBar({
-    super.key,
-    required this.otherUser,
-    this.onVoiceCall,
-    this.onVideoCall,
-  });
+  const ChatAppBar({super.key, required this.otherUser});
   final UserModel otherUser;
-  final VoidCallback? onVoiceCall;
-  final VoidCallback? onVideoCall;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -62,17 +55,5 @@ class ChatAppBar extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _getCallIconPath(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? 'assets/call_light.svg'
-        : 'assets/call_dark.svg';
-  }
-
-  String _getVideoIconPath(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? 'assets/video_light.svg'
-        : 'assets/video_dark.svg';
   }
 }

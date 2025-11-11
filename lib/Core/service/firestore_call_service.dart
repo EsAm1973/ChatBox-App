@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreCallService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Generate unique call ID
+  /// Generate unique call ID (or use ZegoCloud's callID)
   String generateCallId() {
     return 'call_${DateTime.now().millisecondsSinceEpoch}';
   }
@@ -16,8 +16,9 @@ class FirestoreCallService {
     return 'call_channel_${sortedIds[0]}_${sortedIds[1]}';
   }
 
-  /// Create a new call document
+  /// Create a new call document with optional custom callId (for ZegoCloud)
   Future<String> createCall({
+    String? callId, // Optional: use ZegoCloud's callID
     required String callerId,
     required String callerEmail,
     required String receiverId,
@@ -25,11 +26,11 @@ class FirestoreCallService {
     CallType callType = CallType.voice,
   }) async {
     try {
-      final callId = generateCallId();
+      final finalCallId = callId ?? generateCallId();
       final callChannel = _generateCallChannel(callerId, receiverId);
 
       final callData = CallModel(
-        callId: callId,
+        callId: finalCallId,
         callerId: callerId,
         callerEmail: callerEmail,
         receiverId: receiverId,
@@ -40,8 +41,12 @@ class FirestoreCallService {
         callChannel: callChannel,
       ).toMap(useServerTimestamp: true);
 
-      await _firestore.collection('calls').doc(callId).set(callData);
-      return callId;
+      // Use set with merge to avoid overwriting if call already exists
+      await _firestore
+          .collection('calls')
+          .doc(finalCallId)
+          .set(callData, SetOptions(merge: true));
+      return finalCallId;
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
@@ -63,7 +68,8 @@ class FirestoreCallService {
 
       if (status == CallStatus.completed ||
           status == CallStatus.missed ||
-          status == CallStatus.rejected) {
+          status == CallStatus.rejected ||
+          status == CallStatus.cancelled) {
         updateData['endedAt'] = FieldValue.serverTimestamp();
       }
 
@@ -119,7 +125,7 @@ class FirestoreCallService {
     });
   }
 
-  /// Get user's call history
+  /// Get user's call history (all completed, missed, rejected calls)
   Stream<List<CallModel>> getUserCallHistory(String userId) {
     return _firestore
         .collection('calls')
@@ -129,9 +135,11 @@ class FirestoreCallService {
             CallStatus.completed.name,
             CallStatus.missed.name,
             CallStatus.rejected.name,
+            CallStatus.cancelled.name,
           ],
         )
         .orderBy('startedAt', descending: true)
+        .limit(50) // Limit to last 50 calls for performance
         .snapshots()
         .map(
           (snapshot) =>
@@ -153,6 +161,28 @@ class FirestoreCallService {
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to delete call: $e');
+    }
+  }
+
+  /// Batch delete old calls (cleanup utility)
+  Future<void> deleteOldCalls({int daysOld = 30}) async {
+    try {
+      final cutoffDate = DateTime.now().subtract(Duration(days: daysOld));
+      final snapshot =
+          await _firestore
+              .collection('calls')
+              .where('startedAt', isLessThan: Timestamp.fromDate(cutoffDate))
+              .get();
+
+      final batch = _firestore.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      print('Deleted ${snapshot.docs.length} old calls');
+    } catch (e) {
+      throw FirebaseFailure(errorMessage: 'Failed to delete old calls: $e');
     }
   }
 }
