@@ -108,7 +108,7 @@ class _ChatBoxState extends State<ChatBox> with WidgetsBindingObserver {
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
         title: 'ChatBox',
-        theme: AppThemes.getLightTheme,
+        theme: AppThemes.getDarkTheme,
       ),
     );
   }

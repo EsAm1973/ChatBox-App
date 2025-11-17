@@ -1,7 +1,6 @@
 import 'package:chatbox/Core/helper%20functions/formatted_date_and_days.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/date_header.dart';
-import 'package:chatbox/Features/chat/presentation/views/widgets/message_divider.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_attachment_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_message.dart';
 import 'package:chatbox/Features/chat/presentation/views/widgets/recieve_voice_message.dart';
@@ -62,77 +61,74 @@ class MessageList extends StatelessWidget {
                 ? (msgs[index - 1].timestamp ?? DateTime.now())
                 : DateTime.now();
 
-        return Column(
-          children: [
-            if (index == 0 ||
-                isDifferentDay(previousMessageTimestamp, messageTimestamp))
-              DateHeader(date: formatDate(messageTimestamp)),
+        return Padding(
+          padding: EdgeInsets.only(top: 15.h),
+          child: Column(
+            children: [
+              if (index == 0 ||
+                  isDifferentDay(previousMessageTimestamp, messageTimestamp))
+                DateHeader(date: formatDate(messageTimestamp)),
 
-            // الرسائل الصوتية
-            if (message.type == MessageType.voice)
-              isMe
-                  ? SentVoiceMessage(
-                    voiceUrl: message.content,
-                    duration: message.voiceDuration ?? 0,
-                    time: formatTime(messageTimestamp),
-                    isSeen: message.isRead,
-                    status: message.status,
-                  )
-                  : ReceivedVoiceMessage(
-                    voiceUrl: message.content,
-                    duration: message.voiceDuration ?? 0,
-                    time: formatTime(messageTimestamp),
-                  )
-            // الرسائل النصية
-            else if (message.type == MessageType.text)
-              GestureDetector(
-                onTap:
-                    message.status == MessageStatus.failed
-                        ? () => onRetryMessage?.call(message)
-                        : null,
-                child:
-                    isMe
-                        ? SentMessage(
-                          time: formatTime(messageTimestamp),
-                          message: message.content,
-                          status: message.status,
-                          isSeen: message.isRead,
-                        )
-                        : ReceivedMessage(
-                          time: formatTime(messageTimestamp),
-                          messages: [message.content],
-                        ),
-              )
-            // المرفقات (صور وملفات)
-            else if (message.type == MessageType.image ||
-                message.type == MessageType.file)
-              isMe
-                  ? SentAttachmentMessage(
-                    fileUrl: message.content,
-                    time: formatTime(messageTimestamp),
-                    isSeen: message.isRead,
-                    status: message.status,
-                    messageType: message.type,
-                    fileName: _getFileNameFromUrl(message.content),
-                    onRetry:
-                        message.status == MessageStatus.failed
-                            ? () => onRetryMessage?.call(message)
-                            : null,
-                  )
-                  : ReceivedAttachmentMessage(
-                    fileUrl: message.content,
-                    time: formatTime(messageTimestamp),
-                    messageType: message.type,
-                    fileName: _getFileNameFromUrl(message.content),
-                    message: message,
-                  ),
-
-            SizedBox(height: 10.h),
-
-            if (index > 0 &&
-                isDifferentDay(previousMessageTimestamp, messageTimestamp))
-              const MessageDivider(),
-          ],
+              // الرسائل الصوتية
+              if (message.type == MessageType.voice)
+                isMe
+                    ? SentVoiceMessage(
+                      voiceUrl: message.content,
+                      duration: message.voiceDuration ?? 0,
+                      time: formatTime(messageTimestamp),
+                      isSeen: message.isRead,
+                      status: message.status,
+                    )
+                    : ReceivedVoiceMessage(
+                      voiceUrl: message.content,
+                      duration: message.voiceDuration ?? 0,
+                      time: formatTime(messageTimestamp),
+                    )
+              // الرسائل النصية
+              else if (message.type == MessageType.text)
+                GestureDetector(
+                  onTap:
+                      message.status == MessageStatus.failed
+                          ? () => onRetryMessage?.call(message)
+                          : null,
+                  child:
+                      isMe
+                          ? SentMessage(
+                            time: formatTime(messageTimestamp),
+                            message: message.content,
+                            status: message.status,
+                            isSeen: message.isRead,
+                          )
+                          : ReceivedMessage(
+                            time: formatTime(messageTimestamp),
+                            messages: [message.content],
+                          ),
+                )
+              // المرفقات (صور وملفات)
+              else if (message.type == MessageType.image ||
+                  message.type == MessageType.file)
+                isMe
+                    ? SentAttachmentMessage(
+                      fileUrl: message.content,
+                      time: formatTime(messageTimestamp),
+                      isSeen: message.isRead,
+                      status: message.status,
+                      messageType: message.type,
+                      fileName: _getFileNameFromUrl(message.content),
+                      onRetry:
+                          message.status == MessageStatus.failed
+                              ? () => onRetryMessage?.call(message)
+                              : null,
+                    )
+                    : ReceivedAttachmentMessage(
+                      fileUrl: message.content,
+                      time: formatTime(messageTimestamp),
+                      messageType: message.type,
+                      fileName: _getFileNameFromUrl(message.content),
+                      message: message,
+                    ),
+            ],
+          ),
         );
       },
     );

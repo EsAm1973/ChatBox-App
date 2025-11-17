@@ -9,6 +9,7 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
+import 'package:chatbox/Features/calling/presentation/views/call_view.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
@@ -16,6 +17,7 @@ import 'package:chatbox/Features/home/data/repos/user_search_repo.dart';
 import 'package:chatbox/Features/home/presentation/manager/home%20chats/home_chats_cubit.dart';
 import 'package:chatbox/Features/home/presentation/manager/search%20user/search_user_cubit.dart';
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
+import 'package:chatbox/Features/navigation%20bar/presentation/views/home_navigation_bar_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
 import 'package:chatbox/main.dart';
@@ -30,8 +32,9 @@ abstract class AppRouter {
   static const String kChoosePictureRoute = '/choose-picture';
   static const String kRecoverPasswordRoute = '/recover-password';
   static const String kHomeRoute = '/home';
+  static const String kHomeNavigationBarRoute = '/home-navigation-bar';
   static const String kChatScreenRoute = '/chat-screen';
-  static const String kVoiceCallViewRoute = '/voice-call';
+  static const String kCallScreenRoute = '/call-screen';
 
   static final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -91,32 +94,38 @@ abstract class AppRouter {
               child: const RecoverPassView(),
             ),
       ),
-      GoRoute(
-        path: kHomeRoute,
-        builder:
-            (context, state) => MultiBlocProvider(
-              providers: [
-                BlocProvider(
-                  create:
-                      (context) => SearchUserCubit(
-                        homeRepository: getIt<SearchUserRepo>(),
-                      ),
-                ),
-                BlocProvider(
-                  create:
-                      (context) =>
-                          HomeCubit(getIt<ChatRepo>(), getIt<UserRepo>()),
-                ),
-              ],
-              child: const HomeView(),
-            ),
-      ),
+      GoRoute(path: kHomeRoute, builder: (context, state) => const HomeView()),
       GoRoute(
         path: kChatScreenRoute,
         builder:
             (context, state) => BlocProvider(
               create: (context) => ChatCubit(getIt<ChatRepo>()),
               child: ChatView(otherUser: state.extra as UserModel),
+            ),
+      ),
+      GoRoute(
+        path: kCallScreenRoute,
+        builder: (context, state) => const CallView(),
+      ),
+      GoRoute(
+        path: kHomeNavigationBarRoute,
+        builder:
+            (context, state) => MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create:
+                      (context) =>
+                          HomeCubit(getIt<ChatRepo>(), getIt<UserRepo>()),
+                ),
+                BlocProvider(
+                  create:
+                      (context) => SearchUserCubit(
+                        homeRepository: getIt<SearchUserRepo>(),
+                      ),
+                ),
+                BlocProvider(create: (context) => ChatCubit(getIt<ChatRepo>())),
+              ],
+              child: const HomeNavigationBar(),
             ),
       ),
     ],
