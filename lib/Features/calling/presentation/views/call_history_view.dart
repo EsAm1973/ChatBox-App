@@ -1,7 +1,6 @@
 import 'package:chatbox/Features/calling/presentation/views/widgets/call_history_app_bar.dart';
 import 'package:chatbox/Features/calling/presentation/views/widgets/call_history_view_body.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CallHistoryView extends StatelessWidget {
   const CallHistoryView({super.key});
