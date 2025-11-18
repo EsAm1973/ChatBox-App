@@ -4,6 +4,7 @@ import 'package:chatbox/Core/service/firebase_auth_service.dart';
 import 'package:chatbox/Core/service/firestore_call_service.dart';
 import 'package:chatbox/Core/service/firestore_chat_service.dart';
 import 'package:chatbox/Core/service/firestore_user_service.dart';
+import 'package:chatbox/Core/service/firestore_profile_service.dart';
 import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
@@ -12,6 +13,8 @@ import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
 import 'package:chatbox/Features/calling/data/repos/call_repo_impl.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo_impl.dart';
+import 'package:chatbox/Features/profile/data/repos/profile_repo.dart';
+import 'package:chatbox/Features/profile/data/repos/profile_repo_impl.dart';
 import 'package:chatbox/Features/home/data/repos/user_search_repo.dart';
 import 'package:chatbox/Features/home/data/repos/user_search_repo_impl.dart';
 import 'package:get_it/get_it.dart';
@@ -25,6 +28,7 @@ void setupGetIt() {
   getIt.registerSingleton<FirestoreChatService>(FirestoreChatService());
   getIt.registerSingleton<StorageService>(SupabaseStorageService());
   getIt.registerLazySingleton(() => FirestoreCallService());
+  getIt.registerLazySingleton(() => FirestoreProfileService());
 
   getIt.registerSingleton<UserRepo>(
     UserRepoImpl(firestoreUserService: getIt<FirestoreUserService>()),
@@ -35,6 +39,12 @@ void setupGetIt() {
       getIt<FirebaseAuthService>(),
       getIt<StorageService>(),
       getIt<FirestoreUserService>(),
+    ),
+  );
+
+  getIt.registerSingleton<ProfileRepo>(
+    ProfileRepoImpl(
+      profileService: getIt<FirestoreProfileService>(),
     ),
   );
 

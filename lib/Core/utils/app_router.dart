@@ -22,6 +22,9 @@ import 'package:chatbox/Features/home/presentation/views/home_view.dart';
 import 'package:chatbox/Features/navigation%20bar/presentation/views/home_navigation_bar_view.dart';
 import 'package:chatbox/Features/onboarding/presentation/views/onboard_view.dart';
 import 'package:chatbox/Features/splash/presentation/views/splash_view.dart';
+import 'package:chatbox/Features/profile/data/repos/profile_repo.dart';
+import 'package:chatbox/Features/profile/presentation/manager/profile_cubit/profile_cubit.dart';
+import 'package:chatbox/Features/profile/presentation/views/profile_view.dart';
 import 'package:chatbox/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +40,9 @@ abstract class AppRouter {
   static const String kHomeNavigationBarRoute = '/home-navigation-bar';
   static const String kChatScreenRoute = '/chat-screen';
   static const String kCallScreenRoute = '/call-screen';
+  static const String kProfileRoute = '/profile';
+  static const String kEditProfileRoute = '/edit-profile';
+  static const String kPrivacySettingsRoute = '/privacy-settings';
 
   static final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -107,8 +113,11 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kCallScreenRoute,
-        builder:
-            (context, state) => const CallHistoryView(),
+        builder: (context, state) => const CallHistoryView(),
+      ),
+      GoRoute(
+        path: kProfileRoute,
+        builder: (context, state) => const ProfileView(),
       ),
       GoRoute(
         path: kHomeNavigationBarRoute,
@@ -131,7 +140,11 @@ abstract class AppRouter {
                   create:
                       (context) =>
                           CallHistoryCubit(repository: getIt<CallRepo>()),
-                  child: const CallHistoryView(),
+                ),
+                BlocProvider(
+                  create:
+                      (context) =>
+                          ProfileCubit(profileRepo: getIt<ProfileRepo>()),
                 ),
               ],
               child: const HomeNavigationBar(),
