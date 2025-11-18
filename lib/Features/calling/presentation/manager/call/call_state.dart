@@ -1,43 +1,36 @@
-// import 'package:chatbox/Features/calling/data/models/call_model.dart';
+import 'package:chatbox/Features/calling/data/models/call_model.dart';
 
-// abstract class CallState {
-//   final CallModel? currentCall;
-//   final List<CallModel> callHistory;
+abstract class CallHistoryState {
+  const CallHistoryState();
+}
 
-//   const CallState({this.currentCall, this.callHistory = const []});
-// }
+class CallHistoryInitial extends CallHistoryState {}
 
-// class CallInitial extends CallState {
-//   const CallInitial();
-// }
+class CallHistoryLoading extends CallHistoryState {}
 
-// class CallLoading extends CallState {
-//   const CallLoading();
-// }
+class CallHistoryLoaded extends CallHistoryState {
+  final List<CallModel> calls;
+  const CallHistoryLoaded(this.calls);
+}
 
-// class CallInvitationSent extends CallState {
-//   const CallInvitationSent({required super.currentCall});
-// }
+class CallHistoryError extends CallHistoryState {
+  final String message;
+  const CallHistoryError(this.message);
+}
 
-// class CallInvitationReceived extends CallState {
-//   const CallInvitationReceived({required super.currentCall});
-// }
+class CallHistoryDeleting extends CallHistoryState {
+  final List<CallModel> calls;
+  const CallHistoryDeleting(this.calls);
+}
 
-// class CallInProgress extends CallState {
-//   const CallInProgress({required super.currentCall});
-// }
+class CallHistoryDeleteSuccess extends CallHistoryState {
+  final List<CallModel> calls;
+  final String deletedCallId;
+  const CallHistoryDeleteSuccess(this.calls, this.deletedCallId);
+}
 
-// class CallHistoryLoaded extends CallState {
-//   const CallHistoryLoaded({required super.callHistory});
-// }
-
-// class CallEnded extends CallState {
-//   const CallEnded({required super.callHistory});
-// }
-
-// class CallError extends CallState {
-//   final String error;
-
-//   const CallError({required this.error, super.currentCall, super.callHistory});
-// }
-
+class CallHistoryDeleteError extends CallHistoryState {
+  final List<CallModel> calls;
+  final String message;
+  const CallHistoryDeleteError(this.calls, this.message);
+}

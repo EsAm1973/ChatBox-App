@@ -21,8 +21,12 @@ class FirestoreCallService {
     String? callId, // Optional: use ZegoCloud's callID
     required String callerId,
     required String callerEmail,
+    required String callerName,
+    required String callerProfilePic,
     required String receiverId,
     required String receiverEmail,
+    required String receiverName,
+    required String receiverProfilePic,
     CallType callType = CallType.voice,
   }) async {
     try {
@@ -33,8 +37,12 @@ class FirestoreCallService {
         callId: finalCallId,
         callerId: callerId,
         callerEmail: callerEmail,
+        callerName: callerName,
+        callerImage: callerProfilePic,
         receiverId: receiverId,
         receiverEmail: receiverEmail,
+        receiverName: receiverName,
+        receiverImage: receiverProfilePic,
         callType: callType,
         status: CallStatus.calling,
         startedAt: DateTime.now(),

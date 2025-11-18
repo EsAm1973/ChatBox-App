@@ -1,4 +1,4 @@
-import 'package:chatbox/Features/calling/presentation/views/call_view.dart';
+import 'package:chatbox/Features/calling/presentation/views/call_history_view.dart';
 import 'package:chatbox/Features/home/presentation/views/home_view.dart';
 import 'package:chatbox/Features/navigation%20bar/presentation/views/widgets/custom_button_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class _HomeNavigationBarState extends State<HomeNavigationBar> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     const HomeView(),
-    const CallView(),
+    const CallHistoryView(),
     // const SettingsView(),
     Container(),
   ];

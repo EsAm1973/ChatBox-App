@@ -21,8 +21,12 @@ class CallModel {
   final String callId;
   final String callerId;
   final String callerEmail;
+  final String callerName;
+  final String callerImage;
   final String receiverId;
   final String receiverEmail;
+  final String receiverName;
+  final String receiverImage;
   final CallType callType;
   final CallStatus status;
   final DateTime startedAt;
@@ -34,8 +38,12 @@ class CallModel {
     required this.callId,
     required this.callerId,
     required this.callerEmail,
+    required this.callerName,
+    required this.callerImage,
     required this.receiverId,
     required this.receiverEmail,
+    required this.receiverName,
+    required this.receiverImage,
     this.callType = CallType.voice,
     required this.status,
     required this.startedAt,
@@ -49,8 +57,12 @@ class CallModel {
       'callId': callId,
       'callerId': callerId,
       'callerEmail': callerEmail,
+      'callerName': callerName,
+      'callerImage': callerImage,
       'receiverId': receiverId,
       'receiverEmail': receiverEmail,
+      'receiverName': receiverName,
+      'receiverImage': receiverImage,
       'callType': callType.name,
       'status': status.name,
       'duration': duration,
@@ -111,8 +123,12 @@ class CallModel {
       callId: map['callId'] ?? '',
       callerId: map['callerId'] ?? '',
       callerEmail: map['callerEmail'] ?? '',
+      callerName: map['callerName'] ?? '',
+      callerImage: map['callerImage'] ?? '',
       receiverId: map['receiverId'] ?? '',
       receiverEmail: map['receiverEmail'] ?? '',
+      receiverName: map['receiverName'] ?? '',
+      receiverImage: map['receiverImage'] ?? '',
       callType: parseCallType(map['callType'] ?? 'voice'),
       status: parseCallStatus(map['status'] ?? 'completed'),
       startedAt: parseDateTime(map['startedAt']),
@@ -126,8 +142,12 @@ class CallModel {
     String? callId,
     String? callerId,
     String? callerEmail,
+    String? callerName,
+    String? callerImage,
     String? receiverId,
     String? receiverEmail,
+    String? receiverName,
+    String? receiverImage,
     CallType? callType,
     CallStatus? status,
     DateTime? startedAt,
@@ -139,8 +159,12 @@ class CallModel {
       callId: callId ?? this.callId,
       callerId: callerId ?? this.callerId,
       callerEmail: callerEmail ?? this.callerEmail,
+      callerName: callerName ?? this.callerName,
+      callerImage: callerImage ?? this.callerImage,
       receiverId: receiverId ?? this.receiverId,
       receiverEmail: receiverEmail ?? this.receiverEmail,
+      receiverName: receiverName ?? this.receiverName,
+      receiverImage: receiverImage ?? this.receiverImage,
       callType: callType ?? this.callType,
       status: status ?? this.status,
       startedAt: startedAt ?? this.startedAt,

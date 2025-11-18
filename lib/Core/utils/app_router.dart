@@ -9,7 +9,9 @@ import 'package:chatbox/Features/auth/presentation/views/choose_picture_view.dar
 import 'package:chatbox/Features/auth/presentation/views/login_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/recover_pass_view.dart';
 import 'package:chatbox/Features/auth/presentation/views/signup_view.dart';
-import 'package:chatbox/Features/calling/presentation/views/call_view.dart';
+import 'package:chatbox/Features/calling/data/repos/call_repo.dart';
+import 'package:chatbox/Features/calling/presentation/manager/call/call_cubit.dart';
+import 'package:chatbox/Features/calling/presentation/views/call_history_view.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
 import 'package:chatbox/Features/chat/presentation/manager/chat%20cubit/chat_cubit.dart';
 import 'package:chatbox/Features/chat/presentation/views/chat_view.dart';
@@ -105,7 +107,8 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kCallScreenRoute,
-        builder: (context, state) => const CallView(),
+        builder:
+            (context, state) => const CallHistoryView(),
       ),
       GoRoute(
         path: kHomeNavigationBarRoute,
@@ -124,6 +127,12 @@ abstract class AppRouter {
                       ),
                 ),
                 BlocProvider(create: (context) => ChatCubit(getIt<ChatRepo>())),
+                BlocProvider(
+                  create:
+                      (context) =>
+                          CallHistoryCubit(repository: getIt<CallRepo>()),
+                  child: const CallHistoryView(),
+                ),
               ],
               child: const HomeNavigationBar(),
             ),

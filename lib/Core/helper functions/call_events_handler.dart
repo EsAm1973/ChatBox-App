@@ -81,21 +81,38 @@ class CallEventsHandler {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
+      // Prevent calling yourself
+      if (currentUser.uid == invitee.id) {
+        print('❌ Cannot call yourself');
+        return;
+      }
+
       final receiverDoc =
           await FirebaseFirestore.instance
               .collection('users')
               .doc(invitee.id)
               .get();
 
+      if (!receiverDoc.exists) {
+        print('❌ Receiver user not found');
+        return;
+      }
+
       final receiverEmail = receiverDoc.data()?['email'] ?? '';
+      final receiverName = receiverDoc.data()?['name'] ?? '';
+      final receiverProfilePic = receiverDoc.data()?['profilePic'] ?? '';
       final modelCallType = ZegoCallHelper.getCallType(callType);
 
       await _callService.createCall(
         callId: callID,
         callerId: currentUser.uid,
         callerEmail: currentUser.email ?? '',
+        callerName: currentUser.displayName ?? '',
+        callerProfilePic: currentUser.photoURL ?? '',
         receiverId: invitee.id,
         receiverEmail: receiverEmail,
+        receiverName: receiverName,
+        receiverProfilePic: receiverProfilePic,
         callType: modelCallType,
       );
     } catch (e) {
@@ -114,6 +131,7 @@ class CallEventsHandler {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
+      // Get caller information
       final callerDoc =
           await FirebaseFirestore.instance
               .collection('users')
@@ -121,6 +139,7 @@ class CallEventsHandler {
               .get();
 
       final callerEmail = callerDoc.data()?['email'] ?? '';
+      final callerProfilePic = callerDoc.data()?['profilePic'] ?? '';
       final modelCallType = ZegoCallHelper.getCallType(callType);
 
       final existingCall = await _callService.getCall(callID);
@@ -128,10 +147,14 @@ class CallEventsHandler {
       if (existingCall == null) {
         await _callService.createCall(
           callId: callID,
-          callerId: caller.id,
-          callerEmail: callerEmail,
-          receiverId: currentUser.uid,
+          callerId: caller.id, // The person who initiated the call
+          callerEmail: callerEmail, // The caller's email
+          callerName: caller.name,
+          callerProfilePic: callerProfilePic,
+          receiverId: currentUser.uid, // The current user (receiver)
           receiverEmail: currentUser.email ?? '',
+          receiverName: currentUser.displayName ?? '', // Current user's email
+          receiverProfilePic: currentUser.photoURL ?? '',
           callType: modelCallType,
         );
       }
