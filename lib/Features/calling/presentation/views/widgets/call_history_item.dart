@@ -1,11 +1,13 @@
+
 import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/helper functions/formatted_date_and_days.dart';
+import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Features/calling/data/models/call_model.dart';
 import 'package:chatbox/Core/widgets/build_avatat.dart';
+import 'package:chatbox/Features/chat/presentation/views/widgets/zego_send_call_invite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:svg_flutter/svg.dart';
 
 class CallHistoryItem extends StatelessWidget {
   final CallModel call;
@@ -24,7 +26,14 @@ class CallHistoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCurrentDeleting = isDeleting && deletedCallId == call.callId;
-    final hasError = errorMessage != null && deletedCallId == call.callId;
+    final otherUserID =
+        call.callerId == context.read<UserCubit>().getCurrentUser()!.uid
+            ? call.receiverId
+            : call.callerId;
+    final otherUserName =
+        call.callerId == context.read<UserCubit>().getCurrentUser()!.uid
+            ? call.receiverName
+            : call.callerName;
 
     return Opacity(
       opacity: isCurrentDeleting ? 0.5 : 1.0,
@@ -36,11 +45,11 @@ class CallHistoryItem extends StatelessWidget {
                   call.callerId != call.receiverId)
               ? call.receiverImage
               : call.callerImage,
-          48.w,
-          48.h,
-          24.r,
-          24.r,
-          BoxFit.cover,
+          50.w,
+          50.h,
+          30.r,
+          30.r,
+          BoxFit.contain,
         ),
         title: Text(
           (call.callerName ==
@@ -48,7 +57,9 @@ class CallHistoryItem extends StatelessWidget {
                   call.callerId != call.receiverId)
               ? call.receiverName
               : call.callerName,
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          style: AppTextStyles.bold18,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         subtitle: Row(
           children: [
@@ -56,20 +67,28 @@ class CallHistoryItem extends StatelessWidget {
               call.status == CallStatus.missed
                   ? Icons.call_missed
                   : Icons.call_made,
-              size: 16,
+              size: 16.r,
               color:
                   call.status == CallStatus.missed ? Colors.red : Colors.green,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4.w),
             Text(
               formatCallTime(call.startedAt),
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: AppTextStyles.regular12.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
             if (call.duration > 0) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Text(
                 formatDuration(call.duration),
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: AppTextStyles.regular12.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ],
@@ -77,30 +96,11 @@ class CallHistoryItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              call.callType == CallType.video
-                  ? 'assets/video_light.svg'
-                  : 'assets/call_light.svg',
-              width: 20,
-              height: 20,
-            ),
-            if (isCurrentDeleting) ...[
-              const SizedBox(width: 8),
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
-            if (hasError) ...[
-              const SizedBox(width: 8),
-              const Icon(Icons.error, color: Colors.red, size: 20),
-            ],
+            acctionButton(false, otherUserID, otherUserName),
+            acctionButton(true, otherUserID, otherUserName),
           ],
         ),
-        onLongPress: () {
-          // TODO: Show delete option
-        },
+        onLongPress: () {},
       ),
     );
   }
