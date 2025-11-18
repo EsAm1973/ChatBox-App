@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:developer';
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firebase_auth_service.dart';
-import 'package:chatbox/Core/service/firestore_service.dart';
+import 'package:chatbox/Core/service/firestore_user_service.dart';
 import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
@@ -12,7 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthRepoImplementation implements AuthRepo {
   final FirebaseAuthService firebaseAuthServices;
   final StorageService storageService;
-  final FirestoreService firestoreService;
+  final FirestoreUserService firestoreService;
 
   AuthRepoImplementation(
     this.firebaseAuthServices,

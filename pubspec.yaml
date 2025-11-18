@@ -48,6 +48,23 @@ dependencies:
   uuid: ^4.5.1
   google_sign_in: ^6.3.0
   flutter_facebook_auth: ^7.1.2
+  equatable: ^2.0.7
+  cached_network_image: ^3.4.1
+  record: ^6.1.2
+  audioplayers: ^6.5.1
+  path_provider: ^2.1.5
+  permission_handler: ^12.0.1
+  file_picker: ^10.3.3
+  path: ^1.9.1
+  mime: ^2.0.0
+  dio: ^5.4.0
+  http: ^1.1.2
+  open_file: ^3.3.2
+  image_gallery_saver_plus: ^4.0.1
+  shared_preferences: ^2.5.3
+  zego_uikit_prebuilt_call: ^4.21.1
+  zego_express_engine: ^3.22.1
+  zego_uikit_signaling_plugin: ^2.8.19
 
 dev_dependencies:
   flutter_test:

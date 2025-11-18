@@ -1,7 +1,9 @@
-import 'package:chatbox/Core/service/firebase_auth_service.dart';
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:svg_flutter/svg.dart';
@@ -17,15 +19,37 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    navigateToNextScreen();
+    _initializeApp();
   }
 
-  void navigateToNextScreen() {
-    bool isLoggedIn = FirebaseAuthService().isLoggedIn();
+  void _initializeApp() {
+    final userCubit = context.read<UserCubit>();
+
+    // استمع لتغيرات حالة المصادقة
+    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+      if (user != null && mounted) {
+        await userCubit.loadUser(user.uid);
+
+        userCubit.subscribeToUserUpdates(user.uid);
+
+        _navigateToHome();
+      } else if (mounted) {
+        _navigateToOnboard();
+      }
+    });
+  }
+
+  void _navigateToHome() {
     Future.delayed(const Duration(seconds: 2), () {
-      if (isLoggedIn) {
-        GoRouter.of(context).pushReplacement(AppRouter.kHomeRoute);
-      } else {
+      if (mounted) {
+        GoRouter.of(context).pushReplacement(AppRouter.kHomeNavigationBarRoute);
+      }
+    });
+  }
+
+  void _navigateToOnboard() {
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
         GoRouter.of(context).pushReplacement(AppRouter.kOnboardRoute);
       }
     });
