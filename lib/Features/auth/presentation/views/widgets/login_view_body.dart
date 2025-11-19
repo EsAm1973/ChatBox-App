@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
@@ -55,6 +56,11 @@ class _LoginViewBodyState extends State<LoginViewBody> with AppValidators {
                   (context) {},
                 );
               } else if (state is LoginSuccess) {
+                // Update UserCubit with the logged-in user data
+                final userCubit = context.read<UserCubit>();
+                userCubit.setUser(state.user);
+                userCubit.subscribeToUserUpdates(state.user.uid);
+                
                 GoRouter.of(
                   context,
                 ).pushReplacement(AppRouter.kHomeNavigationBarRoute);
