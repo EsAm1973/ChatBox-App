@@ -35,7 +35,10 @@ class ProfileActionsSection extends StatelessWidget {
           'Preferences',
           Icons.tune_rounded,
           gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.blue.shade300],
+            colors: [
+              Colors.purple,
+              Colors.purple.withOpacity(0.8),
+            ],
           ),
         ),
 
@@ -72,7 +75,10 @@ class ProfileActionsSection extends StatelessWidget {
                 value: settings.darkTheme,
                 onChanged: onThemeTap,
                 gradient: LinearGradient(
-                  colors: [Colors.indigo.shade400, Colors.indigo.shade300],
+                  colors: [
+                    Colors.purple.withOpacity(0.8),
+                    Colors.purple.withOpacity(0.6),
+                  ],
                 ),
               ),
 
@@ -92,7 +98,10 @@ class ProfileActionsSection extends StatelessWidget {
                 value: settings.notificationsEnabled,
                 onChanged: onNotificationsTap,
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade300],
+                  colors: [
+                    Colors.purple.withOpacity(0.8),
+                    Colors.purple.withOpacity(0.6),
+                  ],
                 ),
               ),
             ],
@@ -107,7 +116,10 @@ class ProfileActionsSection extends StatelessWidget {
           'Account & Security',
           Icons.shield_rounded,
           gradient: LinearGradient(
-            colors: [Colors.green.shade400, Colors.green.shade300],
+            colors: [
+              Colors.teal,
+              Colors.teal.withOpacity(0.8),
+            ],
           ),
         ),
 
@@ -143,7 +155,10 @@ class ProfileActionsSection extends StatelessWidget {
                 subtitle: 'Manage your privacy preferences',
                 onTap: onPrivacyTap,
                 gradient: LinearGradient(
-                  colors: [Colors.teal.shade400, Colors.teal.shade300],
+                  colors: [
+                    Colors.teal.withOpacity(0.8),
+                    Colors.teal.withOpacity(0.6),
+                  ],
                 ),
               ),
 
@@ -172,7 +187,10 @@ class ProfileActionsSection extends StatelessWidget {
                   );
                 },
                 gradient: LinearGradient(
-                  colors: [Colors.purple.shade400, Colors.purple.shade300],
+                  colors: [
+                    Colors.teal.withOpacity(0.8),
+                    Colors.teal.withOpacity(0.6),
+                  ],
                 ),
               ),
             ],
@@ -187,7 +205,10 @@ class ProfileActionsSection extends StatelessWidget {
           'Danger Zone',
           Icons.warning_rounded,
           gradient: LinearGradient(
-            colors: [Colors.red.shade400, Colors.red.shade300],
+            colors: [
+              Colors.red,
+              Colors.red.withOpacity(0.8),
+            ],
           ),
         ),
 
@@ -199,16 +220,22 @@ class ProfileActionsSection extends StatelessWidget {
               colors:
                   isDark
                       ? [
-                        Colors.red.withOpacity(0.05),
-                        Colors.red.withOpacity(0.02),
+                        theme.colorScheme.error.withOpacity(0.05),
+                        theme.colorScheme.error.withOpacity(0.02),
                       ]
-                      : [Colors.red.shade50, Colors.white],
+                      : [
+                        theme.colorScheme.error.withOpacity(0.05),
+                        theme.scaffoldBackgroundColor,
+                      ],
             ),
             borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(color: Colors.red.withOpacity(0.2), width: 1.5),
+            border: Border.all(
+              color: theme.colorScheme.error.withOpacity(0.2),
+              width: 1.5
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.red.withOpacity(0.1),
+                color: theme.colorScheme.error.withOpacity(0.1),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -223,14 +250,17 @@ class ProfileActionsSection extends StatelessWidget {
                 subtitle: 'Sign out of your account',
                 onTap: onLogoutTap,
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade300],
+                  colors: [
+                    Colors.red.withOpacity(0.8),
+                    Colors.red.withOpacity(0.6),
+                  ],
                 ),
                 isDestructive: true,
               ),
 
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Divider(height: 1.h, color: Colors.red.withOpacity(0.1)),
+                child: Divider(height: 1.h, color: theme.colorScheme.error.withOpacity(0.1)),
               ),
 
               _buildActionTile(
@@ -240,7 +270,10 @@ class ProfileActionsSection extends StatelessWidget {
                 subtitle: 'Permanently delete your account',
                 onTap: onDeleteAccountTap,
                 gradient: LinearGradient(
-                  colors: [Colors.red.shade500, Colors.red.shade400],
+                  colors: [
+                    Colors.red.withOpacity(0.8),
+                    Colors.red.withOpacity(0.6),
+                  ],
                 ),
                 isDestructive: true,
               ),
@@ -281,9 +314,8 @@ class ProfileActionsSection extends StatelessWidget {
           SizedBox(width: 12.w),
           Text(
             title,
-            style: AppTextStyles.semiBold16.copyWith(
+            style: AppTextStyles.semiBold20.copyWith(
               color: theme.textTheme.bodyLarge?.color,
-              fontSize: 18.sp,
               letterSpacing: 0.5,
             ),
           ),
@@ -340,7 +372,6 @@ class ProfileActionsSection extends StatelessWidget {
                       title,
                       style: AppTextStyles.semiBold14.copyWith(
                         color: theme.textTheme.bodyLarge?.color,
-                        fontSize: 15.sp,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -356,20 +387,16 @@ class ProfileActionsSection extends StatelessWidget {
                 ),
               ),
 
-              // Animated Switch
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: Transform.scale(
-                  scale: 0.9,
-                  child: Switch(
-                    value: value,
-                    onChanged: onChanged,
-                    activeThumbColor: gradient.colors.first,
-                    activeTrackColor: gradient.colors.first.withOpacity(0.3),
-                    inactiveThumbColor: theme.disabledColor,
-                    inactiveTrackColor: theme.disabledColor.withOpacity(0.3),
-                  ),
+              // Static Switch
+              Transform.scale(
+                scale: 0.9,
+                child: Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeThumbColor: gradient.colors.first,
+                  activeTrackColor: gradient.colors.first.withOpacity(0.3),
+                  inactiveThumbColor: theme.disabledColor,
+                  inactiveTrackColor: theme.disabledColor.withOpacity(0.3),
                 ),
               ),
             ],
@@ -430,7 +457,6 @@ class ProfileActionsSection extends StatelessWidget {
                             isDestructive
                                 ? gradient.colors.first
                                 : theme.textTheme.bodyLarge?.color,
-                        fontSize: 15.sp,
                       ),
                     ),
                     SizedBox(height: 4.h),

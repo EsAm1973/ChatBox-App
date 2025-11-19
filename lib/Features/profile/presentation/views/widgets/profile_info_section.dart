@@ -40,14 +40,14 @@ class ProfileInfoSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.primaryColor,
-                      theme.primaryColor.withOpacity(0.7),
+                      Colors.blue,
+                      Colors.blue.withOpacity(0.7),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.primaryColor.withOpacity(0.3),
+                      color: Colors.blue.withOpacity(0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -62,9 +62,8 @@ class ProfileInfoSection extends StatelessWidget {
               SizedBox(width: 12.w),
               Text(
                 'Personal Information',
-                style: AppTextStyles.semiBold16.copyWith(
+                style: AppTextStyles.semiBold20.copyWith(
                   color: theme.textTheme.bodyLarge?.color,
-                  fontSize: 18.sp,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -103,7 +102,10 @@ class ProfileInfoSection extends StatelessWidget {
                 subtitle: user.name,
                 onTap: onEditName,
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade400, Colors.blue.shade300],
+                  colors: [
+                    Colors.blue.withOpacity(0.8),
+                    Colors.blue.withOpacity(0.6),
+                  ],
                 ),
               ),
 
@@ -116,7 +118,10 @@ class ProfileInfoSection extends StatelessWidget {
                 subtitle: user.email,
                 onTap: onEditEmail,
                 gradient: LinearGradient(
-                  colors: [Colors.purple.shade400, Colors.purple.shade300],
+                  colors: [
+                    Colors.blue.withOpacity(0.8),
+                    Colors.blue.withOpacity(0.6),
+                  ],
                 ),
               ),
 
@@ -129,7 +134,10 @@ class ProfileInfoSection extends StatelessWidget {
                 subtitle: user.phoneNumber ?? 'Not provided',
                 onTap: onEditPhone,
                 gradient: LinearGradient(
-                  colors: [Colors.green.shade400, Colors.green.shade300],
+                  colors: [
+                    Colors.blue.withOpacity(0.8),
+                    Colors.blue.withOpacity(0.6),
+                  ],
                 ),
               ),
 
@@ -143,7 +151,10 @@ class ProfileInfoSection extends StatelessWidget {
                     user.about ?? 'Add a bio to tell others about yourself',
                 onTap: onEditAbout,
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade300],
+                  colors: [
+                    Colors.blue.withOpacity(0.8),
+                    Colors.blue.withOpacity(0.6),
+                  ],
                 ),
                 maxLines: 2,
               ),
@@ -157,7 +168,10 @@ class ProfileInfoSection extends StatelessWidget {
                 subtitle: _formatLastSeen(user.lastSeen),
                 onTap: null,
                 gradient: LinearGradient(
-                  colors: [Colors.grey.shade400, Colors.grey.shade300],
+                  colors: [
+                    Colors.blue.withOpacity(0.8),
+                    Colors.blue.withOpacity(0.6),
+                  ],
                 ),
                 showArrow: false,
               ),
@@ -233,9 +247,8 @@ class ProfileInfoSection extends StatelessWidget {
                     SizedBox(height: 6.h),
                     Text(
                       subtitle,
-                      style: AppTextStyles.semiBold14.copyWith(
+                      style: AppTextStyles.semiBold16.copyWith(
                         color: theme.textTheme.bodyLarge?.color,
-                        fontSize: 15.sp,
                         height: 1.3,
                       ),
                       maxLines: maxLines,
