@@ -27,7 +27,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateUserName(String name) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.name));
 
@@ -39,7 +39,16 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.name,
       )),
       (updatedUser) {
-        final currentSettings = (state as ProfileLoaded).settings;
+        // Get current settings from any loaded state
+        ProfileSettingsModel currentSettings;
+        if (state is ProfileLoaded) {
+          currentSettings = (state as ProfileLoaded).settings;
+        } else if (state is ProfileUpdated) {
+          currentSettings = (state as ProfileUpdated).updatedSettings;
+        } else {
+          currentSettings = const ProfileSettingsModel(); // fallback
+        }
+        
         emit(ProfileUpdated(
           updatedUser: updatedUser,
           updatedSettings: currentSettings,
@@ -50,7 +59,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateUserEmail(String email) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.email));
 
@@ -62,7 +71,16 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.email,
       )),
       (updatedUser) {
-        final currentSettings = (state as ProfileLoaded).settings;
+        // Get current settings from any loaded state
+        ProfileSettingsModel currentSettings;
+        if (state is ProfileLoaded) {
+          currentSettings = (state as ProfileLoaded).settings;
+        } else if (state is ProfileUpdated) {
+          currentSettings = (state as ProfileUpdated).updatedSettings;
+        } else {
+          currentSettings = const ProfileSettingsModel(); // fallback
+        }
+        
         emit(ProfileUpdated(
           updatedUser: updatedUser,
           updatedSettings: currentSettings,
@@ -73,7 +91,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateUserPhoneNumber(String phoneNumber) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.phone));
 
@@ -85,7 +103,16 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.phone,
       )),
       (updatedUser) {
-        final currentSettings = (state as ProfileLoaded).settings;
+        // Get current settings from any loaded state
+        ProfileSettingsModel currentSettings;
+        if (state is ProfileLoaded) {
+          currentSettings = (state as ProfileLoaded).settings;
+        } else if (state is ProfileUpdated) {
+          currentSettings = (state as ProfileUpdated).updatedSettings;
+        } else {
+          currentSettings = const ProfileSettingsModel(); // fallback
+        }
+        
         emit(ProfileUpdated(
           updatedUser: updatedUser,
           updatedSettings: currentSettings,
@@ -96,7 +123,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateUserAbout(String about) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.about));
 
@@ -108,12 +135,24 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.about,
       )),
       (updatedUser) {
-        final currentSettings = (state as ProfileLoaded).settings;
+        // Get current settings from any loaded state
+        ProfileSettingsModel currentSettings;
+        if (state is ProfileLoaded) {
+          currentSettings = (state as ProfileLoaded).settings;
+        } else if (state is ProfileUpdated) {
+          currentSettings = (state as ProfileUpdated).updatedSettings;
+        } else {
+          currentSettings = const ProfileSettingsModel(); // fallback
+        }
+        
         emit(ProfileUpdated(
           updatedUser: updatedUser,
           updatedSettings: currentSettings,
           updateType: ProfileUpdateType.about,
         ));
+
+        // TODO: Update UserCubit here when we have access to it
+        // This will ensure HomeAppBar reflects the changes immediately
       },
     );
   }

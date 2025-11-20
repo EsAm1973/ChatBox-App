@@ -59,17 +59,11 @@ class _ProfileViewState extends State<ProfileView> {
               return const ProfileLoadingState();
             }
 
-            if (state is ProfileLoading) {
+            if (state is ProfileLoading || state is ProfileUpdateLoading) {
               return const ProfileLoadingState();
             }
 
-            if (state is ProfileError) {
-              return ProfileErrorState(
-                message: state.message,
-                onRetry: _loadProfileData,
-              );
-            }
-
+            // If we have loaded data, always show it regardless of other states
             if (state is ProfileLoaded) {
               return _buildProfileContent(context, state.user, state.settings);
             }
@@ -82,12 +76,50 @@ class _ProfileViewState extends State<ProfileView> {
               );
             }
 
+            // Handle errors intelligently
+            if (state is ProfileError) {
+              // For update-related errors, don't disrupt the UI - just continue showing current data
+              if (state.updateType != null && state.updateType != ProfileUpdateType.none) {
+                // Return current data instead of showing error
+                final currentUser = context.read<UserCubit>().getCurrentUser();
+                final currentSettings = context.read<ProfileCubit>().currentSettings;
+                
+                if (currentUser != null && currentSettings != null) {
+                  return _buildProfileContent(
+                    context,
+                    currentUser,
+                    currentSettings,
+                  );
+                }
+              }
+              
+              // Only show error state if we don't have any loaded data
+              final userCubitUser = context.read<UserCubit>().getCurrentUser();
+              if (userCubitUser != null) {
+                return _buildProfileContent(
+                  context,
+                  userCubitUser,
+                  context.read<ProfileCubit>().currentSettings ?? const ProfileSettingsModel(),
+                );
+              }
+              
+              return ProfileErrorState(
+                message: state.message,
+                onRetry: _loadProfileData,
+              );
+            }
+
+            // Fallback: try to load from UserCubit if available
             final userCubitUser = context.read<UserCubit>().getCurrentUser();
             if (userCubitUser != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _loadProfileData();
-              });
-              return const ProfileLoadingState();
+              final currentSettings = context.read<ProfileCubit>().currentSettings;
+              if (currentSettings != null) {
+                return _buildProfileContent(
+                  context,
+                  userCubitUser,
+                  currentSettings,
+                );
+              }
             }
 
             return ProfileErrorState(
@@ -147,33 +179,64 @@ class _ProfileViewState extends State<ProfileView> {
                       context,
                       'Edit Name',
                       user.name,
-                      (value) =>
-                          context.read<ProfileCubit>().updateUserName(value),
+                      (value) {
+                        context.read<ProfileCubit>().updateUserName(value);
+                        // Update UserCubit for HomeAppBar
+                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        if (currentUser != null) {
+                          context.read<UserCubit>().updateUserProfile(
+                            currentUser.copyWith(name: value),
+                          );
+                        }
+                      },
                     ),
                 onEditEmail:
                     () => _showEditDialog(
                       context,
                       'Edit Email',
                       user.email,
-                      (value) =>
-                          context.read<ProfileCubit>().updateUserEmail(value),
+                      (value) {
+                        context.read<ProfileCubit>().updateUserEmail(value);
+                        // Update UserCubit for HomeAppBar
+                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        if (currentUser != null) {
+                          context.read<UserCubit>().updateUserProfile(
+                            currentUser.copyWith(email: value),
+                          );
+                        }
+                      },
                     ),
                 onEditPhone:
                     () => _showEditDialog(
                       context,
                       'Edit Phone',
                       user.phoneNumber ?? '',
-                      (value) => context
-                          .read<ProfileCubit>()
-                          .updateUserPhoneNumber(value),
+                      (value) {
+                        context.read<ProfileCubit>().updateUserPhoneNumber(value);
+                        // Update UserCubit for HomeAppBar
+                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        if (currentUser != null) {
+                          context.read<UserCubit>().updateUserProfile(
+                            currentUser.copyWith(phoneNumber: value),
+                          );
+                        }
+                      },
                     ),
                 onEditAbout:
                     () => _showEditDialog(
                       context,
                       'Edit About',
                       user.about ?? '',
-                      (value) =>
-                          context.read<ProfileCubit>().updateUserAbout(value),
+                      (value) {
+                        context.read<ProfileCubit>().updateUserAbout(value);
+                        // Update UserCubit for HomeAppBar
+                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        if (currentUser != null) {
+                          context.read<UserCubit>().updateUserProfile(
+                            currentUser.copyWith(about: value),
+                          );
+                        }
+                      },
                     ),
               ),
             ),
