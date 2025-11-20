@@ -5,14 +5,12 @@ import 'package:chatbox/Core/utils/app_text_styles.dart';
 class ProfileEditPictureBottomSheet extends StatelessWidget {
   final VoidCallback onTakePhoto;
   final VoidCallback onChooseFromGallery;
-  final VoidCallback? onRemovePhoto;
   final bool hasExistingPhoto;
 
   const ProfileEditPictureBottomSheet({
     super.key,
     required this.onTakePhoto,
     required this.onChooseFromGallery,
-    this.onRemovePhoto,
     required this.hasExistingPhoto,
   });
 
@@ -20,7 +18,6 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
     required BuildContext context,
     required VoidCallback onTakePhoto,
     required VoidCallback onChooseFromGallery,
-    VoidCallback? onRemovePhoto,
     required bool hasExistingPhoto,
   }) {
     return showModalBottomSheet(
@@ -29,7 +26,6 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
       builder: (context) => ProfileEditPictureBottomSheet(
         onTakePhoto: onTakePhoto,
         onChooseFromGallery: onChooseFromGallery,
-        onRemovePhoto: onRemovePhoto,
         hasExistingPhoto: hasExistingPhoto,
       ),
     );
@@ -75,17 +71,6 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
               onChooseFromGallery();
             },
           ),
-          if (hasExistingPhoto && onRemovePhoto != null)
-            _buildBottomSheetOption(
-              context,
-              icon: Icons.delete_rounded,
-              title: 'Remove Photo',
-              isDestructive: true,
-              onTap: () {
-                Navigator.pop(context);
-                onRemovePhoto!();
-              },
-            ),
         ],
       ),
     );

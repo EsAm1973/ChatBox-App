@@ -119,16 +119,28 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateProfilePicture(String imageUrl) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
 
-    emit(ProfilePictureLoading());
+    emit(const ProfileUpdateLoading(ProfileUpdateType.picture));
 
     final result = await _profileRepo.updateProfilePicture(imageUrl);
     
     result.fold(
-      (failure) => emit(ProfilePictureError(message: failure.errorMessage)),
+      (failure) => emit(ProfileError(
+        message: failure.errorMessage,
+        updateType: ProfileUpdateType.picture,
+      )),
       (updatedUser) {
-        final currentSettings = (state as ProfileLoaded).settings;
+        // Get current settings from any loaded state
+        ProfileSettingsModel currentSettings;
+        if (state is ProfileLoaded) {
+          currentSettings = (state as ProfileLoaded).settings;
+        } else if (state is ProfileUpdated) {
+          currentSettings = (state as ProfileUpdated).updatedSettings;
+        } else {
+          currentSettings = const ProfileSettingsModel(); // fallback
+        }
+        
         emit(ProfileUpdated(
           updatedUser: updatedUser,
           updatedSettings: currentSettings,
