@@ -1,6 +1,7 @@
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firestore_profile_service.dart';
 import 'package:chatbox/Core/service/local_profile_service.dart';
+import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/profile/data/models/profile_settings_model.dart';
 import 'package:chatbox/Features/profile/data/repos/profile_repo.dart';
@@ -195,6 +196,9 @@ class ProfileRepoImpl implements ProfileRepo {
       // Clear local settings
       await _localProfileService.clearSettings();
       
+      // Clear downloaded files data
+      await SupabaseStorageService.clearDownloadedFiles();
+      
       // Logout through service
       await _profileService.logout();
       
@@ -216,6 +220,9 @@ class ProfileRepoImpl implements ProfileRepo {
 
       // Clear local settings
       await _localProfileService.clearSettings();
+      
+      // Clear downloaded files data
+      await SupabaseStorageService.clearDownloadedFiles();
       
       // Delete account through service
       await _profileService.deleteAccount(currentUser.uid);

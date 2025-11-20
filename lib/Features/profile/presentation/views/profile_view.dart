@@ -19,6 +19,8 @@ import 'package:chatbox/Features/profile/presentation/views/widgets/profile_logo
 import 'package:chatbox/Features/profile/presentation/views/widgets/profile_delete_account_dialog.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Core/helper%20functions/animated_loading_dialog.dart';
+import 'package:chatbox/Core/utils/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -421,14 +423,96 @@ class _ProfileViewState extends State<ProfileView> {
   void _showLogoutDialog(BuildContext context) {
     ProfileLogoutDialog.show(
       context: context,
-      onLogout: () => context.read<ProfileCubit>().logout(),
+      onLogout: () => _performLogout(context),
     );
+  }
+
+  Future<void> _performLogout(BuildContext context) async {
+    try {
+      // Show loading state
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Perform logout through ProfileCubit
+      await context.read<ProfileCubit>().logout();
+      
+      // Also logout UserCubit to clear user state
+      context.read<UserCubit>().logout();
+      
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      // Navigate to onboarding view
+      if (mounted) {
+        GoRouter.of(context).pushReplacement(AppRouter.kOnboardRoute);
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) {
+        Navigator.of(context).pop();
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
     ProfileDeleteAccountDialog.show(
       context: context,
-      onDelete: () => context.read<ProfileCubit>().deleteAccount(),
+      onDelete: () => _performDeleteAccount(context),
     );
+  }
+
+  Future<void> _performDeleteAccount(BuildContext context) async {
+    try {
+      // Show loading state
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Perform delete account through ProfileCubit
+      await context.read<ProfileCubit>().deleteAccount();
+      
+      // Also logout UserCubit to clear user state
+      context.read<UserCubit>().logout();
+      
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      
+      // Navigate to onboarding view
+      if (mounted) {
+        GoRouter.of(context).pushReplacement(AppRouter.kOnboardRoute);
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) {
+        Navigator.of(context).pop();
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Account deletion failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
