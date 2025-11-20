@@ -194,7 +194,11 @@ class ProfileCubit extends Cubit<ProfileState> {
     bool? profilePictureVisible,
     bool? onlineStatusVisible,
   }) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
+
+    // Save current user before changing state
+    final currentUser = this.currentUser;
+    if (currentUser == null) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.privacy));
 
@@ -210,7 +214,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.privacy,
       )),
       (updatedSettings) {
-        final currentUser = (state as ProfileLoaded).user;
         emit(ProfileUpdated(
           updatedUser: currentUser,
           updatedSettings: updatedSettings,
@@ -221,7 +224,11 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateNotificationSettings(bool notificationsEnabled) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
+
+    // Save current user before changing state
+    final currentUser = this.currentUser;
+    if (currentUser == null) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.notifications));
 
@@ -233,7 +240,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.notifications,
       )),
       (updatedSettings) {
-        final currentUser = (state as ProfileLoaded).user;
         emit(ProfileUpdated(
           updatedUser: currentUser,
           updatedSettings: updatedSettings,
@@ -244,7 +250,11 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> toggleTheme(bool darkTheme) async {
-    if (state is! ProfileLoaded) return;
+    if (state is! ProfileLoaded && state is! ProfileUpdated) return;
+
+    // Save current user before changing state
+    final currentUser = this.currentUser;
+    if (currentUser == null) return;
 
     emit(const ProfileUpdateLoading(ProfileUpdateType.theme));
 
@@ -256,7 +266,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         updateType: ProfileUpdateType.theme,
       )),
       (updatedSettings) {
-        final currentUser = (state as ProfileLoaded).user;
         emit(ProfileUpdated(
           updatedUser: currentUser,
           updatedSettings: updatedSettings,

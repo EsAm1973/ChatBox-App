@@ -1,5 +1,6 @@
 import 'package:chatbox/Core/errors/firebase_failures.dart';
 import 'package:chatbox/Core/service/firestore_profile_service.dart';
+import 'package:chatbox/Core/service/local_profile_service.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
 import 'package:chatbox/Features/profile/data/models/profile_settings_model.dart';
 import 'package:chatbox/Features/profile/data/repos/profile_repo.dart';
@@ -8,10 +9,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileRepoImpl implements ProfileRepo {
   final FirestoreProfileService _profileService;
+  final LocalProfileService _localProfileService;
 
   ProfileRepoImpl({
     required FirestoreProfileService profileService,
-  }) : _profileService = profileService;
+    required LocalProfileService localProfileService,
+  })  : _profileService = profileService,
+        _localProfileService = localProfileService;
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getProfileData(String uid) async {
@@ -22,9 +26,8 @@ class ProfileRepoImpl implements ProfileRepo {
         return Left(FirebaseFailure(errorMessage: 'User not found'));
       }
 
-      // Get user settings from Firestore
-      final settingsData = await _profileService.getUserSettings(uid);
-      final settings = settingsData ?? const ProfileSettingsModel();
+      // Get user settings from local storage
+      final settings = _localProfileService.getUserSettings();
 
       return Right({
         'user': userData,
@@ -145,22 +148,14 @@ class ProfileRepoImpl implements ProfileRepo {
     bool? onlineStatusVisible,
   }) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        return Left(FirebaseFailure(errorMessage: 'User not authenticated'));
-      }
-
-      // Update in Firestore through service
-      final updatedSettings = await _profileService.updatePrivacySettings(
-        uid: currentUser.uid,
+      // Update in local storage through service
+      final updatedSettings = await _localProfileService.updatePrivacySettings(
         lastSeenVisible: lastSeenVisible,
         profilePictureVisible: profilePictureVisible,
         onlineStatusVisible: onlineStatusVisible,
       );
 
       return Right(updatedSettings);
-    } on FirebaseFailure catch (failure) {
-      return Left(failure);
     } catch (e) {
       return Left(FirebaseFailure(errorMessage: 'Failed to update privacy settings: $e'));
     }
@@ -169,20 +164,12 @@ class ProfileRepoImpl implements ProfileRepo {
   @override
   Future<Either<Failure, ProfileSettingsModel>> updateNotificationSettings(bool enabled) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        return Left(FirebaseFailure(errorMessage: 'User not authenticated'));
-      }
-
-      // Update in Firestore through service
-      final updatedSettings = await _profileService.updateNotificationSettings(
-        uid: currentUser.uid,
+      // Update in local storage through service
+      final updatedSettings = await _localProfileService.updateNotificationSettings(
         enabled: enabled,
       );
 
       return Right(updatedSettings);
-    } on FirebaseFailure catch (failure) {
-      return Left(failure);
     } catch (e) {
       return Left(FirebaseFailure(errorMessage: 'Failed to update notification settings: $e'));
     }
@@ -191,20 +178,12 @@ class ProfileRepoImpl implements ProfileRepo {
   @override
   Future<Either<Failure, ProfileSettingsModel>> updateThemePreference(bool darkTheme) async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        return Left(FirebaseFailure(errorMessage: 'User not authenticated'));
-      }
-
-      // Update in Firestore through service
-      final updatedSettings = await _profileService.updateThemePreference(
-        uid: currentUser.uid,
+      // Update in local storage through service
+      final updatedSettings = await _localProfileService.updateThemePreference(
         darkTheme: darkTheme,
       );
 
       return Right(updatedSettings);
-    } on FirebaseFailure catch (failure) {
-      return Left(failure);
     } catch (e) {
       return Left(FirebaseFailure(errorMessage: 'Failed to update theme preference: $e'));
     }
@@ -213,6 +192,9 @@ class ProfileRepoImpl implements ProfileRepo {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
+      // Clear local settings
+      await _localProfileService.clearSettings();
+      
       // Logout through service
       await _profileService.logout();
       
@@ -232,6 +214,9 @@ class ProfileRepoImpl implements ProfileRepo {
         return Left(FirebaseFailure(errorMessage: 'User not authenticated'));
       }
 
+      // Clear local settings
+      await _localProfileService.clearSettings();
+      
       // Delete account through service
       await _profileService.deleteAccount(currentUser.uid);
       

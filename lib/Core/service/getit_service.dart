@@ -5,6 +5,7 @@ import 'package:chatbox/Core/service/firestore_call_service.dart';
 import 'package:chatbox/Core/service/firestore_chat_service.dart';
 import 'package:chatbox/Core/service/firestore_user_service.dart';
 import 'package:chatbox/Core/service/firestore_profile_service.dart';
+import 'package:chatbox/Core/service/local_profile_service.dart';
 import 'package:chatbox/Core/service/storage_service.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Features/auth/data/repos/auth_repo.dart';
@@ -29,6 +30,7 @@ void setupGetIt() {
   getIt.registerSingleton<StorageService>(SupabaseStorageService());
   getIt.registerLazySingleton(() => FirestoreCallService());
   getIt.registerLazySingleton(() => FirestoreProfileService());
+  getIt.registerLazySingleton(() => LocalProfileService());
 
   getIt.registerSingleton<UserRepo>(
     UserRepoImpl(firestoreUserService: getIt<FirestoreUserService>()),
@@ -45,6 +47,7 @@ void setupGetIt() {
   getIt.registerSingleton<ProfileRepo>(
     ProfileRepoImpl(
       profileService: getIt<FirestoreProfileService>(),
+      localProfileService: getIt<LocalProfileService>(),
     ),
   );
 

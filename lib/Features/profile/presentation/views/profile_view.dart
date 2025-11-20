@@ -51,6 +51,13 @@ class _ProfileViewState extends State<ProfileView> {
       appBar: const ProfileAppBar(),
       body: SafeArea(
         child: BlocBuilder<ProfileCubit, ProfileState>(
+          buildWhen: (previous, current) {
+            // Don't rebuild when only settings are being updated
+            if (current is ProfileUpdateLoading) {
+              return false;
+            }
+            return true;
+          },
           builder: (context, state) {
             if (state is ProfileInitial) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,7 +66,7 @@ class _ProfileViewState extends State<ProfileView> {
               return const ProfileLoadingState();
             }
 
-            if (state is ProfileLoading || state is ProfileUpdateLoading) {
+            if (state is ProfileLoading) {
               return const ProfileLoadingState();
             }
 
@@ -79,11 +86,13 @@ class _ProfileViewState extends State<ProfileView> {
             // Handle errors intelligently
             if (state is ProfileError) {
               // For update-related errors, don't disrupt the UI - just continue showing current data
-              if (state.updateType != null && state.updateType != ProfileUpdateType.none) {
+              if (state.updateType != null &&
+                  state.updateType != ProfileUpdateType.none) {
                 // Return current data instead of showing error
                 final currentUser = context.read<UserCubit>().getCurrentUser();
-                final currentSettings = context.read<ProfileCubit>().currentSettings;
-                
+                final currentSettings =
+                    context.read<ProfileCubit>().currentSettings;
+
                 if (currentUser != null && currentSettings != null) {
                   return _buildProfileContent(
                     context,
@@ -92,17 +101,18 @@ class _ProfileViewState extends State<ProfileView> {
                   );
                 }
               }
-              
+
               // Only show error state if we don't have any loaded data
               final userCubitUser = context.read<UserCubit>().getCurrentUser();
               if (userCubitUser != null) {
                 return _buildProfileContent(
                   context,
                   userCubitUser,
-                  context.read<ProfileCubit>().currentSettings ?? const ProfileSettingsModel(),
+                  context.read<ProfileCubit>().currentSettings ??
+                      const ProfileSettingsModel(),
                 );
               }
-              
+
               return ProfileErrorState(
                 message: state.message,
                 onRetry: _loadProfileData,
@@ -112,7 +122,8 @@ class _ProfileViewState extends State<ProfileView> {
             // Fallback: try to load from UserCubit if available
             final userCubitUser = context.read<UserCubit>().getCurrentUser();
             if (userCubitUser != null) {
-              final currentSettings = context.read<ProfileCubit>().currentSettings;
+              final currentSettings =
+                  context.read<ProfileCubit>().currentSettings;
               if (currentSettings != null) {
                 return _buildProfileContent(
                   context,
@@ -175,46 +186,45 @@ class _ProfileViewState extends State<ProfileView> {
                 user: user,
                 settings: settings,
                 onEditName:
-                    () => _showEditDialog(
-                      context,
-                      'Edit Name',
-                      user.name,
-                      (value) {
-                        context.read<ProfileCubit>().updateUserName(value);
-                        // Update UserCubit for HomeAppBar
-                        final currentUser = context.read<UserCubit>().getCurrentUser();
-                        if (currentUser != null) {
-                          context.read<UserCubit>().updateUserProfile(
-                            currentUser.copyWith(name: value),
-                          );
-                        }
-                      },
-                    ),
+                    () => _showEditDialog(context, 'Edit Name', user.name, (
+                      value,
+                    ) {
+                      context.read<ProfileCubit>().updateUserName(value);
+                      // Update UserCubit for HomeAppBar
+                      final currentUser =
+                          context.read<UserCubit>().getCurrentUser();
+                      if (currentUser != null) {
+                        context.read<UserCubit>().updateUserProfile(
+                          currentUser.copyWith(name: value),
+                        );
+                      }
+                    }),
                 onEditEmail:
-                    () => _showEditDialog(
-                      context,
-                      'Edit Email',
-                      user.email,
-                      (value) {
-                        context.read<ProfileCubit>().updateUserEmail(value);
-                        // Update UserCubit for HomeAppBar
-                        final currentUser = context.read<UserCubit>().getCurrentUser();
-                        if (currentUser != null) {
-                          context.read<UserCubit>().updateUserProfile(
-                            currentUser.copyWith(email: value),
-                          );
-                        }
-                      },
-                    ),
+                    () => _showEditDialog(context, 'Edit Email', user.email, (
+                      value,
+                    ) {
+                      context.read<ProfileCubit>().updateUserEmail(value);
+                      // Update UserCubit for HomeAppBar
+                      final currentUser =
+                          context.read<UserCubit>().getCurrentUser();
+                      if (currentUser != null) {
+                        context.read<UserCubit>().updateUserProfile(
+                          currentUser.copyWith(email: value),
+                        );
+                      }
+                    }),
                 onEditPhone:
                     () => _showEditDialog(
                       context,
                       'Edit Phone',
                       user.phoneNumber ?? '',
                       (value) {
-                        context.read<ProfileCubit>().updateUserPhoneNumber(value);
+                        context.read<ProfileCubit>().updateUserPhoneNumber(
+                          value,
+                        );
                         // Update UserCubit for HomeAppBar
-                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        final currentUser =
+                            context.read<UserCubit>().getCurrentUser();
                         if (currentUser != null) {
                           context.read<UserCubit>().updateUserProfile(
                             currentUser.copyWith(phoneNumber: value),
@@ -230,7 +240,8 @@ class _ProfileViewState extends State<ProfileView> {
                       (value) {
                         context.read<ProfileCubit>().updateUserAbout(value);
                         // Update UserCubit for HomeAppBar
-                        final currentUser = context.read<UserCubit>().getCurrentUser();
+                        final currentUser =
+                            context.read<UserCubit>().getCurrentUser();
                         if (currentUser != null) {
                           context.read<UserCubit>().updateUserProfile(
                             currentUser.copyWith(about: value),

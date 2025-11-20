@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class ProfileSettingsModel {
   final bool lastSeenVisible;
   final bool profilePictureVisible;
@@ -35,16 +33,14 @@ class ProfileSettingsModel {
   }
 
   factory ProfileSettingsModel.fromMap(Map<String, dynamic> map) {
-    DateTime parseDateTime(dynamic date) {
-      if (date is Timestamp) {
-        return date.toDate();
-      } else if (date is int) {
+    DateTime? parseDateTime(dynamic date) {
+      if (date == null) return null;
+      if (date is int) {
         return DateTime.fromMillisecondsSinceEpoch(date);
       } else if (date is String) {
         return DateTime.parse(date);
-      } else {
-        return DateTime.now();
       }
+      return null;
     }
 
     return ProfileSettingsModel(
@@ -54,8 +50,8 @@ class ProfileSettingsModel {
       notificationsEnabled: map['notificationsEnabled'] ?? true,
       darkTheme: map['darkTheme'] ?? false,
       language: map['language'] ?? 'en',
-      createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
-      updatedAt: map['updatedAt'] != null ? parseDateTime(map['updatedAt']) : null,
+      createdAt: parseDateTime(map['createdAt']),
+      updatedAt: parseDateTime(map['updatedAt']),
     );
   }
 
