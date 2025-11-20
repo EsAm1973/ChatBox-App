@@ -23,11 +23,12 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => ProfileEditPictureBottomSheet(
-        onTakePhoto: onTakePhoto,
-        onChooseFromGallery: onChooseFromGallery,
-        hasExistingPhoto: hasExistingPhoto,
-      ),
+      builder:
+          (context) => ProfileEditPictureBottomSheet(
+            onTakePhoto: onTakePhoto,
+            onChooseFromGallery: onChooseFromGallery,
+            hasExistingPhoto: hasExistingPhoto,
+          ),
     );
   }
 
@@ -97,13 +98,15 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: (isDestructive ? theme.colorScheme.error : theme.primaryColor)
-                      .withOpacity(0.1),
+                  color: (isDestructive
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurface)
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Icon(
                   icon,
-                  color: isDestructive ? theme.colorScheme.error : theme.primaryColor,
+                  color: isDestructive ? theme.colorScheme.error : theme.iconTheme.color,
                   size: 20.sp,
                 ),
               ),
@@ -111,9 +114,10 @@ class ProfileEditPictureBottomSheet extends StatelessWidget {
               Text(
                 title,
                 style: AppTextStyles.semiBold14.copyWith(
-                  color: isDestructive
-                      ? theme.colorScheme.error
-                      : theme.textTheme.bodyLarge?.color,
+                  color:
+                      isDestructive
+                          ? theme.colorScheme.error
+                          : theme.textTheme.bodyLarge?.color,
                 ),
               ),
             ],
