@@ -1,6 +1,6 @@
 // SentAttachmentMessage.dart
 
-import 'package:chatbox/Core/helper%20functions/sent_attachment_methods.dart';
+import 'package:chatbox/Core/helper%20functions/build_images_files_ui_render.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:flutter/material.dart';
