@@ -23,6 +23,10 @@ class _ChatViewBodyState extends State<ChatViewBody> {
   final ScrollController _scrollController = ScrollController();
   bool _isAtBottom = true;
 
+  // متغيرات جديدة لإدارة حالة التمرير
+  double? _savedScrollPosition;
+  bool _isFirstLoad = true;
+
   @override
   void initState() {
     super.initState();
@@ -37,16 +41,27 @@ class _ChatViewBodyState extends State<ChatViewBody> {
 
     _scrollController.addListener(_onScroll);
 
-    // Scroll to bottom after first frame (when opening chat)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom(animated: true);
-      // Mark existing messages as seen when opening
-      _markMessagesAsSeen();
+    // Display latest message immediately without animation when opening chat
+    _scheduleInitialScroll();
+  }
+
+  void _scheduleInitialScroll() {
+    // انتظار للتأكد من تحميل الرسائل بالكامل
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _displayLatestMessageImmediately();
+        _markMessagesAsSeen();
+      }
     });
   }
 
   @override
   void dispose() {
+    // حفظ موقع التمرير قبل إغلاق الشاشة
+    if (_scrollController.hasClients) {
+      _savedScrollPosition = _scrollController.position.pixels;
+    }
+
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     // Mark all messages as seen when leaving
@@ -55,6 +70,11 @@ class _ChatViewBodyState extends State<ChatViewBody> {
   }
 
   void _onScroll() {
+    // حفظ موقع التمرير الحالي عند بدء التمرير
+    if (_scrollController.hasClients) {
+      _savedScrollPosition = _scrollController.position.pixels;
+    }
+
     final isAtBottom =
         _scrollController.hasClients &&
         _scrollController.position.pixels >=
@@ -71,6 +91,43 @@ class _ChatViewBodyState extends State<ChatViewBody> {
   String _generateChatRoomId(String user1, String user2) {
     final sortedIds = [user1, user2]..sort();
     return 'chat_${sortedIds[0]}_${sortedIds[1]}';
+  }
+
+  void _displayLatestMessageImmediately() {
+    if (!_scrollController.hasClients) return;
+
+    // استرداد الموقع المحفوظ إذا كان موجوداً
+    if (_savedScrollPosition != null && !_isFirstLoad) {
+      _scrollController.jumpTo(_savedScrollPosition!);
+    } else {
+      // عرض آخر رسالة فوراً دون انيميشن
+      _jumpToBottomForce();
+    }
+
+    _isFirstLoad = false;
+  }
+
+  void _jumpToBottomForce() {
+    if (!_scrollController.hasClients) return;
+
+    // استخدم animateTo مع margin إضافي للتأكد من الوصول لآخر رسالة
+    final targetPosition = _scrollController.position.maxScrollExtent + 200.0;
+    _scrollController.animateTo(
+      targetPosition,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOut,
+    );
+
+    // محاولة ثانية للتأكد
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (_scrollController.hasClients && mounted) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent + 250.0,
+          duration: const Duration(milliseconds: 50),
+          curve: Curves.linear,
+        );
+      }
+    });
   }
 
   void _markMessagesAsSeen() {
@@ -104,6 +161,14 @@ class _ChatViewBodyState extends State<ChatViewBody> {
                   : (state is MessageSent
                       ? state.messages
                       : (state as MessageSending).messages);
+
+          // Auto-scroll to bottom when new messages are added and user was at bottom
+          if (state is MessagesLoaded && _isAtBottom) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scrollToBottom(animated: true);
+            });
+          }
+
           return Column(
             children: [
               // ✅ ChatAppBar with call buttons
