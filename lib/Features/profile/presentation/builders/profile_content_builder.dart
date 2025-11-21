@@ -20,7 +20,6 @@ class ProfileContentBuilder {
     required Function(String) onEditPhone,
     required Function(String) onEditAbout,
     required VoidCallback onPrivacyTap,
-    required Function(bool) onThemeTap,
     required Function(bool) onNotificationsTap,
     required VoidCallback onLogoutTap,
     required VoidCallback onDeleteAccountTap,
@@ -56,7 +55,6 @@ class ProfileContentBuilder {
           _buildProfileActionsSection(
             settings,
             onPrivacyTap,
-            onThemeTap,
             onNotificationsTap,
             onLogoutTap,
             onDeleteAccountTap,
@@ -119,7 +117,6 @@ class ProfileContentBuilder {
   Widget _buildProfileActionsSection(
     ProfileSettingsModel settings,
     VoidCallback onPrivacyTap,
-    Function(bool) onThemeTap,
     Function(bool) onNotificationsTap,
     VoidCallback onLogoutTap,
     VoidCallback onDeleteAccountTap,
@@ -130,7 +127,6 @@ class ProfileContentBuilder {
         child: ProfileActionsSection(
           settings: settings,
           onPrivacyTap: onPrivacyTap,
-          onThemeTap: onThemeTap,
           onNotificationsTap: onNotificationsTap,
           onLogoutTap: onLogoutTap,
           onDeleteAccountTap: onDeleteAccountTap,

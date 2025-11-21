@@ -33,4 +33,8 @@ class Prefs {
   static Future<bool> remove(String key) async {
     return await _instance.remove(key);
   }
+
+  static bool containsKey(String key) {
+    return _instance.containsKey(key);
+  }
 }

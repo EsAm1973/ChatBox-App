@@ -129,7 +129,6 @@ class ProfileStateBuilder extends StatelessWidget {
       onEditPhone: controller.showEditPhoneDialog,
       onEditAbout: controller.showEditAboutDialog,
       onPrivacyTap: controller.navigateToPrivacySettings,
-      onThemeTap: controller.toggleTheme,
       onNotificationsTap: controller.updateNotificationSettings,
       onLogoutTap: controller.showLogoutDialog,
       onDeleteAccountTap: controller.showDeleteAccountDialog,

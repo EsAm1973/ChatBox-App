@@ -163,10 +163,7 @@ class ProfileViewController {
     }
   }
 
-  // Settings Management
-  Future<void> toggleTheme(bool isDark) async {
-    await context.read<ProfileCubit>().toggleTheme(isDark);
-  }
+  // Settings Management (theme is now handled by ToggleThemeCubit directly)
 
   Future<void> updateNotificationSettings(bool enabled) async {
     await context.read<ProfileCubit>().updateNotificationSettings(enabled);
