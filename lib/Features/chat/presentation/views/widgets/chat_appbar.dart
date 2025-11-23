@@ -50,8 +50,11 @@ class ChatAppBar extends StatelessWidget {
               ],
             ),
           ),
-          acctionButton(false, otherUser.uid, otherUser.name),
-          acctionButton(true, otherUser.uid, otherUser.name),
+          // Conditionally render call buttons if the user is not deleted
+          if (!otherUser.isDeleted) ...[
+            acctionButton(false, otherUser.uid, otherUser.name),
+            acctionButton(true, otherUser.uid, otherUser.name),
+          ],
         ],
       ),
     );
