@@ -179,18 +179,6 @@ flutter run -d chrome
 
 ---
 
-## 8. Future Improvements
-
-* Add comprehensive unit and widget tests.
-* Message reactions, typing indicators, read receipts and message editing.
-* Support group chats and broadcast channels.
-* Integrate in-app voice/video calling SDK.
-* Add push notifications and background call handling.
-* Localization and RTL language support.
-* Harden validation and abuse protection; improve offline caching.
-
----
-
 ## 9. Screenshots
 
 Place screenshots in `screenshots/` and update filenames as needed.
