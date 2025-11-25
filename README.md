@@ -207,6 +207,6 @@ Place screenshots in `screenshots/` and update filenames as needed.
 
 ## 10. Social Links
 
-* LinkedIn: [(add your profile link)](https://www.linkedin.com/in/mohamed-esam-4085b524a/)
+* LinkedIn: [(Mohamed Esam)](https://www.linkedin.com/in/mohamed-esam-4085b524a/)
 
 Contributions, issues, and feature requests are welcome—open a discussion or pull request.
