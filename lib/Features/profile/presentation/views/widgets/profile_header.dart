@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/widgets/build_avatat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:chatbox/Features/auth/data/models/user_model.dart';
@@ -17,30 +18,7 @@ class ProfileHeader extends StatefulWidget {
   State<ProfileHeader> createState() => _ProfileHeaderState();
 }
 
-class _ProfileHeaderState extends State<ProfileHeader>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
+class _ProfileHeaderState extends State<ProfileHeader> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -54,78 +32,47 @@ class _ProfileHeaderState extends State<ProfileHeader>
           Stack(
             alignment: Alignment.center,
             children: [
-              // Animated Outer Ring
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: Container(
-                      width: 140.w,
-                      height: 140.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.primaryColor,
-                            theme.primaryColor.withOpacity(0.5),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              // Static Outer Ring
+              Container(
+                width: 140.w,
+                height: 140.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.primaryColor,
+                      theme.primaryColor.withOpacity(0.5),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
               ),
 
               // Profile Picture Container
-              Hero(
-                tag: 'profile_pic_${widget.user.uid}',
-                child: Container(
-                  width: 130.w,
-                  height: 130.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: theme.cardColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.primaryColor.withOpacity(0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.all(4.w),
-                  child: CircleAvatar(
-                    radius: 60.r,
-                    backgroundColor: theme.cardColor,
-                    backgroundImage:
-                        widget.user.profilePic.isNotEmpty
-                            ? NetworkImage(widget.user.profilePic)
-                            : null,
-                    child:
-                        widget.user.profilePic.isEmpty
-                            ? ShaderMask(
-                              shaderCallback:
-                                  (bounds) => LinearGradient(
-                                    colors: [
-                                      theme.primaryColor,
-                                      theme.primaryColor.withOpacity(0.7),
-                                    ],
-                                  ).createShader(bounds),
-                              child: Text(
-                                widget.user.name.isNotEmpty
-                                    ? widget.user.name[0].toUpperCase()
-                                    : 'U',
-                                style: AppTextStyles.bold18.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 48.sp,
-                                ),
-                              ),
-                            )
-                            : null,
-                  ),
+              Container(
+                width: 130.w,
+                height: 130.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.primaryColor.withOpacity(0.3),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(4.w),
+                child: buildAvatar(
+                  context,
+                  widget.user.profilePic,
+                  90.w,
+                  90.w,
+                  50.r,
+                  50.r,
+                  BoxFit.cover,
                 ),
               ),
 
@@ -170,34 +117,12 @@ class _ProfileHeaderState extends State<ProfileHeader>
 
           SizedBox(height: 20.h),
 
-          // User Name with Verified Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  widget.user.name,
-                  style: AppTextStyles.bold18.copyWith(
-                    color: theme.textTheme.bodyLarge?.color,
-                    fontSize: 26.sp,
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.blue.shade600],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.verified, color: Colors.white, size: 20.sp),
-              ),
-            ],
+          // User Name
+          Text(
+            widget.user.name,
+            style: TextStyle(fontSize: 26.sp, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
           ),
 
           SizedBox(height: 12.h),
@@ -229,7 +154,7 @@ class _ProfileHeaderState extends State<ProfileHeader>
               children: [
                 Icon(
                   Icons.email_rounded,
-                  color: theme.primaryColor,
+                  color: theme.iconTheme.color!.withValues(alpha: 0.7),
                   size: 16.sp,
                 ),
                 SizedBox(width: 8.w),
@@ -237,7 +162,7 @@ class _ProfileHeaderState extends State<ProfileHeader>
                   child: Text(
                     widget.user.email,
                     style: AppTextStyles.regular14.copyWith(
-                      color: theme.primaryColor,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -283,7 +208,7 @@ class _ProfileHeaderState extends State<ProfileHeader>
                     children: [
                       Icon(
                         Icons.format_quote,
-                        color: theme.primaryColor.withOpacity(0.5),
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
                         size: 20.sp,
                       ),
                       SizedBox(width: 8.w),

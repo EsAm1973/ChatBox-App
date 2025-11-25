@@ -263,26 +263,46 @@ class FirestoreProfileService {
   Future<void> deleteAccount(String uid) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        throw FirebaseFailure(errorMessage: 'User not authenticated');
+      if (user == null || user.uid != uid) {
+        throw FirebaseFailure(
+            errorMessage: 'User not authenticated or UID mismatch');
       }
 
-      // Delete user data from Firestore in a batch
+      // 1. Anonymize user data in Firestore and delete settings
+      final userRef = _firestore.collection(_usersCollection).doc(uid);
+      final settingsRef = _firestore.collection(_settingsCollection).doc(uid);
       final batch = _firestore.batch();
-      
-      // Delete user document
-      batch.delete(_firestore.collection(_usersCollection).doc(uid));
-      
-      // Delete user settings document
-      batch.delete(_firestore.collection(_settingsCollection).doc(uid));
-      
-      // TODO: Delete other user-related data (messages, calls, etc.)
-      
+
+      // Anonymize the main user document
+      batch.update(userRef, {
+        'name': 'Deleted Account',
+        'email': 'deleted.$uid@chatbox.com', // Unique, non-functional email
+        'profilePic': 'assets/deleted_user_icon.svg', // Placeholder asset
+        'isDeleted': true,
+        'isOnline': false,
+        'phoneNumber': null,
+        'about': null,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Delete the associated settings document
+      batch.delete(settingsRef);
+
+      // Note: We are not iterating through chat_rooms.
+      // The UI will handle displaying deleted users based on the `isDeleted` flag.
+      // This is more scalable than updating every conversation.
+
       await batch.commit();
 
-      // Delete auth user
+      // 2. Delete the user from Firebase Authentication
       await user.delete();
     } on FirebaseException catch (e) {
+      // If the user needs to re-authenticate, this specific error should be handled.
+      if (e.code == 'requires-recent-login') {
+        throw FirebaseFailure(
+            errorMessage:
+                'This is a sensitive operation and requires recent authentication. Please log out and log back in before trying again.');
+      }
       throw FirebaseFailure.fromFirestoreException(e);
     } catch (e) {
       throw FirebaseFailure(errorMessage: 'Failed to delete account: $e');

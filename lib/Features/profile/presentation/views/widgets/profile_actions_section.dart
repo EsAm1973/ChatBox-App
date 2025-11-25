@@ -1,253 +1,284 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:chatbox/Features/profile/data/models/profile_settings_model.dart';
+import 'package:chatbox/Features/profile/presentation/manager/profile_cubit/profile_cubit.dart';
+import 'package:chatbox/Core/cubit/toggle%20theme/toggle_theme_cubit.dart';
+import 'package:chatbox/Core/utils/app_theme_enum.dart';
 import 'package:chatbox/Core/utils/app_text_styles.dart';
 
-class ProfileActionsSection extends StatelessWidget {
+class ProfileActionsSection extends StatefulWidget {
   final ProfileSettingsModel settings;
   final VoidCallback onPrivacyTap;
-  final Function(bool) onThemeTap;
-  final Function(bool) onNotificationsTap;
   final VoidCallback onLogoutTap;
   final VoidCallback onDeleteAccountTap;
+  final Function(bool) onNotificationsTap;
 
   const ProfileActionsSection({
     super.key,
     required this.settings,
     required this.onPrivacyTap,
-    required this.onThemeTap,
-    required this.onNotificationsTap,
     required this.onLogoutTap,
     required this.onDeleteAccountTap,
+    required this.onNotificationsTap,
   });
+
+  @override
+  State<ProfileActionsSection> createState() => _ProfileActionsSectionState();
+}
+
+class _ProfileActionsSectionState extends State<ProfileActionsSection> {
+  late bool _notificationsEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationsEnabled = widget.settings.notificationsEnabled;
+  }
+
+  @override
+  void didUpdateWidget(ProfileActionsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update local state when settings change from outside
+    if (oldWidget.settings != widget.settings) {
+      _notificationsEnabled = widget.settings.notificationsEnabled;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Preferences Section
-        _buildSectionHeader(
-          context,
-          'Preferences',
-          Icons.tune_rounded,
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.blue.shade300],
-          ),
-        ),
+    return BlocBuilder<ToggleThemeCubit, AppTheme>(
+      builder: (context, themeState) {
+        final darkTheme = themeState == AppTheme.dark;
 
-        SizedBox(height: 16.h),
-
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors:
-                  isDark
-                      ? [
-                        Colors.white.withOpacity(0.05),
-                        Colors.white.withOpacity(0.02),
-                      ]
-                      : [Colors.white, Colors.grey.shade50],
-            ),
-            borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withOpacity(0.08),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+        return BlocListener<ProfileCubit, ProfileState>(
+          listener: (context, state) {
+            // Update local state when settings are updated
+            if (state is ProfileUpdated) {
+              setState(() {
+                _notificationsEnabled =
+                    state.updatedSettings.notificationsEnabled;
+              });
+            }
+          },
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSwitchTile(
+              // Preferences Section
+              _buildSectionHeader(
                 context,
-                icon: Icons.dark_mode_rounded,
-                title: 'Dark Theme',
-                subtitle: 'Switch between light and dark themes',
-                value: settings.darkTheme,
-                onChanged: onThemeTap,
+                'Preferences',
+                Icons.tune_rounded,
                 gradient: LinearGradient(
-                  colors: [Colors.indigo.shade400, Colors.indigo.shade300],
+                  colors: [Colors.purple, Colors.purple.withOpacity(0.8)],
                 ),
               ),
 
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Divider(
-                  height: 1.h,
-                  color: theme.dividerColor.withOpacity(0.1),
+              SizedBox(height: 16.h),
+
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors:
+                        isDark
+                            ? [
+                              Colors.white.withOpacity(0.05),
+                              Colors.white.withOpacity(0.02),
+                            ]
+                            : [Colors.white, Colors.grey.shade50],
+                  ),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.1),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withOpacity(0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ),
-
-              _buildSwitchTile(
-                context,
-                icon: Icons.notifications_rounded,
-                title: 'Push Notifications',
-                subtitle: 'Enable notifications for new messages',
-                value: settings.notificationsEnabled,
-                onChanged: onNotificationsTap,
-                gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade300],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        SizedBox(height: 24.h),
-
-        // Account & Security Section
-        _buildSectionHeader(
-          context,
-          'Account & Security',
-          Icons.shield_rounded,
-          gradient: LinearGradient(
-            colors: [Colors.green.shade400, Colors.green.shade300],
-          ),
-        ),
-
-        SizedBox(height: 16.h),
-
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors:
-                  isDark
-                      ? [
-                        Colors.white.withOpacity(0.05),
-                        Colors.white.withOpacity(0.02),
-                      ]
-                      : [Colors.white, Colors.grey.shade50],
-            ),
-            borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowColor.withOpacity(0.08),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildActionTile(
-                context,
-                icon: Icons.lock_rounded,
-                title: 'Privacy Settings',
-                subtitle: 'Manage your privacy preferences',
-                onTap: onPrivacyTap,
-                gradient: LinearGradient(
-                  colors: [Colors.teal.shade400, Colors.teal.shade300],
-                ),
-              ),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Divider(
-                  height: 1.h,
-                  color: theme.dividerColor.withOpacity(0.1),
-                ),
-              ),
-
-              _buildActionTile(
-                context,
-                icon: Icons.help_rounded,
-                title: 'Help & Support',
-                subtitle: 'Get help and contact support',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Help center coming soon...'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                child: Column(
+                  children: [
+                    _buildSwitchTile(
+                      context,
+                      icon: Icons.dark_mode_rounded,
+                      title: 'Dark Theme',
+                      subtitle: 'Switch between light and dark themes',
+                      value: darkTheme,
+                      onChanged: (value) {
+                        // Use ToggleThemeCubit to set theme and persist to storage
+                        context.read<ToggleThemeCubit>().setTheme(
+                          value ? AppTheme.dark : AppTheme.light,
+                        );
+                      },
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.purple.withOpacity(0.8),
+                          Colors.purple.withOpacity(0.6),
+                        ],
                       ),
                     ),
-                  );
-                },
-                gradient: LinearGradient(
-                  colors: [Colors.purple.shade400, Colors.purple.shade300],
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Divider(
+                        height: 1.h,
+                        color: theme.dividerColor.withOpacity(0.1),
+                      ),
+                    ),
+
+                    _buildSwitchTile(
+                      context,
+                      icon: Icons.notifications_rounded,
+                      title: 'Push Notifications',
+                      subtitle: 'Enable notifications for new messages',
+                      value: _notificationsEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _notificationsEnabled = value;
+                        });
+                        widget.onNotificationsTap(value);
+                      },
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.withOpacity(0.8),
+                          Colors.orange.withOpacity(0.6),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
 
-        SizedBox(height: 24.h),
+              SizedBox(height: 24.h),
 
-        // Danger Zone
-        _buildSectionHeader(
-          context,
-          'Danger Zone',
-          Icons.warning_rounded,
-          gradient: LinearGradient(
-            colors: [Colors.red.shade400, Colors.red.shade300],
-          ),
-        ),
-
-        SizedBox(height: 16.h),
-
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors:
-                  isDark
-                      ? [
-                        Colors.red.withOpacity(0.05),
-                        Colors.red.withOpacity(0.02),
-                      ]
-                      : [Colors.red.shade50, Colors.white],
-            ),
-            borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(color: Colors.red.withOpacity(0.2), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.red.withOpacity(0.1),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildActionTile(
+              // Privacy Section
+              _buildSectionHeader(
                 context,
-                icon: Icons.logout_rounded,
-                title: 'Sign Out',
-                subtitle: 'Sign out of your account',
-                onTap: onLogoutTap,
+                'Privacy',
+                Icons.security_rounded,
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade300],
+                  colors: [Colors.blue, Colors.blue.withOpacity(0.8)],
                 ),
-                isDestructive: true,
               ),
 
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Divider(height: 1.h, color: Colors.red.withOpacity(0.1)),
+              SizedBox(height: 16.h),
+
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors:
+                        isDark
+                            ? [
+                              Colors.white.withOpacity(0.05),
+                              Colors.white.withOpacity(0.02),
+                            ]
+                            : [Colors.white, Colors.grey.shade50],
+                  ),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.1),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withOpacity(0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: _buildActionTile(
+                  context,
+                  icon: Icons.lock_rounded,
+                  title: 'Privacy Settings',
+                  subtitle: 'Manage your privacy preferences',
+                  onTap: widget.onPrivacyTap,
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.withOpacity(0.8),
+                      Colors.blue.withOpacity(0.6),
+                    ],
+                  ),
+                ),
               ),
 
-              _buildActionTile(
+              SizedBox(height: 24.h),
+
+              // Danger Zone
+              _buildSectionHeader(
                 context,
-                icon: Icons.delete_forever_rounded,
-                title: 'Delete Account',
-                subtitle: 'Permanently delete your account',
-                onTap: onDeleteAccountTap,
+                'Danger Zone',
+                Icons.warning_rounded,
                 gradient: LinearGradient(
-                  colors: [Colors.red.shade500, Colors.red.shade400],
+                  colors: [Colors.red, Colors.red.withOpacity(0.8)],
                 ),
-                isDestructive: true,
+              ),
+
+              SizedBox(height: 16.h),
+
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors:
+                        isDark
+                            ? [
+                              theme.colorScheme.error.withOpacity(0.05),
+                              theme.colorScheme.error.withOpacity(0.02),
+                            ]
+                            : [
+                              theme.colorScheme.error.withOpacity(0.05),
+                              theme.scaffoldBackgroundColor,
+                            ],
+                  ),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(
+                    color: theme.colorScheme.error.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.error.withOpacity(0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildActionTile(
+                      context,
+                      icon: Icons.logout_rounded,
+                      title: 'Sign Out',
+                      subtitle: 'Sign out of your account',
+                      onTap: widget.onLogoutTap,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red.withOpacity(0.8),
+                          Colors.red.withOpacity(0.6),
+                        ],
+                      ),
+                      isDestructive: true,
+                    ),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Divider(
+                        height: 1.h,
+                        color: theme.colorScheme.error.withOpacity(0.1),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -271,20 +302,18 @@ class ProfileActionsSection extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: gradient.colors.first.withOpacity(0.3),
-                  blurRadius: 10,
+                  blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Icon(icon, color: Colors.white, size: 20.sp),
+            child: Icon(icon, color: Colors.white, size: 18.sp),
           ),
           SizedBox(width: 12.w),
           Text(
             title,
             style: AppTextStyles.semiBold16.copyWith(
               color: theme.textTheme.bodyLarge?.color,
-              fontSize: 18.sp,
-              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -340,7 +369,6 @@ class ProfileActionsSection extends StatelessWidget {
                       title,
                       style: AppTextStyles.semiBold14.copyWith(
                         color: theme.textTheme.bodyLarge?.color,
-                        fontSize: 15.sp,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -356,20 +384,16 @@ class ProfileActionsSection extends StatelessWidget {
                 ),
               ),
 
-              // Animated Switch
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: Transform.scale(
-                  scale: 0.9,
-                  child: Switch(
-                    value: value,
-                    onChanged: onChanged,
-                    activeThumbColor: gradient.colors.first,
-                    activeTrackColor: gradient.colors.first.withOpacity(0.3),
-                    inactiveThumbColor: theme.disabledColor,
-                    inactiveTrackColor: theme.disabledColor.withOpacity(0.3),
-                  ),
+              // Static Switch
+              Transform.scale(
+                scale: 0.9,
+                child: Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeThumbColor: gradient.colors.first,
+                  activeTrackColor: gradient.colors.first.withOpacity(0.3),
+                  inactiveThumbColor: theme.disabledColor,
+                  inactiveTrackColor: theme.disabledColor.withOpacity(0.3),
                 ),
               ),
             ],
@@ -430,7 +454,6 @@ class ProfileActionsSection extends StatelessWidget {
                             isDestructive
                                 ? gradient.colors.first
                                 : theme.textTheme.bodyLarge?.color,
-                        fontSize: 15.sp,
                       ),
                     ),
                     SizedBox(height: 4.h),

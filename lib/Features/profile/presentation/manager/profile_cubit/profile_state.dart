@@ -67,6 +67,7 @@ class ProfilePictureError extends ProfileState {
 }
 
 enum ProfileUpdateType {
+  none,
   name,
   email,
   phone,

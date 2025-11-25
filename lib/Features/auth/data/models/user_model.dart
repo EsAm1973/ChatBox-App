@@ -5,22 +5,24 @@ class UserModel {
   final String name;
   final String email;
   final String profilePic;
-  final String? phoneNumber;
-  final String? about;
   final bool isOnline;
   final DateTime createdAt;
   final DateTime lastSeen;
+  final String? phoneNumber;
+  final String? about;
+  final bool isDeleted;
 
   UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.profilePic,
-    this.phoneNumber,
-    this.about,
     required this.isOnline,
     required this.createdAt,
     required this.lastSeen,
+    this.phoneNumber,
+    this.about,
+    this.isDeleted = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,60 +31,62 @@ class UserModel {
       'name': name,
       'email': email,
       'profilePic': profilePic,
-      'phoneNumber': phoneNumber ?? '',
-      'about': about ?? '',
       'isOnline': isOnline,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'lastSeen': lastSeen.millisecondsSinceEpoch,
+      'createdAt': createdAt,
+      'lastSeen': lastSeen,
+      'phoneNumber': phoneNumber,
+      'about': about,
+      'isDeleted': isDeleted,
     };
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
-    // تحويل Timestamp إلى DateTime إذا لزم الأمر
     DateTime parseDateTime(dynamic date) {
       if (date is Timestamp) {
         return date.toDate();
       } else if (date is int) {
         return DateTime.fromMillisecondsSinceEpoch(date);
-      } else if (date is String) {
-        return DateTime.parse(date);
-      } else {
-        return DateTime.now();
       }
+      return DateTime.now(); // Fallback
     }
 
     return UserModel(
-      uid: map['uid']?.toString() ?? '',
-      name: map['name']?.toString() ?? '',
-      email: map['email']?.toString() ?? '',
-      profilePic: map['profilePic']?.toString() ?? 'default_profile_pic_url',
-      phoneNumber: map['phoneNumber']?.toString(),
-      about: map['about']?.toString(),
+      uid: map['uid'] ?? '',
+      name: map['name'] ?? '',
+      email: map['email'] ?? '',
+      profilePic: map['profilePic'] ?? '',
       isOnline: map['isOnline'] ?? false,
       createdAt: parseDateTime(map['createdAt']),
       lastSeen: parseDateTime(map['lastSeen']),
+      phoneNumber: map['phoneNumber'],
+      about: map['about'],
+      isDeleted: map['isDeleted'] ?? false,
     );
   }
 
   UserModel copyWith({
+    String? uid,
     String? name,
     String? email,
     String? profilePic,
+    bool? isOnline,
+    DateTime? createdAt,
+    DateTime? lastSeen,
     String? phoneNumber,
     String? about,
-    bool? isOnline,
-    DateTime? lastSeen,
+    bool? isDeleted,
   }) {
     return UserModel(
-      uid: uid,
+      uid: uid ?? this.uid,
       name: name ?? this.name,
       email: email ?? this.email,
       profilePic: profilePic ?? this.profilePic,
+      isOnline: isOnline ?? this.isOnline,
+      createdAt: createdAt ?? this.createdAt,
+      lastSeen: lastSeen ?? this.lastSeen,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       about: about ?? this.about,
-      isOnline: isOnline ?? this.isOnline,
-      createdAt: createdAt,
-      lastSeen: lastSeen ?? this.lastSeen,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 }

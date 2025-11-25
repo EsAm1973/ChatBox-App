@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/helper%20functions/animated_error_dialog.dart';
 import 'package:chatbox/Core/helper%20functions/animated_loading_dialog.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
@@ -21,7 +22,12 @@ class OnboardViewBody extends StatelessWidget {
     return BlocListener<LoginCubit, LoginState>(
       listener: (context, state) {
         if (state is LoginSuccess) {
-GoRouter.of(context).pop();
+          // Update UserCubit with the logged-in user data
+          final userCubit = context.read<UserCubit>();
+          userCubit.setUser(state.user);
+          userCubit.subscribeToUserUpdates(state.user.uid);
+          
+          GoRouter.of(context).pop();
           GoRouter.of(context).pushReplacement(AppRouter.kHomeNavigationBarRoute);
         } else if (state is LoginError) {
           GoRouter.of(context).pop();

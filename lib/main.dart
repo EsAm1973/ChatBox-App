@@ -1,3 +1,4 @@
+import 'package:chatbox/Core/cubit/toggle%20theme/toggle_theme_cubit.dart';
 import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/helper%20functions/call_events_handler.dart';
 import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
@@ -6,8 +7,11 @@ import 'package:chatbox/Core/service/firestore_call_service.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Core/service/shared_prefrences_sengelton.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
+import 'package:chatbox/Core/service/theme_service.dart';
+import 'package:chatbox/Core/theme/dark_theme.dart';
+import 'package:chatbox/Core/theme/light_theme.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
-import 'package:chatbox/Core/utils/app_theme.dart';
+import 'package:chatbox/Core/utils/app_theme_enum.dart';
 import 'package:chatbox/constants.dart';
 import 'package:chatbox/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -52,9 +56,19 @@ void main() async {
   await SupabaseStorageService.initSupabaseStorage();
   await SupabaseStorageService.initializeDownloadedFiles();
 
+  // Pre-initialize theme to avoid flash
+  final initialTheme = await ThemeService.getInitialTheme();
+
   runApp(
-    BlocProvider(
-      create: (context) => UserCubit(userRepo: getIt<UserRepo>()),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ToggleThemeCubit()..setTheme(initialTheme),
+        ),
+        BlocProvider(
+          create: (context) => UserCubit(userRepo: getIt<UserRepo>()),
+        ),
+      ],
       child: const ChatBox(),
     ),
   );
@@ -104,11 +118,17 @@ class _ChatBoxState extends State<ChatBox> with WidgetsBindingObserver {
       designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
-      child: MaterialApp.router(
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
-        title: 'ChatBox',
-        theme: AppThemes.getDarkTheme,
+      child: BlocBuilder<ToggleThemeCubit, AppTheme>(
+        builder: (context, theme) {
+          return MaterialApp.router(
+            routerConfig: AppRouter.router,
+            debugShowCheckedModeBanner: false,
+            title: 'ChatBox',
+            theme: theme == AppTheme.dark ? darkTheme : lightTheme,
+            themeAnimationCurve: Curves.linear,
+            themeAnimationDuration: const Duration(milliseconds: 300),
+          );
+        },
       ),
     );
   }

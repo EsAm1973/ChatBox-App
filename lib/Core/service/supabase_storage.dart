@@ -358,4 +358,14 @@ class SupabaseStorageService implements StorageService {
     final instance = SupabaseStorageService();
     await instance._loadDownloadedFiles();
   }
+
+  // دالة لحذف جميع البيانات المحفوظة عند تسجيل الخروج
+  static Future<void> clearDownloadedFiles() async {
+    try {
+      _downloadedFiles.clear();
+      await Prefs.remove(_downloadedFilesKey);
+    } catch (e) {
+      print('Failed to clear downloaded files: $e');
+    }
+  }
 }
