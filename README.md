@@ -179,7 +179,7 @@ flutter run -d chrome
 
 ---
 
-## 9. Screenshots
+## 8. Screenshots
 
 Place screenshots in `screenshots/` and update filenames as needed.
 
@@ -193,7 +193,7 @@ Place screenshots in `screenshots/` and update filenames as needed.
 
 ---
 
-## 10. Social Links
+## 9. Social Links
 
 * LinkedIn: [(Mohamed Esam)](https://www.linkedin.com/in/mohamed-esam-4085b524a/)
 
