@@ -53,13 +53,14 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
     return BlocBuilder<ToggleThemeCubit, AppTheme>(
       builder: (context, themeState) {
         final darkTheme = themeState == AppTheme.dark;
-        
+
         return BlocListener<ProfileCubit, ProfileState>(
           listener: (context, state) {
             // Update local state when settings are updated
             if (state is ProfileUpdated) {
               setState(() {
-                _notificationsEnabled = state.updatedSettings.notificationsEnabled;
+                _notificationsEnabled =
+                    state.updatedSettings.notificationsEnabled;
               });
             }
           },
@@ -72,10 +73,7 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                 'Preferences',
                 Icons.tune_rounded,
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.purple,
-                    Colors.purple.withOpacity(0.8),
-                  ],
+                  colors: [Colors.purple, Colors.purple.withOpacity(0.8)],
                 ),
               ),
 
@@ -87,13 +85,15 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                     colors:
                         isDark
                             ? [
-                                Colors.white.withOpacity(0.05),
-                                Colors.white.withOpacity(0.02),
-                              ]
+                              Colors.white.withOpacity(0.05),
+                              Colors.white.withOpacity(0.02),
+                            ]
                             : [Colors.white, Colors.grey.shade50],
                   ),
                   borderRadius: BorderRadius.circular(24.r),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.1),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: theme.shadowColor.withOpacity(0.08),
@@ -113,8 +113,8 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                       onChanged: (value) {
                         // Use ToggleThemeCubit to set theme and persist to storage
                         context.read<ToggleThemeCubit>().setTheme(
-                              value ? AppTheme.dark : AppTheme.light,
-                            );
+                          value ? AppTheme.dark : AppTheme.light,
+                        );
                       },
                       gradient: LinearGradient(
                         colors: [
@@ -163,10 +163,7 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                 'Privacy',
                 Icons.security_rounded,
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.blue,
-                    Colors.blue.withOpacity(0.8),
-                  ],
+                  colors: [Colors.blue, Colors.blue.withOpacity(0.8)],
                 ),
               ),
 
@@ -178,13 +175,15 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                     colors:
                         isDark
                             ? [
-                                Colors.white.withOpacity(0.05),
-                                Colors.white.withOpacity(0.02),
-                              ]
+                              Colors.white.withOpacity(0.05),
+                              Colors.white.withOpacity(0.02),
+                            ]
                             : [Colors.white, Colors.grey.shade50],
                   ),
                   borderRadius: BorderRadius.circular(24.r),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.1),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: theme.shadowColor.withOpacity(0.08),
@@ -216,10 +215,7 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                 'Danger Zone',
                 Icons.warning_rounded,
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.red,
-                    Colors.red.withOpacity(0.8),
-                  ],
+                  colors: [Colors.red, Colors.red.withOpacity(0.8)],
                 ),
               ),
 
@@ -231,18 +227,18 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
                     colors:
                         isDark
                             ? [
-                                theme.colorScheme.error.withOpacity(0.05),
-                                theme.colorScheme.error.withOpacity(0.02),
-                              ]
+                              theme.colorScheme.error.withOpacity(0.05),
+                              theme.colorScheme.error.withOpacity(0.02),
+                            ]
                             : [
-                                theme.colorScheme.error.withOpacity(0.05),
-                                theme.scaffoldBackgroundColor,
-                              ],
+                              theme.colorScheme.error.withOpacity(0.05),
+                              theme.scaffoldBackgroundColor,
+                            ],
                   ),
                   borderRadius: BorderRadius.circular(24.r),
                   border: Border.all(
                     color: theme.colorScheme.error.withOpacity(0.2),
-                    width: 1.5
+                    width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -271,22 +267,10 @@ class _ProfileActionsSectionState extends State<ProfileActionsSection> {
 
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
-                      child: Divider(height: 1.h, color: theme.colorScheme.error.withOpacity(0.1)),
-                    ),
-
-                    _buildActionTile(
-                      context,
-                      icon: Icons.delete_forever_rounded,
-                      title: 'Delete Account',
-                      subtitle: 'Permanently delete your account',
-                      onTap: widget.onDeleteAccountTap,
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.red.withOpacity(0.8),
-                          Colors.red.withOpacity(0.6),
-                        ],
+                      child: Divider(
+                        height: 1.h,
+                        color: theme.colorScheme.error.withOpacity(0.1),
                       ),
-                      isDestructive: true,
                     ),
                   ],
                 ),
