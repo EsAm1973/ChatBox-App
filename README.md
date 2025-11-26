@@ -67,7 +67,9 @@ The app follows a feature-first, layered architecture:
 
 * Profile details, picture, and settings managed through `ProfileCubit` and `ProfileState`.
 * Profile picture selection using camera/gallery and upload via `ProfileImageService`.
-* Profile editing dialogs for name, email, phone, about, privacy, and account actions.
+* Profile editing dialogs for name, phone, about, privacy, and account actions.
+* Dark mode toggle.
+* Profile logout flows.
 
 **Real-Time Chat**
 
