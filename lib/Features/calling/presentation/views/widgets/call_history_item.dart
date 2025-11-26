@@ -26,25 +26,62 @@ class CallHistoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCurrentDeleting = isDeleting && deletedCallId == call.callId;
-    final otherUserID =
-        call.callerId == context.read<UserCubit>().getCurrentUser()!.uid
-            ? call.receiverId
-            : call.callerId;
+    final currentUser = context.read<UserCubit>().getCurrentUser();
+
+    if (currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    final bool isCurrentUserCaller = call.callerId == currentUser.uid;
+
+    final otherUserID = isCurrentUserCaller ? call.receiverId : call.callerId;
     final otherUserName =
-        call.callerId == context.read<UserCubit>().getCurrentUser()!.uid
-            ? call.receiverName
-            : call.callerName;
+        isCurrentUserCaller ? call.receiverName : call.callerName;
+    final otherUserImage =
+        isCurrentUserCaller ? call.receiverImage : call.callerImage;
+
+    IconData iconData;
+    Color iconColor;
+
+    switch (call.status) {
+      case CallStatus.completed:
+        iconData = isCurrentUserCaller ? Icons.call_made : Icons.call_received;
+        iconColor = Colors.green;
+        break;
+      case CallStatus.missed:
+        iconData =
+            isCurrentUserCaller ? Icons.call_missed_outgoing : Icons.call_missed;
+        iconColor = Colors.red;
+        break;
+      case CallStatus.rejected:
+        iconData = isCurrentUserCaller ? Icons.call_made : Icons.call_received;
+        iconColor = Colors.red;
+        break;
+      case CallStatus.cancelled:
+        if (isCurrentUserCaller) {
+          iconData = Icons.call_made;
+          iconColor = Colors.grey;
+        } else {
+          iconData = Icons.call_missed;
+          iconColor = Colors.red;
+        }
+        break;
+      case CallStatus.failed:
+        iconData = Icons.error_outline;
+        iconColor = Colors.red;
+        break;
+      default:
+        iconData = isCurrentUserCaller ? Icons.call_made : Icons.call_received;
+        iconColor = Colors.grey;
+        break;
+    }
 
     return Opacity(
       opacity: isCurrentDeleting ? 0.5 : 1.0,
       child: ListTile(
         leading: buildAvatar(
           context,
-          (call.callerName ==
-                      context.read<UserCubit>().getCurrentUser()!.name &&
-                  call.callerId != call.receiverId)
-              ? call.receiverImage
-              : call.callerImage,
+          otherUserImage,
           50.w,
           50.h,
           30.r,
@@ -52,11 +89,7 @@ class CallHistoryItem extends StatelessWidget {
           BoxFit.contain,
         ),
         title: Text(
-          (call.callerName ==
-                      context.read<UserCubit>().getCurrentUser()!.name &&
-                  call.callerId != call.receiverId)
-              ? call.receiverName
-              : call.callerName,
+          otherUserName,
           style: AppTextStyles.bold18,
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
@@ -64,12 +97,9 @@ class CallHistoryItem extends StatelessWidget {
         subtitle: Row(
           children: [
             Icon(
-              call.status == CallStatus.missed
-                  ? Icons.call_missed
-                  : Icons.call_made,
+              iconData,
               size: 16.r,
-              color:
-                  call.status == CallStatus.missed ? Colors.red : Colors.green,
+              color: iconColor,
             ),
             SizedBox(width: 4.w),
             Text(
