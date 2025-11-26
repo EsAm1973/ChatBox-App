@@ -39,10 +39,7 @@ class ProfileInfoSection extends StatelessWidget {
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.blue,
-                      Colors.blue.withOpacity(0.7),
-                    ],
+                    colors: [Colors.blue, Colors.blue.withOpacity(0.7)],
                   ),
                   borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
@@ -113,25 +110,14 @@ class ProfileInfoSection extends StatelessWidget {
 
               _buildInfoTile(
                 context,
-                icon: Icons.email_rounded,
-                title: 'Email Address',
-                subtitle: user.email,
-                onTap: onEditEmail,
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.blue.withOpacity(0.8),
-                    Colors.blue.withOpacity(0.6),
-                  ],
-                ),
-              ),
-
-              _buildDivider(theme),
-
-              _buildInfoTile(
-                context,
                 icon: Icons.phone_android_rounded,
                 title: 'Phone Number',
-                subtitle: user.phoneNumber ?? 'Not provided',
+                subtitle:
+                    (user.phoneNumber == null ||
+                            user.phoneNumber == 'null' ||
+                            user.phoneNumber!.isEmpty)
+                        ? 'Not Provided'
+                        : user.phoneNumber!,
                 onTap: onEditPhone,
                 gradient: LinearGradient(
                   colors: [
@@ -148,7 +134,11 @@ class ProfileInfoSection extends StatelessWidget {
                 icon: Icons.article_rounded,
                 title: 'About Me',
                 subtitle:
-                    user.about ?? 'Add a bio to tell others about yourself',
+                    (user.about == null ||
+                            user.about == 'null' ||
+                            user.about!.isEmpty)
+                        ? 'Not Provided'
+                        : user.about!,
                 onTap: onEditAbout,
                 gradient: LinearGradient(
                   colors: [

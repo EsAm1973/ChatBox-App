@@ -1,18 +1,18 @@
+import 'dart:async';
+
 import 'package:chatbox/Core/cubit/toggle%20theme/toggle_theme_cubit.dart';
 import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
-import 'package:chatbox/Core/helper%20functions/call_events_handler.dart';
 import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
 import 'package:chatbox/Core/service/bloc_observer.dart';
-import 'package:chatbox/Core/service/firestore_call_service.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
 import 'package:chatbox/Core/service/shared_prefrences_sengelton.dart';
 import 'package:chatbox/Core/service/supabase_storage.dart';
 import 'package:chatbox/Core/service/theme_service.dart';
+import 'package:chatbox/Core/service/zego_service.dart';
 import 'package:chatbox/Core/theme/dark_theme.dart';
 import 'package:chatbox/Core/theme/light_theme.dart';
 import 'package:chatbox/Core/utils/app_router.dart';
 import 'package:chatbox/Core/utils/app_theme_enum.dart';
-import 'package:chatbox/constants.dart';
 import 'package:chatbox/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -20,11 +20,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
-late CallEventsHandler _callEventsHandler;
+late ZegoService zegoService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,25 +30,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await requestPermission();
   setupGetIt();
-  _callEventsHandler = CallEventsHandler(getIt<FirestoreCallService>());
-
-  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(rootNavigatorKey);
-
-  await ZegoUIKitPrebuiltCallInvitationService()
-      .init(
-        appID: appIdZegoCloud,
-        appSign: appSignZegoCloud,
-        userID: FirebaseAuth.instance.currentUser?.uid ?? '000',
-        userName: FirebaseAuth.instance.currentUser?.displayName ?? '000',
-        plugins: [ZegoUIKitSignalingPlugin()],
-        invitationEvents: _callEventsHandler.getInvitationEvents(),
-        requireConfig: (ZegoCallInvitationData data) {
-          return ZegoUIKitPrebuiltCallConfig(
-            durationConfig: ZegoCallDurationConfig(isVisible: true),
-          );
-        },
-      )
-      .catchError((error) => print('❌ ZegoCloud init error: $error'));
+  zegoService = ZegoService(navigatorKey: rootNavigatorKey);
 
   await Prefs.init();
   await SupabaseStorageService.initSupabaseStorage();
@@ -90,16 +70,28 @@ class ChatBox extends StatefulWidget {
 }
 
 class _ChatBoxState extends State<ChatBox> with WidgetsBindingObserver {
+  StreamSubscription<User?>? _authSubscription;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _authSubscription =
+        FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // User is signed in.
+        zegoService.initForUser(user);
+      } else {
+        // User is signed out.
+        zegoService.uninit();
+      }
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _callEventsHandler.dispose();
+    _authSubscription?.cancel();
+    zegoService.dispose();
     super.dispose();
   }
 
@@ -108,7 +100,7 @@ class _ChatBoxState extends State<ChatBox> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed) {
-      _callEventsHandler.completeAllActiveCalls();
+      zegoService.callEventsHandler.completeAllActiveCalls();
     }
   }
 
