@@ -69,6 +69,7 @@ class MessageList extends StatelessWidget {
                   isDifferentDay(previousMessageTimestamp, messageTimestamp))
                 DateHeader(date: formatDate(messageTimestamp)),
 
+              SizedBox(height: 10.h,),
               // الرسائل الصوتية
               if (message.type == MessageType.voice)
                 isMe
