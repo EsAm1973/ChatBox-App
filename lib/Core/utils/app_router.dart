@@ -107,7 +107,8 @@ abstract class AppRouter {
         path: kChatScreenRoute,
         builder:
             (context, state) => BlocProvider(
-              create: (context) => ChatCubit(getIt<ChatRepo>()),
+              create:
+                  (context) => ChatCubit(getIt<ChatRepo>(), getIt<UserRepo>()),
               child: ChatView(otherUser: state.extra as UserModel),
             ),
       ),
@@ -135,7 +136,11 @@ abstract class AppRouter {
                         homeRepository: getIt<SearchUserRepo>(),
                       ),
                 ),
-                BlocProvider(create: (context) => ChatCubit(getIt<ChatRepo>())),
+                BlocProvider(
+                  create:
+                      (context) =>
+                          ChatCubit(getIt<ChatRepo>(), getIt<UserRepo>()),
+                ),
                 BlocProvider(
                   create:
                       (context) =>

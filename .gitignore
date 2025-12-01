@@ -44,5 +44,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Google Cloud Service Account credentials
-assets/notification_key/*.json
+assets/notification_key

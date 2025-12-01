@@ -11,6 +11,7 @@ class UserModel {
   final String? phoneNumber;
   final String? about;
   final bool isDeleted;
+  final String? fcmToken;
 
   UserModel({
     required this.uid,
@@ -23,6 +24,7 @@ class UserModel {
     this.phoneNumber,
     this.about,
     this.isDeleted = false,
+    this.fcmToken,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +39,7 @@ class UserModel {
       'phoneNumber': phoneNumber,
       'about': about,
       'isDeleted': isDeleted,
+      'fcmToken': fcmToken,
     };
   }
 
@@ -61,6 +64,7 @@ class UserModel {
       phoneNumber: map['phoneNumber'],
       about: map['about'],
       isDeleted: map['isDeleted'] ?? false,
+      fcmToken: map['fcmToken'],
     );
   }
 
@@ -75,6 +79,7 @@ class UserModel {
     String? phoneNumber,
     String? about,
     bool? isDeleted,
+    String? fcmToken,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -87,6 +92,7 @@ class UserModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       about: about ?? this.about,
       isDeleted: isDeleted ?? this.isDeleted,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 }

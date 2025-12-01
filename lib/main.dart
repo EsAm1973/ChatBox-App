@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chatbox/Core/config/notification_config.dart';
 import 'package:chatbox/Core/cubit/toggle%20theme/toggle_theme_cubit.dart';
 import 'package:chatbox/Core/cubit/user%20cubit/user_cubit.dart';
 import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
@@ -16,6 +17,7 @@ import 'package:chatbox/Core/utils/app_theme_enum.dart';
 import 'package:chatbox/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,6 +30,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = CustomBlocObserver();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  MessagingConfig.initFirebaseMessaging();
+  FirebaseMessaging.onBackgroundMessage(MessagingConfig.messageHandler);
   await requestPermission();
   setupGetIt();
   zegoService = ZegoService(navigatorKey: rootNavigatorKey);
@@ -75,8 +79,9 @@ class _ChatBoxState extends State<ChatBox> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _authSubscription =
-        FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      User? user,
+    ) {
       if (user != null) {
         // User is signed in.
         zegoService.initForUser(user);

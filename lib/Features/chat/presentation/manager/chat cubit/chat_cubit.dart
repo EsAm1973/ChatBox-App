@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:chatbox/Core/repos/user%20repo/user_repo.dart';
+import 'package:chatbox/Core/service/notification_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:chatbox/Features/chat/data/models/message.dart';
 import 'package:chatbox/Features/chat/data/repos/chat_repo.dart';
@@ -9,12 +11,13 @@ import 'package:open_file/open_file.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final ChatRepo _chatRepo;
+  final UserRepo _userRepo;
   StreamSubscription? _messagesSubscription;
   StreamSubscription? _chatsSubscription;
   final Map<String, MessageModel> _pendingMessages = {};
   final Map<String, MessageModel> _downloadingMessages = {};
 
-  ChatCubit(this._chatRepo) : super(const ChatInitial());
+  ChatCubit(this._chatRepo, this._userRepo) : super(const ChatInitial());
 
   void initializeChat(String user1, String user2) async {
     emit(const ChatLoading());
@@ -133,7 +136,50 @@ class ChatCubit extends Cubit<ChatState> {
       );
       emit(MessagesLoaded(messages: updatedMessages));
       emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
-    }, (_) {});
+    }, (_) async {
+      // Fetch sender and receiver UserModels
+      final senderResult = await _userRepo.getUserData(message.senderId);
+      final receiverResult = await _userRepo.getUserData(message.receiverId);
+
+      await senderResult.fold(
+        (failure) {
+          print('Error fetching sender data: ${failure.errorMessage}');
+        },
+        (senderUser) async {
+          await receiverResult.fold(
+            (failure) {
+              print('Error fetching receiver data: ${failure.errorMessage}');
+            },
+            (receiverUser) async {
+              print('Sender: ${senderUser.name}');
+              print('Receiver: ${receiverUser.name}');
+              print('Receiver FCM Token: ${receiverUser.fcmToken}');
+
+              if (receiverUser.fcmToken != null && receiverUser.fcmToken!.isNotEmpty) {
+                // Generate chat room ID using the same logic as FirestoreChatService
+                final sortedIds = [message.senderId, message.receiverId]..sort();
+                final chatId = 'chat_${sortedIds[0]}_${sortedIds[1]}';
+
+                await sendNotification(
+                  token: receiverUser.fcmToken!,
+                  title: 'New message from ${senderUser.name}',
+                  body: message.content,
+                  data: {
+                    'chatId': chatId,
+                    'senderId': message.senderId,
+                    'messageId': message.id,
+                    'route': '/chat_screen', // Placeholder, needs actual route for chat screen
+                    // Potentially add more data like sender's profile picture etc.
+                  },
+                );
+              } else {
+                print('Receiver does not have an FCM token.');
+              }
+            },
+          );
+        },
+      );
+    });
   }
 
   void sendVoiceMessage({
@@ -183,8 +229,29 @@ class ChatCubit extends Cubit<ChatState> {
         emit(MessagesLoaded(messages: updatedMessages));
         emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
       },
-      (_) {
+      (_) async {
         _pendingMessages.remove(messageId);
+        final senderResult = await _userRepo.getUserData(senderId);
+        final receiverResult = await _userRepo.getUserData(receiverId);
+        await senderResult.fold((l) => null, (sender) async {
+          await receiverResult.fold((l) => null, (receiver) async {
+            if (receiver.fcmToken != null && receiver.fcmToken!.isNotEmpty) {
+              final sortedIds = [senderId, receiverId]..sort();
+              final chatId = 'chat_${sortedIds[0]}_${sortedIds[1]}';
+              await sendNotification(
+                token: receiver.fcmToken!,
+                title: 'New message from ${sender.name}',
+                body: "Sent a voice message",
+                data: {
+                  'chatId': chatId,
+                  'senderId': senderId,
+                  'messageId': messageId,
+                  'route': '/chat_screen',
+                },
+              );
+            }
+          });
+        });
       },
     );
   }
@@ -261,8 +328,35 @@ class ChatCubit extends Cubit<ChatState> {
         emit(MessagesLoaded(messages: updatedMessages));
         emit(ChatError(error: failure.errorMessage, messages: updatedMessages));
       },
-      (_) {
+      (_) async {
         _pendingMessages.remove(messageId);
+        final senderResult = await _userRepo.getUserData(senderId);
+        final receiverResult = await _userRepo.getUserData(receiverId);
+        await senderResult.fold((l) => null, (sender) async {
+          await receiverResult.fold((l) => null, (receiver) async {
+            if (receiver.fcmToken != null && receiver.fcmToken!.isNotEmpty) {
+              final sortedIds = [senderId, receiverId]..sort();
+              final chatId = 'chat_${sortedIds[0]}_${sortedIds[1]}';
+              final String notificationBody;
+              if (fileType == MessageType.image) {
+                notificationBody = "Sent an image";
+              } else {
+                notificationBody = "Sent a file";
+              }
+              await sendNotification(
+                token: receiver.fcmToken!,
+                title: 'New message from ${sender.name}',
+                body: notificationBody,
+                data: {
+                  'chatId': chatId,
+                  'senderId': senderId,
+                  'messageId': messageId,
+                  'route': '/chat_screen',
+                },
+              );
+            }
+          });
+        });
       },
     );
   }

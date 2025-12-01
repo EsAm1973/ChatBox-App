@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io';
 import 'dart:developer';
 import 'package:chatbox/Core/errors/firebase_failures.dart';
@@ -32,7 +33,7 @@ class AuthRepoImplementation implements AuthRepo {
               'An unexpected error occurred during $operation: $error',
         ),
       );
-    }
+      }
   }
 
   /// Helper method to clean up resources when user creation fails
@@ -83,6 +84,9 @@ class AuthRepoImplementation implements AuthRepo {
         displayName: name,
       );
 
+      // Get FCM token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
       // 2. Upload the image to storage
       uploadedImageUrl = await storageService.uploadFile(
         profilePic,
@@ -101,6 +105,7 @@ class AuthRepoImplementation implements AuthRepo {
         isOnline: true,
         createdAt: DateTime.now(),
         lastSeen: DateTime.now(),
+        fcmToken: fcmToken,
       );
 
       // 4. Save user to Firestore
@@ -139,10 +144,13 @@ class AuthRepoImplementation implements AuthRepo {
           ),
         );
       }
+      // Get FCM token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
 
       final updatedUserModel = userModel.copyWith(
         isOnline: true,
         lastSeen: DateTime.now(),
+        fcmToken: fcmToken,
       );
 
       await firestoreService.saveUser(updatedUserModel);
@@ -283,6 +291,9 @@ class AuthRepoImplementation implements AuthRepo {
       // 1. Authenticate with Google
       final user = await firebaseAuthServices.signInWithGoogle();
 
+      // Get FCM token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
       // 2. Check if user already exists in Firestore by email
       UserModel? existingUser = await firestoreService.getUserByEmail(
         user.email!,
@@ -293,6 +304,7 @@ class AuthRepoImplementation implements AuthRepo {
         final updatedUserModel = existingUser.copyWith(
           isOnline: true,
           lastSeen: DateTime.now(),
+          fcmToken: fcmToken,
         );
 
         await firestoreService.saveUser(updatedUserModel);
@@ -313,6 +325,7 @@ class AuthRepoImplementation implements AuthRepo {
           isOnline: true,
           createdAt: DateTime.now(),
           lastSeen: DateTime.now(),
+          fcmToken: fcmToken,
         );
 
         // Save user to Firestore
@@ -337,6 +350,9 @@ class AuthRepoImplementation implements AuthRepo {
       // 1. Authenticate with Facebook
       final user = await firebaseAuthServices.signInWithFacebook();
 
+      // Get FCM token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
       // 2. Check if user already exists in Firestore by email
       UserModel? existingUser = await firestoreService.getUserByEmail(
         user.email!,
@@ -347,6 +363,7 @@ class AuthRepoImplementation implements AuthRepo {
         final updatedUserModel = existingUser.copyWith(
           isOnline: true,
           lastSeen: DateTime.now(),
+          fcmToken: fcmToken,
         );
 
         await firestoreService.saveUser(updatedUserModel);
@@ -367,6 +384,7 @@ class AuthRepoImplementation implements AuthRepo {
           isOnline: true,
           createdAt: DateTime.now(),
           lastSeen: DateTime.now(),
+          fcmToken: fcmToken,
         );
 
         // Save user to Firestore

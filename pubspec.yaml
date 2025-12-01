@@ -58,13 +58,17 @@ dependencies:
   path: ^1.9.1
   mime: ^2.0.0
   dio: ^5.4.0
-  http: ^1.1.2
+  http: ^1.6.0
   open_file: ^3.3.2
   image_gallery_saver_plus: ^4.0.1
   shared_preferences: ^2.5.3
   zego_uikit_prebuilt_call: ^4.21.1
   zego_express_engine: ^3.22.1
   zego_uikit_signaling_plugin: ^2.8.19
+  googleapis: ^15.0.0
+  googleapis_auth: ^2.0.0
+  flutter_local_notifications: ^19.5.0
+  firebase_messaging: ^16.0.4
 
 dev_dependencies:
   flutter_test:
@@ -91,6 +95,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+    - assets/notification_key/chatbox-ee37f-6e3c33e943d5.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
