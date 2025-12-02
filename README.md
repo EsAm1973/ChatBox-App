@@ -190,15 +190,41 @@ flutter run -d chrome
 
 ## 8. Screenshots
 
-Place screenshots in `screenshots/` and update filenames as needed.
+### Splash
 
-| Onboarding                   | Home / Chats           | Chat Detail            |
-| ---------------------------- | ---------------------- | ---------------------- |
-| `screenshots/onboarding.png` | `screenshots/home.png` | `screenshots/chat.png` |
+`assets/screenshots/splash_screen.jpg`
 
-| Call History            | Profile                   |
-| ----------------------- | ------------------------- |
-| `screenshots/calls.png` | `screenshots/profile.png` |
+### Onboard
+
+`assets/screenshots/onboard_screen.jpg`
+
+### Auth
+
+* `assets/screenshots/login_screen.jpg`
+* `assets/screenshots/signup_screen.jpg`
+* `assets/screenshots/select_photo_screen.png`
+* `assets/screenshots/select_photo_screen2.png`
+* `assets/screenshots/recover_pass_screen.jpg`
+
+### Home & Chats
+
+* `assets/screenshots/home_screen.jpg`
+* `assets/screenshots/chat_screen.jpg`
+* `assets/screenshots/chat_screen2.jpg`
+
+### Calling
+
+* `assets/screenshots/call_history.jpg`
+* `assets/screenshots/call_notification.jpg`
+* `assets/screenshots/calling_screen.jpg`
+* `assets/screenshots/calling_screen2.png`
+* `assets/screenshots/calling_screen3.jpg`
+
+### Profile
+
+* `assets/screenshots/profile_screen.jpg`
+* `assets/screenshots/profile_screen2.jpg`
+* `assets/screenshots/profile_screen3.jpg`
 
 ---
 
