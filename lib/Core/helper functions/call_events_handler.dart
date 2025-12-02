@@ -92,7 +92,7 @@ class CallEventsHandler {
               .collection('users')
               .doc(invitee.id)
               .get();
-
+      final callerDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
       if (!receiverDoc.exists) {
         print('❌ Receiver user not found');
         return;
@@ -102,12 +102,12 @@ class CallEventsHandler {
       final receiverName = receiverDoc.data()?['name'] ?? '';
       final receiverProfilePic = receiverDoc.data()?['profilePic'] ?? '';
       final modelCallType = ZegoCallHelper.getCallType(callType);
-
+      final callerName = callerDoc.data()?['name'] ?? currentUser.displayName ?? '';
       await _callService.createCall(
         callId: callID,
         callerId: currentUser.uid,
         callerEmail: currentUser.email ?? '',
-        callerName: currentUser.displayName ?? '',
+        callerName: callerName,
         callerProfilePic: currentUser.photoURL ?? '',
         receiverId: invitee.id,
         receiverEmail: receiverEmail,
@@ -137,11 +137,12 @@ class CallEventsHandler {
               .collection('users')
               .doc(caller.id)
               .get();
-
+      final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
       final callerEmail = callerDoc.data()?['email'] ?? '';
       final callerProfilePic = callerDoc.data()?['profilePic'] ?? '';
       final modelCallType = ZegoCallHelper.getCallType(callType);
-
+      final callerName = callerDoc.data()?['name'] ?? caller.name;
+      final receiverName = receiverDoc.data()?['name'] ?? currentUser.displayName ?? '';
       final existingCall = await _callService.getCall(callID);
 
       if (existingCall == null) {
@@ -149,11 +150,11 @@ class CallEventsHandler {
           callId: callID,
           callerId: caller.id, // The person who initiated the call
           callerEmail: callerEmail, // The caller's email
-          callerName: caller.name,
+          callerName: callerName,
           callerProfilePic: callerProfilePic,
           receiverId: currentUser.uid, // The current user (receiver)
           receiverEmail: currentUser.email ?? '',
-          receiverName: currentUser.displayName ?? '', // Current user's email
+          receiverName: receiverName, // Current user's email
           receiverProfilePic: currentUser.photoURL ?? '',
           callType: modelCallType,
         );

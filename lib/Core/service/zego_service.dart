@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatbox/Core/helper%20functions/call_events_handler.dart';
 import 'package:chatbox/Core/service/firestore_call_service.dart';
 import 'package:chatbox/Core/service/getit_service.dart';
@@ -21,13 +20,14 @@ class ZegoService {
   Future<void> initForUser(User user) async {
     // It's good practice to uninit before initializing, to handle re-logins without app restart.
     await ZegoUIKitPrebuiltCallInvitationService().uninit();
-
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final userName = userDoc.data()?['name'] ?? user.displayName ?? user.email ?? user.uid;
     await ZegoUIKitPrebuiltCallInvitationService()
         .init(
           appID: appIdZegoCloud,
           appSign: appSignZegoCloud,
           userID: user.uid,
-          userName: user.displayName ?? user.email ?? user.uid,
+          userName: userName,
           plugins: [ZegoUIKitSignalingPlugin()],
           invitationEvents: _callEventsHandler.getInvitationEvents(),
           requireConfig: (ZegoCallInvitationData data) {
