@@ -192,39 +192,39 @@ flutter run -d chrome
 
 ### Splash
 
-`assets/screenshots/splash_screen.jpg`
+![Splash](assets/screenshots/splash_screen.jpg)
 
 ### Onboard
 
-`assets/screenshots/onboard_screen.jpg`
+![Onboard](assets/screenshots/onboard_screen.jpg)
 
 ### Auth
 
-* `assets/screenshots/login_screen.jpg`
-* `assets/screenshots/signup_screen.jpg`
-* `assets/screenshots/select_photo_screen.png`
-* `assets/screenshots/select_photo_screen2.png`
-* `assets/screenshots/recover_pass_screen.jpg`
+![Login](assets/screenshots/login_screen.jpg)
+![Signup](assets/screenshots/signup_screen.jpg)
+![Select Photo](assets/screenshots/select_photo_screen.png)
+![Select Photo 2](assets/screenshots/select_photo_screen2.png)
+![Recover Password](assets/screenshots/recover_pass_screen.jpg)
 
 ### Home & Chats
 
-* `assets/screenshots/home_screen.jpg`
-* `assets/screenshots/chat_screen.jpg`
-* `assets/screenshots/chat_screen2.jpg`
+![Home](assets/screenshots/home_screen.jpg)
+![Chat](assets/screenshots/chat_screen.jpg)
+![Chat 2](assets/screenshots/chat_screen2.jpg)
 
 ### Calling
 
-* `assets/screenshots/call_history.jpg`
-* `assets/screenshots/call_notification.jpg`
-* `assets/screenshots/calling_screen.jpg`
-* `assets/screenshots/calling_screen2.png`
-* `assets/screenshots/calling_screen3.jpg`
+![Call History](assets/screenshots/call_history.jpg)
+![Call Notification](assets/screenshots/call_notification.jpg)
+![Calling](assets/screenshots/calling_screen.jpg)
+![Calling 2](assets/screenshots/calling_screen2.png)
+![Calling 3](assets/screenshots/calling_screen3.jpg)
 
 ### Profile
 
-* `assets/screenshots/profile_screen.jpg`
-* `assets/screenshots/profile_screen2.jpg`
-* `assets/screenshots/profile_screen3.jpg`
+![Profile](assets/screenshots/profile_screen.jpg)
+![Profile 2](assets/screenshots/profile_screen2.jpg)
+![Profile 3](assets/screenshots/profile_screen3.jpg)
 
 ---
 
