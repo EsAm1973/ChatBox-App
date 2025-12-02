@@ -6,11 +6,6 @@ import 'package:svg_flutter/svg_flutter.dart';
 
 class SocialMediaLoginWidget extends StatelessWidget {
   const SocialMediaLoginWidget({super.key});
-  String _getAppleIconPath(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? 'assets/apple logo light.svg'
-        : 'assets/apple logo dark.svg';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,13 +26,6 @@ class SocialMediaLoginWidget extends StatelessWidget {
           onPressed: () {
             context.read<LoginCubit>().signInWithGoogle();
           },
-          context: context,
-        ),
-        SizedBox(width: 20.w),
-
-        _buildSocialButton(
-          iconAssetPath: _getAppleIconPath(context),
-          onPressed: () {},
           context: context,
         ),
       ],
