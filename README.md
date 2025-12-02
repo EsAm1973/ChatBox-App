@@ -84,8 +84,15 @@ The app follows a feature-first, layered architecture:
 
 **Calls & History**
 
+* `ZegoService` handles ZegoCloud initialization.
+* `CallEventsHandler` tracks call events and syncs with Firestore.
 * `CallModel` represents calls with types, status and timestamps.
 * `FirestoreCallService` manages call creation, updates, streams and cleanup.
+
+**Notifications**
+
+* `MessagingConfig` setups FCM
+* `NotificationService` handles foreground notifications, channels, and routing from payloads.
 
 **Navigation**
 
