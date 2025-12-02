@@ -14,28 +14,28 @@ ChatBox is built as a scalable messaging experience where users can sign up, log
 
 **Framework**
 
-* Flutter (multi-platform app: mobile & desktop)
+- Flutter (multi-platform app: mobile & desktop)
 
 **Navigation & UI**
 
-* `go_router` for declarative navigation and deep-link friendly routes
-* `flutter_screenutil` for responsive sizing and layout
+- `go_router` for declarative navigation and deep-link friendly routes
+- `flutter_screenutil` for responsive sizing and layout
 
 **State Management & DI**
 
-* `flutter_bloc` / `bloc` for Cubit/BLoC state management (e.g., `LoginCubit`, `HomeCubit`, `CallHistoryCubit`, `ProfileCubit`)
-* `get_it` as a service locator (used in `setupGetIt`)
+- `flutter_bloc` / `bloc` for Cubit/BLoC state management (e.g., `LoginCubit`, `HomeCubit`, `CallHistoryCubit`, `ProfileCubit`)
+- `get_it` as a service locator (used in `setupGetIt`)
 
 **Backend & Data**
 
-* `firebase_core`, `firebase_auth`, `cloud_firestore` for authentication and real-time data
-* `supabase_flutter` as a storage backend implementation for profile images and other media
-* `dartz` for functional `Either` and error handling in repositories
+- `firebase_core`, `firebase_auth`, `cloud_firestore` for authentication and real-time data
+- `supabase_flutter` as a storage backend implementation for profile images and other media
+- `dartz` for functional `Either` and error handling in repositories
 
 **Media & Platform**
 
-* `image_picker` for profile image and avatar selection
-* Various platform-specific plugins for audio, file selection, and secure storage
+- `image_picker` for profile image and avatar selection
+- Various platform-specific plugins for audio, file selection, and secure storage
 
 ---
 
@@ -43,11 +43,11 @@ ChatBox is built as a scalable messaging experience where users can sign up, log
 
 The app follows a feature-first, layered architecture:
 
-* **Presentation layer**: Flutter screens and widgets in `features/*/presentation`, driven by Cubits like `LoginCubit`, `HomeCubit`, `CallHistoryCubit`, and `ProfileCubit`.
-* **Domain / Data access layer**: Repositories (`AuthRepo`, `ChatRepo`, `CallRepo`, `UserRepo`, `ProfileRepo`, `SearchUserRepo`) define contracts and delegate to service classes to access Firestore, Firebase Auth, and storage, returning `Either<Failure, T>`.
-* **Core services**: Firestore services (`FirestoreChatService`, `FirestoreUserService`, `FirestoreCallService`, `FirestoreProfileService`) encapsulate low-level operations.
-* **Storage**: `SupabaseStorageService` implements `StorageService` and handles file uploads (avatars, attachments).
-* **Routing & Composition**: `AppRouter` defines GoRoutes and wires Cubits and repos via `BlocProvider`/`MultiBlocProvider`.
+- **Presentation layer**: Flutter screens and widgets in `features/*/presentation`, driven by Cubits like `LoginCubit`, `HomeCubit`, `CallHistoryCubit`, and `ProfileCubit`.
+- **Domain / Data access layer**: Repositories (`AuthRepo`, `ChatRepo`, `CallRepo`, `UserRepo`, `ProfileRepo`, `SearchUserRepo`) define contracts and delegate to service classes to access Firestore, Firebase Auth, and storage, returning `Either<Failure, T>`.
+- **Core services**: Firestore services (`FirestoreChatService`, `FirestoreUserService`, `FirestoreCallService`, `FirestoreProfileService`) encapsulate low-level operations.
+- **Storage**: `SupabaseStorageService` implements `StorageService` and handles file uploads (avatars, attachments).
+- **Routing & Composition**: `AppRouter` defines GoRoutes and wires Cubits and repos via `BlocProvider`/`MultiBlocProvider`.
 
 ### Architecture Diagram
 
@@ -59,44 +59,44 @@ The app follows a feature-first, layered architecture:
 
 **Authentication & Onboarding**
 
-* Email/password signup and login with validation mixins and custom form components.
-* Social login entry points (Google and Facebook) via `FirebaseAuthService`.
-* Password recovery flow with reset email, validation, and success/error dialogs.
+- Email/password signup and login with validation mixins and custom form components.
+- Social login entry points (Google and Facebook) via `FirebaseAuthService`.
+- Password recovery flow with reset email, validation, and success/error dialogs.
 
 **User Profiles**
 
-* Profile details, picture, and settings managed through `ProfileCubit` and `ProfileState`.
-* Profile picture selection using camera/gallery and upload via `ProfileImageService`.
-* Profile editing dialogs for name, phone, about, privacy, and account actions.
-* Dark mode toggle.
-* Profile logout flows.
+- Profile details, picture, and settings managed through `ProfileCubit` and `ProfileState`.
+- Profile picture selection using camera/gallery and upload via `ProfileImageService`.
+- Profile editing dialogs for name, phone, about, privacy, and account actions.
+- Dark mode toggle.
+- Profile logout flows.
 
 **Real-Time Chat**
 
-* `MessageModel` supports statuses (pending, sent, delivered, read, failed) and multiple types (text, voice, image, file).
-* Firestore-backed one-to-one chat rooms with unread counts and server timestamps.
-* Chat cubit handles sending text, voice messages, attachments with optimistic updates.
+- `MessageModel` supports statuses (pending, sent, delivered, read, failed) and multiple types (text, voice, image, file).
+- Firestore-backed one-to-one chat rooms with unread counts and server timestamps.
+- Chat cubit handles sending text, voice messages, attachments with optimistic updates.
 
 **Home & Search**
 
-* Home chat list driven by `HomeCubit`, with batched user profile fetching via `UserRepo`.
-* Search users by email with `SearchUserCubit`.
+- Home chat list driven by `HomeCubit`, with batched user profile fetching via `UserRepo`.
+- Search users by email with `SearchUserCubit`.
 
 **Calls & History**
 
-* `ZegoService` handles ZegoCloud initialization.
-* `CallEventsHandler` tracks call events and syncs with Firestore.
-* `CallModel` represents calls with types, status and timestamps.
-* `FirestoreCallService` manages call creation, updates, streams and cleanup.
+- `ZegoService` handles ZegoCloud initialization.
+- `CallEventsHandler` tracks call events and syncs with Firestore.
+- `CallModel` represents calls with types, status and timestamps.
+- `FirestoreCallService` manages call creation, updates, streams and cleanup.
 
 **Notifications**
 
-* `MessagingConfig` setups FCM
-* `NotificationService` handles foreground notifications, channels, and routing from payloads.
+- `MessagingConfig` setups FCM
+- `NotificationService` handles foreground notifications, channels, and routing from payloads.
 
 **Navigation**
 
-* Centralized `AppRouter` wires all screens (splash, onboarding, login, signup, choose picture, recover password, home, chat, calls, profile, navigation bar) and injects dependencies using `getIt`.
+- Centralized `AppRouter` wires all screens (splash, onboarding, login, signup, choose picture, recover password, home, chat, calls, profile, navigation bar) and injects dependencies using `getIt`.
 
 ---
 
@@ -104,8 +104,8 @@ The app follows a feature-first, layered architecture:
 
 Repository includes standard Flutter test scaffolding. Suggested targets:
 
-* Cubit/BLoC unit tests (`LoginCubit`, `HomeCubit`, etc.)
-* Widget tests for core views (login, onboarding, home, chat list, call history, profile)
+- Cubit/BLoC unit tests (`LoginCubit`, `HomeCubit`, etc.)
+- Widget tests for core views (login, onboarding, home, chat list, call history, profile)
 
 Add tests under `/test` using `flutter_test` and BLoC testing patterns.
 
@@ -156,9 +156,9 @@ android/ ios/ macos/ linux/ windows/ web/
 
 ### Prerequisites
 
-* Install Flutter (stable channel compatible with the project).
-* Install IDE (Android Studio or VS Code) with Flutter & Dart plugins.
-* Create a Firebase project (Firestore + Authentication).
+- Install Flutter (stable channel compatible with the project).
+- Install IDE (Android Studio or VS Code) with Flutter & Dart plugins.
+- Create a Firebase project (Firestore + Authentication).
 
 ### Clone & Setup
 
@@ -170,13 +170,14 @@ flutter pub get
 
 ### Configure Firebase
 
-* Enable Email/password authentication and Cloud Firestore.
-* Add platform configuration files:
+- Enable Email/password authentication and Cloud Firestore.
+- Add platform configuration files:
 
-  * Android: `android/app/google-services.json`
-  * iOS: `ios/Runner/GoogleService-Info.plist`
-  * Web/Desktop: configure `DefaultFirebaseOptions` in `firebase_options.dart`.
-* Ensure bundle IDs/application IDs match Firebase config.
+  - Android: `android/app/google-services.json`
+  - iOS: `ios/Runner/GoogleService-Info.plist`
+  - Web/Desktop: configure `DefaultFirebaseOptions` in `firebase_options.dart`.
+
+- Ensure bundle IDs/application IDs match Firebase config.
 
 ### Run
 
@@ -188,48 +189,62 @@ flutter run -d chrome
 
 ---
 
-## 8. Screenshots
+## 🖼️ Screenshots
+
+Here are some screenshots showcasing the UI of ChatBox:
 
 ### Splash
 
-![Splash](assets/screenshots/splash_screen.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/splash_screen.jpg" width="200" alt="Splash Screen" />
+</div>
 
-### Onboard
+### Onboarding
 
-![Onboard](assets/screenshots/onboard_screen.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/onboard_screen.jpg" width="200" alt="Onboarding" />
+</div>
 
-### Auth
+### Auth (Login & Signup)
 
-![Login](assets/screenshots/login_screen.jpg)
-![Signup](assets/screenshots/signup_screen.jpg)
-![Select Photo](assets/screenshots/select_photo_screen.png)
-![Select Photo 2](assets/screenshots/select_photo_screen2.png)
-![Recover Password](assets/screenshots/recover_pass_screen.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/login_screen.jpg" width="200" alt="Login Screen" />
+  <img src="assets/screenshots/signup_screen.jpg" width="200" alt="Signup Screen" />
+  <img src="assets/screenshots/select_photo_screen.png" width="200" alt="Select Photo" />
+  <img src="assets/screenshots/select_photo_screen2.png" width="200" alt="Select Photo 2" />
+  <img src="assets/screenshots/recover_pass_screen.jpg" width="200" alt="Recover Password" />
+</div>
 
 ### Home & Chats
 
-![Home](assets/screenshots/home_screen.jpg)
-![Chat](assets/screenshots/chat_screen.jpg)
-![Chat 2](assets/screenshots/chat_screen2.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/home_screen.jpg" width="200" alt="Home Screen" />
+  <img src="assets/screenshots/chat_screen.jpg" width="200" alt="Chat Screen" />
+  <img src="assets/screenshots/chat_screen2.jpg" width="200" alt="Chat Screen 2" />
+</div>
 
 ### Calling
 
-![Call History](assets/screenshots/call_history.jpg)
-![Call Notification](assets/screenshots/call_notification.jpg)
-![Calling](assets/screenshots/calling_screen.jpg)
-![Calling 2](assets/screenshots/calling_screen2.png)
-![Calling 3](assets/screenshots/calling_screen3.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/call_history.jpg" width="200" alt="Call History" />
+  <img src="assets/screenshots/call_notification.jpg" width="200" alt="Call Notification" />
+  <img src="assets/screenshots/calling_screen.jpg" width="200" alt="Calling Screen" />
+  <img src="assets/screenshots/calling_screen2.png" width="200" alt="Calling Screen 2" />
+  <img src="assets/screenshots/calling_screen3.jpg" width="200" alt="Calling Screen 3" />
+</div>
 
 ### Profile
 
-![Profile](assets/screenshots/profile_screen.jpg)
-![Profile 2](assets/screenshots/profile_screen2.jpg)
-![Profile 3](assets/screenshots/profile_screen3.jpg)
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+  <img src="assets/screenshots/profile_screen.jpg" width="200" alt="Profile Screen" />
+  <img src="assets/screenshots/profile_screen2.jpg" width="200" alt="Profile Screen 2" />
+  <img src="assets/screenshots/profile_screen3.jpg" width="200" alt="Profile Screen 3" />
+</div>
 
 ---
 
 ## 9. Social Links
 
-* LinkedIn: [(Mohamed Esam)](https://www.linkedin.com/in/mohamed-esam-4085b524a/)
+- LinkedIn: [(Mohamed Esam)](https://www.linkedin.com/in/mohamed-esam-4085b524a/)
 
 Contributions, issues, and feature requests are welcome—open a discussion or pull request.
